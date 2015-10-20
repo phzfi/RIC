@@ -29,8 +29,6 @@ Use descriptive names for the branches, lowercase letters and hyphens.
 
 From the dropdown menu select the branch to which you have committed your changes.
 
-![](https://raw.githubusercontent.com/kmort89/RIC/master/docs/images/workflow/01-new-branch.png)
-
 ![](https://raw.githubusercontent.com/kmort89/RIC/master/docs/images/workflow/02-branch-ahead.png)
 
 Select the base repository. Pull request will be opened for this repository. Currently we are using kmort89/IRC which is forked from phzfi/RIC. 
