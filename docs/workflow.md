@@ -25,6 +25,9 @@ Use descriptive names for the branches, lowercase letters and hyphens.
 
 ## Pull requests
 
+<<<<<<< HEAD
+
+=======
 ### Open a pull request
 
 From the dropdown menu select the branch to which you have committed your changes.
@@ -64,6 +67,7 @@ Merge pull request to <code>master</code>
 After successfully merging you can delete the branch:
 
 ![](https://raw.githubusercontent.com/kmort89/RIC/master/docs/images/workflow/04f-pull-delete.png)
+>>>>>>> master
 
 ## Resources
 
