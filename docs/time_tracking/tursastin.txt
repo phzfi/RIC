@@ -1,0 +1,4 @@
+15.10.	4	Kickoff (intro + sprint planning)
+20.10.	0.5	Studying course material, updating learning diary for previous week
+20.10.	4	Go workshop, git & GitHub practices
+
