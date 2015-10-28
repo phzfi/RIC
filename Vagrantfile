@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "ubuntu/wily64"
+  config.vm.box = "ubuntu/vivid64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -72,10 +72,10 @@ Vagrant.configure(2) do |config|
   # documentation for more information about their specific syntax and use.
   
   # TODO: More?
-  config.vm.provision "shell", inline: <<-SHELL
-      sudo apt-get update
-      sudo apt-get install -y libmagickwand-dev
-      sudo apt-get install -y golang-go
-  SHELL
+  config.vm.provision "shell", type: "shell" do |s|
+      s.inline = "sudo apt-get update"
+      s.inline = "sudo apt-get install -y libmagickwand-dev"
+      s.inline = "sudo apt-get install -y golang-go"
+  end
 
 end
