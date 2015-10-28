@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"github.com/joonazan/imagick/imagick"
 )
@@ -19,3 +20,4 @@ func (img ImageBlob) Resized(w, h uint) (resized ImageBlob, err error) {
 	return
 
 }
+*/
