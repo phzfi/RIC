@@ -19,14 +19,16 @@ func (*MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func NewServer() {
-	handler := MyHandler{}
-	server := &http.Server{
-		Addr:           ":8005",
-		Handler:        &handler,
-		ReadTimeout:    5 * time.Second,
-		WriteTimeout:   5 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+func NewServer() *graceful.Server {
+	server := &graceful.Server{
+		Timeout: 5 * time.Second,
+		Server: &http.Server{
+			Addr:           ":8005",
+			Handler:        &MyHandler{},
+			ReadTimeout:    5 * time.Second,
+			WriteTimeout:   5 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		},
 	}
 	return server
 }
