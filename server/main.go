@@ -4,7 +4,7 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 	"log"
 	"net/http"
-	// "net/url"
+	"server/cache"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -24,6 +24,8 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
+	// ImageCache
+	images *cache.ImageCache
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -83,7 +85,6 @@ func (self *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 	}
 }
 
-
 // Respond to POST message by saying Hello
 func (*MyHandler) RetrieveHello(writer *http.ResponseWriter) {
 	result := "Hello world!"
@@ -93,14 +94,13 @@ func (*MyHandler) RetrieveHello(writer *http.ResponseWriter) {
 	}
 }
 
-
 // Write image by filename into ResponseWriter with the
 // desired width and height being pointed to. If there
 // are no desired width or height, that parameter is nil.
 func (self *MyHandler) RetrieveImage(writer *http.ResponseWriter,
-								filename string,
-								width *int,
-								height *int) {
+	filename string,
+	width *int,
+	height *int) {
 
 	// TODO: filename must not be interpret as "absolute"
 	// implement a type that will abstract away the filesystem.
@@ -108,10 +108,11 @@ func (self *MyHandler) RetrieveImage(writer *http.ResponseWriter,
 		log.Println("Find: " + filename)
 	}
 
-	// Load the image from disk
-	// TODO: Use width or height in resize?
-	// TODO: Insert cache control before this
-	blob, err := LoadImage(filename)
+	// Get cache
+	bank := (*self).images
+
+	// Load the image
+	blob, err := (*bank).GetImage(filename, width, height)
 	if err != nil {
 		// TODO:
 		// Classify different possible errors more but make sure
@@ -125,13 +126,16 @@ func (self *MyHandler) RetrieveImage(writer *http.ResponseWriter,
 
 // Create a new graceful server and configure it.
 // This does not run the server however.
-func NewServer() (*graceful.Server, *MyHandler)  {
+func NewServer() (*graceful.Server, *MyHandler) {
 	handler := &MyHandler{
 		// TODO: Set this to true while debugging (preprosessor possible?)
 		verbose: true,
 
 		// Initialize
 		requests: 0,
+
+		// No cache (later sprints)
+		images: &Cacheless{},
 	}
 	server := &graceful.Server{
 		Timeout: 8 * time.Second,
@@ -145,7 +149,6 @@ func NewServer() (*graceful.Server, *MyHandler)  {
 	}
 	return server, handler
 }
-
 
 // The entry point for the program.
 // This is obviously not exported.
@@ -173,5 +176,3 @@ func main() {
 		log.Fatal(err)
 	}
 }
-
-
