@@ -1,7 +1,14 @@
 package cache
 
-import "server/images"
+import "github.com/phzfi/RIC/server/images"
 
 type ImageCache interface {
-	GetImage(filename string, width *int, height *int) (images.ImageBlob, error)
+	GetImage(filename string, width *uint, height *uint) (images.ImageBlob, error)
+
+	// TODO: These could be moved a separate filesystem handler
+	// but these are ok, where they are at the moment (no need to bloat yet).
+	AddRoot(string) error
+	RemoveRoot(string) error
 }
+
+

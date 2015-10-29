@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/phzfi/RIC/server/cache"
 	"gopkg.in/tylerb/graceful.v1"
 	"log"
 	"net/http"
-	"server/cache"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -53,24 +53,24 @@ func (self *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 		query := req.Query()
 
 		// Extract width and height if needed
-		var width *int = nil
-		var height *int = nil
+		var width *uint = nil
+		var height *uint = nil
 		if len(query) > 0 {
 			strw, ok := query["width"]
 			if ok && len(strw) > 0 {
-				intw, err := strconv.Atoi(strw[0])
+				intw, err := strconv.ParseUint(strw[0], 10, 32)
 				if err == nil {
-					width = new(int)
-					*width = intw
+					width = new(uint)
+					*width = uint(intw)
 				}
 				// For now, silent error if !ok
 			}
 			strh, ok := query["height"]
 			if ok && len(strh) > 0 {
-				inth, err := strconv.Atoi(strh[0])
+				inth, err := strconv.ParseUint(strh[0], 10, 32)
 				if err == nil {
-					height = new(int)
-					*height = inth
+					height = new(uint)
+					*height = uint(inth)
 				}
 				// For now, silent error if !ok
 			}
@@ -99,8 +99,8 @@ func (*MyHandler) RetrieveHello(writer *http.ResponseWriter) {
 // are no desired width or height, that parameter is nil.
 func (self *MyHandler) RetrieveImage(writer *http.ResponseWriter,
 	filename string,
-	width *int,
-	height *int) {
+	width *uint,
+	height *uint) {
 
 	// TODO: filename must not be interpret as "absolute"
 	// implement a type that will abstract away the filesystem.
@@ -127,16 +127,32 @@ func (self *MyHandler) RetrieveImage(writer *http.ResponseWriter,
 // Create a new graceful server and configure it.
 // This does not run the server however.
 func NewServer() (*graceful.Server, *MyHandler) {
+	// No cache (will be implemented in later sprints)
+	cacher := new (cache.ImageCache)
+	implementation := &cache.Cacheless{}
+	*cacher = implementation
+
+	// Add roots
+	// TODO: This must be externalized outside the source code.
+	if (*implementation).AddRoot("/var/www") != nil {
+		log.Fatal("Root not added /var/www")
+	}
+
+	if (*implementation).AddRoot(".") != nil {
+		log.Println("Root not added .")
+	}
+
+	// Configure handler
 	handler := &MyHandler{
 		// TODO: Set this to true while debugging (preprosessor possible?)
 		verbose: true,
 
 		// Initialize
 		requests: 0,
-
-		// No cache (later sprints)
-		images: &Cacheless{},
+		images: cacher,
 	}
+
+	// Configure server
 	server := &graceful.Server{
 		Timeout: 8 * time.Second,
 		Server: &http.Server{
@@ -158,6 +174,7 @@ func main() {
 	server, handler := NewServer()
 
 	// Run the server
+	log.Println("Server starting...")
 	begin := time.Now()
 	(*handler).started = begin
 	err := server.ListenAndServe()
