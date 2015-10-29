@@ -9,18 +9,24 @@ import (
 	"time"
 )
 
+// This is an utility function to launch a graceful server.
+// This is intended to be run as a goroutine as it takes an
+// error channel as the first parameter.
 func startServer(errors chan<- error, server *graceful.Server) {
 	errors <- server.ListenAndServe()
 }
 
+// Test that the web server return "Hello world" and does not
+// raise any exceptions or errors. This also starts and stops
+// a web server instance for the duration of the test.
 func TestHello(test *testing.T) {
-	server := NewServer()
+	server, _ := NewServer()
 	errors := make(chan error)
 
 	go startServer(errors, server)
-	defer server.Stop(5 * time.Second)
+	defer server.Stop(3 * time.Second)
 
-	resp, err := http.Get("http://localhost:8005")
+	resp, err := http.Post("http://localhost:8005", "text/plain", nil)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -41,7 +47,7 @@ func TestHello(test *testing.T) {
 	if len(errors) > 0 {
 		err, ok := <-errors
 		if !ok {
-			// TODO: You could do this *properly*
+			// TODO: You should do this properly
 			test.Fatal("There was an error, but we missed it (too soon or too late")
 		}
 		if err != nil {
@@ -49,3 +55,4 @@ func TestHello(test *testing.T) {
 		}
 	}
 }
+
