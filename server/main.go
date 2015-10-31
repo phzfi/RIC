@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/phzfi/RIC/server/cache"
+	"github.com/phzfi/RIC/server/logging"
 	"gopkg.in/tylerb/graceful.v1"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -10,13 +12,11 @@ import (
 	"time"
 )
 
+
 // MyHandler type is used to encompass HandlerFunc interface.
 // In the future this type will probably contain pointers to
 // services provided by this program (image cache).
 type MyHandler struct {
-
-	// Additional output (debug)
-	verbose bool
 
 	// Service started
 	started time.Time
@@ -25,29 +25,29 @@ type MyHandler struct {
 	requests uint64
 
 	// ImageCache
-	images *cache.ImageCache
+	images cache.ImageCache
 }
 
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
 // TODO: Check that ServeHTTP is called inside a goroutine?
-func (self *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	method := (*request).Method
+func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	method := request.Method
 
 	// In the future we can use requester can detect request spammers!
 	// requester := (*request).RemoteAddr
 
 	// Increase request count
-	count := &((*self).requests)
+	count := &(h.requests)
 	atomic.AddUint64(count, 1)
 
 	// SPLIT on method
 	if method == "GET" {
 		// GET an image by name
-		req := (*request).URL
+		req := request.URL
 
 		// Get the filename
-		filename := (*req).Path
+		filename := req.Path
 
 		// Get parameters
 		query := req.Query()
@@ -77,18 +77,18 @@ func (self *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 		}
 
 		// Get the image
-		(*self).RetrieveImage(&writer, filename, width, height)
+		h.RetrieveImage(writer, filename, width, height)
 
 	} else if method == "POST" {
 		// POST is currently unused so we can use this for testing
-		(*self).RetrieveHello(&writer)
+		h.RetrieveHello(writer)
 	}
 }
 
 // Respond to POST message by saying Hello
-func (*MyHandler) RetrieveHello(writer *http.ResponseWriter) {
+func (h MyHandler) RetrieveHello(writer http.ResponseWriter) {
 	result := "Hello world!"
-	_, err := (*writer).Write([]byte(result))
+	_, err := io.WriteString(writer, result)
 	if err != nil {
 		log.Println(err)
 	}
@@ -97,57 +97,55 @@ func (*MyHandler) RetrieveHello(writer *http.ResponseWriter) {
 // Write image by filename into ResponseWriter with the
 // desired width and height being pointed to. If there
 // are no desired width or height, that parameter is nil.
-func (self *MyHandler) RetrieveImage(writer *http.ResponseWriter,
+func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 	filename string,
 	width *uint,
 	height *uint) {
 
 	// TODO: filename must not be interpret as "absolute"
 	// implement a type that will abstract away the filesystem.
-	if (*self).verbose {
-		log.Println("Find: " + filename)
-	}
+	logging.Debug("Find: " + filename)
 
 	// Get cache
-	bank := (*self).images
+	bank := h.images
 
 	// Load the image
-	blob, err := (*bank).GetImage(filename, width, height)
+	blob, err := bank.GetImage(filename, width, height)
 	if err != nil {
 		// TODO:
 		// Classify different possible errors more but make sure
 		// no "internal" information is leaked.
-		(*writer).WriteHeader(http.StatusNotFound)
-		(*writer).Write([]byte("Image not found!"))
+		writer.WriteHeader(http.StatusNotFound)
+		io.WriteString(writer, "Image not found!")
+		logging.Debug(err)
 		return
 	}
-	(*writer).Write(blob)
+	writer.Write(blob)
 }
 
 // Create a new graceful server and configure it.
 // This does not run the server however.
 func NewServer() (*graceful.Server, *MyHandler) {
 	// No cache (will be implemented in later sprints)
-	cacher := new (cache.ImageCache)
-	implementation := &cache.Cacheless{}
-	*cacher = implementation
+	cacher := &cache.Cacheless{}
 
 	// Add roots
 	// TODO: This must be externalized outside the source code.
-	if (*implementation).AddRoot("/var/www") != nil {
+	if cacher.AddRoot("/var/www") != nil {
 		log.Fatal("Root not added /var/www")
 	}
 
-	if (*implementation).AddRoot(".") != nil {
+	if cacher.AddRoot(".") != nil {
 		log.Println("Root not added .")
+	}
+
+	// Root count
+	if len(cacher.Roots) != 2 {
+		log.Fatal("All roots not added")
 	}
 
 	// Configure handler
 	handler := &MyHandler{
-		// TODO: Set this to true while debugging (preprosessor possible?)
-		verbose: true,
-
-		// Initialize
 		requests: 0,
 		images: cacher,
 	}
@@ -175,8 +173,7 @@ func main() {
 
 	// Run the server
 	log.Println("Server starting...")
-	begin := time.Now()
-	(*handler).started = begin
+	handler.started = time.Now()
 	err := server.ListenAndServe()
 	end := time.Now()
 
@@ -184,7 +181,7 @@ func main() {
 	requests := strconv.FormatUint((*handler).requests, 10)
 
 	// Calculate the elapsed time
-	duration := end.Sub(begin)
+	duration := end.Sub(handler.started)
 	log.Println("Server requests: " + requests)
 	log.Println("Server uptime: " + duration.String())
 
