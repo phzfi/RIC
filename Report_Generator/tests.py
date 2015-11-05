@@ -6,7 +6,7 @@ Created on 5 Nov 2015
 import unittest
 import text_to_csv
 
-
+#TODO: About everything.
 class TestGenerator(unittest.TestCase):
 
 
@@ -18,6 +18,9 @@ class TestGenerator(unittest.TestCase):
             time_sum += line[0]
         self.assertEqual(27.11, time_sum, "transfer time was wrong" )
 
+
+    def test_log_reader(self):
+        "lol"
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
