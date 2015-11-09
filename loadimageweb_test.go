@@ -3,10 +3,8 @@ package main
 import( 
    "net/http"
    "testing"
-   "fmt"
    "path/filepath"
    "gopkg.in/tylerb/graceful.v1"
-   "time"
 )
 
 
@@ -21,6 +19,7 @@ func(h *TestHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
     w.Write(image)
 }
 
+
 func TestImageWeb(t *testing.T) {
     handler := &TestHandler{
     }
@@ -30,19 +29,91 @@ func TestImageWeb(t *testing.T) {
             Handler: handler,
         },
     }
-    fmt.Println("Ready to serve...")
     go func() {
         server.ListenAndServe()
     }()
     
-    time.Sleep(time.Second)
-    server.Stop(time.Second)
+    imageblob, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
+    if err != nil {
+        t.Fatal(err)
+    }
 
-    fmt.Println("Server is up and running.")
-    //if(err != nil) {
-    //        t.Fatal(err)
-    //}
+    imageblob_cmp, err := LoadImage(filepath.FromSlash("testimages/loadimage/test.jpg"))
+    if err != nil {
+        t.Fatal(err)
+    }
 
+    if len(imageblob) != len(imageblob_cmp) {
+        t.Fatal("Image size different")
+    }
+    for i, v := range imageblob {
+        if imageblob_cmp[i] != v {
+            t.Fatal("Different image")
+        }
+    }
+
+    server.Stop(0)
 
 }
 
+
+func TestImageWebWrongImage(t *testing.T) {
+    handler := &TestHandler{
+    }
+    server := graceful.Server{
+        Server: &http.Server{
+            Addr: ":8006",
+            Handler: handler,
+        },
+    }
+    go func() {
+        server.ListenAndServe()
+    }()
+    
+    imageblob, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    imageblob_cmp, err := LoadImage(filepath.FromSlash("testimages/loadimage/test.png"))
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if len(imageblob) != len(imageblob_cmp) {
+        return
+    }
+    for i, v := range imageblob {
+        if imageblob_cmp[i] != v {
+            return
+        }
+    }
+
+    t.Fatal("Images are same")
+
+    server.Stop(0)
+
+}
+
+
+func TestImageWeb404(t *testing.T) {
+    server := graceful.Server{
+        Server: &http.Server{
+            Addr: ":8006",
+            Handler: http.NotFoundHandler(),
+        },
+    }
+    go func() {
+        server.ListenAndServe()
+    }()
+    
+    _, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
+    if err == nil {
+        t.Fatal("LoadImageWeb didn't return error when 404 received")
+    }
+
+    err = nil
+
+    server.Stop(0)
+
+}
