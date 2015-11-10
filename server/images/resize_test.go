@@ -10,9 +10,11 @@ import (
 func TestResize1(t *testing.T) {
 	doTest(t, "toresize.jpg", "resized.jpg", true)
 }
+
 func TestResize2(t *testing.T) {
 	doTest(t, "toresize2.jpg", "resized2.jpg", true)
 }
+
 func TestResize3(t *testing.T) {
 	doTest(t, "toresize.jpg", "resized_bad.jpg", false)
 }
@@ -47,20 +49,22 @@ func GetDistortion(filename, filename_cmp string) (distortion float64, err error
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
 
-	imageblob, err := LoadImage(filepath.FromSlash(image_folder + filename))
+	image, err := LoadImage(filepath.FromSlash(image_folder + filename))
 	if err != nil {
 		err = errors.New("LoadImage failed:" + err.Error())
 		return
 	}
-	resizedblob, err := imageblob.Resized(100, 100)
+
+	resized, err := image.Resized(100, 100)
 	if err != nil {
 		err = errors.New("Resize failed:" + err.Error())
 		return
 	}
-	mw.ReadImageBlob(resizedblob)
 
-	image, distortion := mw.CompareImages(mw_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
-	image.Destroy()
+	mw.ReadImageBlob(resized.ToBlob())
+
+        trash, distortion := mw.CompareImages(mw_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
+	trash.Destroy()
 
 	err = mw.WriteImage(filepath.FromSlash("testresults/resize/" + filename))
 
