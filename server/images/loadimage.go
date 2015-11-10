@@ -16,6 +16,8 @@ func LoadImage(filename string) (img Image, err error) {
 	if err != nil {
 		return
 	}
+	// Remember to free resources after you're done
+	defer reader.Close()
 
 	buffer := bytes.NewBuffer([]byte{})
 	buffer.ReadFrom(reader)
@@ -23,6 +25,5 @@ func LoadImage(filename string) (img Image, err error) {
 
         img = NewImage()
         err = img.ReadImageBlob(blob)
-
 	return
 }
