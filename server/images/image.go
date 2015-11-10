@@ -1,5 +1,5 @@
 
-package main
+package images
 
 import (
 	"github.com/joonazan/imagick/imagick"

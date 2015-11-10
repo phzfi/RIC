@@ -1,4 +1,4 @@
-package main
+package images
 
 import (
 	"errors"
@@ -33,7 +33,7 @@ func doTest(t *testing.T, to_resize_fn, resized_fn string, should_pass bool) {
 }
 
 func GetDistortion(filename, filename_cmp string) (distortion float64, err error) {
-	const image_folder = "testimages/resize/"
+	const image_folder = "../testimages/resize/"
 	imagick.Initialize()
 	defer imagick.Terminate()
 
@@ -66,7 +66,7 @@ func GetDistortion(filename, filename_cmp string) (distortion float64, err error
         trash, distortion := mw.CompareImages(mw_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
 	trash.Destroy()
 
-	err = mw.WriteImage(filepath.FromSlash("testresults/resize/" + filename))
+	err = mw.WriteImage(filepath.FromSlash("../testresults/resize/" + filename))
 
 	return
 }
