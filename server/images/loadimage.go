@@ -3,6 +3,10 @@ package images
 import (
 	"bytes"
 	"os"
+        "net/http"
+        "fmt"
+        "errors"
+        "io/ioutil"
 )
 
 
@@ -24,4 +28,31 @@ func LoadImage(filename string) (img Image, err error) {
         img = NewImage()
         err = img.ReadImageBlob(blob)
 	return
+}
+
+// Return binary ImageBlob of an image from web.
+func LoadImageWeb(url string) (image Image, err error){
+    
+    resp, err := http.Get(url);
+    defer resp.Body.Close()
+    if err != nil {
+	return
+    }
+    
+    if resp.StatusCode != 200 {
+        err = errors.New(fmt.Sprintf("Couldn't load image. Server returned %i", resp.StatusCode))
+        return
+    }
+
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return 
+    }
+
+    blob := body
+
+    image = NewImage()
+    err = image.ReadImageBlob(blob)
+
+    return
 }
