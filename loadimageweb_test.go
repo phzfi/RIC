@@ -29,9 +29,9 @@ func TestImageWeb(t *testing.T) {
             Handler: handler,
         },
     }
-    go func() {
-        server.ListenAndServe()
-    }()
+    
+    go server.ListenAndServe()
+    defer server.Stop(0)
     
     imageblob, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
     if err != nil {
@@ -52,8 +52,6 @@ func TestImageWeb(t *testing.T) {
         }
     }
 
-    server.Stop(0)
-
 }
 
 
@@ -66,9 +64,9 @@ func TestImageWebWrongImage(t *testing.T) {
             Handler: handler,
         },
     }
-    go func() {
-        server.ListenAndServe()
-    }()
+    
+    go server.ListenAndServe()
+    defer server.Stop(0)
     
     imageblob, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
     if err != nil {
@@ -91,29 +89,25 @@ func TestImageWebWrongImage(t *testing.T) {
 
     t.Fatal("Images are same")
 
-    server.Stop(0)
 
 }
 
 
 func TestImageWeb404(t *testing.T) {
+
     server := graceful.Server{
         Server: &http.Server{
             Addr: ":8006",
             Handler: http.NotFoundHandler(),
         },
     }
-    go func() {
-        server.ListenAndServe()
-    }()
-    
+
+    go server.ListenAndServe()
+    defer server.Stop(0)
+
     _, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
     if err == nil {
         t.Fatal("LoadImageWeb didn't return error when 404 received")
     }
-
-    err = nil
-
-    server.Stop(0)
 
 }

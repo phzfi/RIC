@@ -5,7 +5,11 @@ import (
 	"os"
         "net/http"
         "io/ioutil"
+        "errors"
+        "fmt"
 )
+
+
 
 // Imageblob is just an image file dumped, byte by byte to an byte array.
 type ImageBlob []byte
@@ -26,11 +30,17 @@ func LoadImage(filename string) (blob ImageBlob, err error) {
 
 // Return binary ImageBlob of an image from web.
 func LoadImageWeb(url string) (blob ImageBlob, err error){
+    
     resp, err := http.Get(url);
+    defer resp.Body.Close()
     if err != nil {
 	return
     }
-    defer resp.Body.Close()
+    
+    if resp.StatusCode != 200 {
+        err = errors.New(fmt.Sprintf("Couldn't load image. Server returned %i", resp.StatusCode))
+        return
+    }
 
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
