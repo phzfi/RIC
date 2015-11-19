@@ -3,24 +3,24 @@ Date & Time,Trans,Elap Time,Data Trans,Resp Time,Trans Rate,Throughput,Concurren
 "
 ""
 ""
-Roundtrip time,Bytes,Path
+Roundtrip time,Bytes,Path,Response
 2.66,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.67,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.69,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.7,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.72,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.73,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.73,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.73,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.74,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200
 2.74,7841615,"/images/14857596084_b0105b8e88_o.jpg
-"
+",HTTP/1.1 200

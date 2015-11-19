@@ -20,7 +20,7 @@ class TestGenerator(unittest.TestCase):
 
 
     def test_log_reader(self):
-        "lol"
+        ""
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
