@@ -32,8 +32,11 @@ logging.basicConfig(filename='Report_Generator_error.log',
 def main():    
     text_directory = 'textLogs' 
     csv_directory = 'csvFiles'
-    logs = read_log('log.txt')
+    logs = read_log('siege.log')
     
+    if len(logs) == 0:
+        logging.critical('siege.log is empty.')
+        sys.exit(1)
     
     try:
         text_dir_list = os.listdir(text_directory)
@@ -52,10 +55,10 @@ def main():
         if basename in logs:    
             data = read_text(os.path.join(text_directory, filename))
             save_to_csv(os.path.join(csv_directory, basename) + '.csv', data, logs[basename])
-        try:
-            os.remove(os.path.join(text_directory, filename))
-        except OSError as o:
-            logging.error(str(o) + ' while attempting to remove: ' + filename)
+    try:
+        os.remove(os.path.join(text_directory, filename))
+    except OSError as o:
+        logging.error(str(o) + ' while attempting to remove: ' + filename)
 
 
 def read_log(path):
@@ -79,10 +82,11 @@ def read_log(path):
                 """
                 timestamp = splitted[0].replace(':','.').strip()
                 if timestamp != 'Date & Time':
-                    timestamp_map[timestamp] = splitted 
+                    timestamp_map[timestamp] = [x.strip() for x in splitted] 
            
     except OSError as o:
-        logging.error(str(o) + ' while reading log at: ' + path)
+        logging.critical(str(o) + ' while reading log at: ' + path)
+        sys.exit(1)
     except Exception as e:
         logging.critical(str(e) + ' while reading log at: ' + path)
         sys.exit(1)
@@ -107,7 +111,7 @@ def read_text(path):
                     server_response, transfer_data, image_path = line.split('  ')
                     transfer_data = transfer_data.strip()
                     roundtrip_time, _, byte_data, _, _, _ = transfer_data.split(' ')
-                    values.append([float(roundtrip_time), int(byte_data), image_path, server_response.strip()])
+                    values.append([float(roundtrip_time), int(byte_data), image_path.strip(), server_response.strip()])
                 except ValueError as v:
                     logging.error(str(v) + ' in the following line: ' + line)
 
