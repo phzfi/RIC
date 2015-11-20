@@ -19,6 +19,10 @@ func TestResize3(t *testing.T) {
 	doTest(t, "toresize.jpg", "resized_bad.jpg", false)
 }
 
+func TestResizeWebp1(t *testing.T) {
+	doTest(t, "toresizeWebp1.webp", "resizedWebp1.webp", true)
+}
+
 func doTest(t *testing.T, to_resize_fn, resized_fn string, should_pass bool) {
 	const tolerance = 0.002
 
