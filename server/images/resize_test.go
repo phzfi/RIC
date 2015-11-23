@@ -67,7 +67,7 @@ func GetDistortion(filename, filename_cmp string) (distortion float64, err error
 
 	mw.ReadImageBlob(resized.ToBlob())
 
-        trash, distortion := mw.CompareImages(mw_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
+	trash, distortion := mw.CompareImages(mw_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
 	trash.Destroy()
 
 	err = mw.WriteImage(filepath.FromSlash("../testresults/resize/" + filename))

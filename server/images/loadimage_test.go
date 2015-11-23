@@ -3,10 +3,10 @@ package images
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"github.com/joonazan/imagick/imagick"
 	"path/filepath"
 	"testing"
-	"github.com/joonazan/imagick/imagick"
-        "fmt"
 )
 
 const LOAD_IMAGE_FOLDER = "../testimages/loadimage/"
@@ -35,16 +35,16 @@ func CompareBlobToImage(blob_base64 string, filename string) error {
 	if err != nil {
 		return errors.New("LoadImage failed: " + err.Error())
 	}
-        
-        img_cmp := imagick.NewMagickWand()
-        img_cmp.ReadImageBlob(blob_cmp)
-        trash, distortion := img.CompareImages(img_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
-        trash.Destroy()
+
+	img_cmp := imagick.NewMagickWand()
+	img_cmp.ReadImageBlob(blob_cmp)
+	trash, distortion := img.CompareImages(img_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
+	trash.Destroy()
 
 	const tolerance = 0.0002
 	if distortion > tolerance {
-            return errors.New(fmt.Sprintf("Image load failed. Distortion: %f, Tolerance: %f", distortion, tolerance))
+		return errors.New(fmt.Sprintf("Image load failed. Distortion: %f, Tolerance: %f", distortion, tolerance))
 	}
 
-        return nil
+	return nil
 }
