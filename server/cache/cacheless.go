@@ -16,11 +16,14 @@ type Cacheless struct {
 // Get the image with the desired size. Size params can be nil if the
 // original is desired.
 func (self *Cacheless) GetImage(filename string, width *uint, height *uint) (blob images.ImageBlob, err error) {
+
+        var image images.Image
+
 	for _, root := range self.Roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
 		trial := root + filename
-
-		blob, err = images.LoadImage(trial)
+                
+                image, err = images.LoadImage(trial)
 		if err == nil {
 			log.Println("Found: " + trial)
 			break
@@ -39,10 +42,11 @@ func (self *Cacheless) GetImage(filename string, width *uint, height *uint) (blo
 		wx := strconv.FormatUint(uint64(*width), 10)
 		wy := strconv.FormatUint(uint64(*height), 10)
 		log.Println("Resize to: " + wx + "x" + wy)
-		blob, err = blob.Resized(*width, *height)
+                image, err = image.Resized(*width, *height)
 		if err != nil {
 			return nil, err
 		}
+                blob = image.ToBlob()
 	}
 	return blob, nil
 }

@@ -2,15 +2,15 @@ package images
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 )
 
-// Imageblob is just an image file dumped, byte by byte to an byte array.
-type ImageBlob []byte
-
 // Returns binary ImageBlob of an image.
-func LoadImage(filename string) (blob ImageBlob, err error) {
-	blob = nil
+func LoadImage(filename string) (img Image, err error) {
 
 	reader, err := os.Open(filename)
 	if err != nil {
@@ -20,13 +20,40 @@ func LoadImage(filename string) (blob ImageBlob, err error) {
 	defer reader.Close()
 
 	buffer := bytes.NewBuffer([]byte{})
-
-	// Remember to check for errors
 	_, err = buffer.ReadFrom(reader)
 	if err != nil {
 		return
 	}
+	blob := ImageBlob(buffer.Bytes())
 
-	blob = ImageBlob(buffer.Bytes())
+	img = NewImage()
+	err = img.ReadImageBlob(blob)
+	return
+}
+
+// Return binary ImageBlob of an image from web.
+func LoadImageWeb(url string) (image Image, err error) {
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		err = errors.New(fmt.Sprintf("Couldn't load image. Server returned %i", resp.StatusCode))
+		return
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	blob := body
+
+	image = NewImage()
+	err = image.ReadImageBlob(blob)
+
 	return
 }
