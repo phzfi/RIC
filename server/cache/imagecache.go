@@ -10,5 +10,3 @@ type ImageCache interface {
 	AddRoot(string) error
 	RemoveRoot(string) error
 }
-
-

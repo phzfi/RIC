@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-
 // MyHandler type is used to encompass HandlerFunc interface.
 // In the future this type will probably contain pointers to
 // services provided by this program (image cache).
@@ -147,7 +146,7 @@ func NewServer() (*graceful.Server, *MyHandler) {
 	// Configure handler
 	handler := &MyHandler{
 		requests: 0,
-		images: cacher,
+		images:   cacher,
 	}
 
 	// Configure server
