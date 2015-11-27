@@ -1,0 +1,11 @@
+#imdiv {
+  margin: 10px auto 0 auto;
+  width: 95%;
+  background-color: gray;
+  border-style: solid;
+}
+
+#buttondiv {
+  width: 95%;
+  margin: 10px auto 0 auto;
+}

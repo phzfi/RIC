@@ -1,45 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script type="text/javascript">
-    document.write(screen.width + "x" + screen.height);
-    document.write("<br>")
-    document.write(window.devicePixelRatio);
-    document.write("<br>");
-
-    // Select proper img based on device screen properties
-    function setImg() {
-      /*
-      var dpr = window.devicePixelRatio;
-      var s = "10";
-      var m = Math.min(screen.width, screen.height);
-      if (m < 500)
-        s = s + "small";
-      else if (m < 1000)
-        s = s + "medium";
-      else if (m < 1100)
-        s = s + "large";
-      else
-        ;
-      s = s + ".jpg";
-
-      document.getElementById("I").src = s;
-      */
-    }
-  </script>
-  <style>
-    img { width: 100%; }
-  </style>
+  <script src="test.js"></script>
+  <link rel="stylesheet" href="test.css"></style>
 </head>
-<body onload="setImg()">
-  <!-- use empty img-tag to prevent preloading images -->
-  <!-- <img id="I">-->
-
-  <!-- For now, just show all different images -->
-  <img src="10xsmall.jpg">
-  <img src="10small.jpg">
-  <img src="10medium.jpg">
-  <img src="10large.jpg">
-  <img src="10.jpg">
+<body>
+  <div id="infodiv">
+  </div>
+  <div id="buttondiv">
+    <button id="01" onclick="buttonf(this)">01.jpg</button>
+    <button id="02" onclick="buttonf(this)">02.jpg</button>
+    <button id="03" onclick="buttonf(this)">03.jpg</button>
+    <button id="04" onclick="buttonf(this)">04.jpg</button>
+    <button id="05" onclick="buttonf(this)">05.jpg</button>
+  </div>
+  <div id="imdiv">
+    <img id="I">
+  </div>
 </body>
 </html>
