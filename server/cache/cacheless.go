@@ -27,12 +27,12 @@ func (self *Cacheless) GetImage(filename string, width, height uint) (blob image
 			break
 		}
 		if !os.IsNotExist(err) {
-			return nil, err
+			return
 		}
 		log.Println("Not found: " + trial)
 	}
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	wx := strconv.FormatUint(uint64(width), 10)
@@ -40,11 +40,11 @@ func (self *Cacheless) GetImage(filename string, width, height uint) (blob image
 	log.Println("Resize to: " + wx + "x" + wy)
 	image, err = image.Resized(width, height)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	blob = image.ToBlob()
-	return blob, nil
+	return
 }
 
 // A very trivial (and inefficient way to handle roots)

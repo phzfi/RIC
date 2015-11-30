@@ -21,6 +21,7 @@ type CacheRecent struct {
 	maxMemory, currentMemory uint
 }
 
+// Takes the maximum size of the cache in bytes
 func NewCacherecent(mm uint) *CacheRecent {
 	return &CacheRecent{maxMemory: mm}
 }
@@ -29,7 +30,7 @@ func (c *CacheRecent) GetImage(filename string, width, height uint) (images.Imag
 
 	info := imageInfo{filename, width, height}
 
-	if blob, ok := c.blobs[info]; !ok {
+	if blob, ok := c.blobs[info]; ok {
 		return blob, nil
 	}
 
