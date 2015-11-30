@@ -24,7 +24,7 @@ func init() {
 func TestNormalOperation(t_in *testing.T) {
 	t := T{t_in}
 
-	// 550MB cache
+	// 500MB cache
 	cache := NewCacherecent(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
@@ -42,7 +42,7 @@ func TestNormalOperation(t_in *testing.T) {
 func TestCache(t_in *testing.T) {
 	t := T{t_in}
 
-	// 550MB cache
+	// 500MB cache
 	cache := NewCacherecent(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
@@ -53,6 +53,7 @@ func TestCache(t_in *testing.T) {
 	_, err = cache.GetImage("toserve.jpg", 104, 10)
 	t.FatalIfError(err)
 
+	// root is removed to verify that the image is not read from disk
 	t.FatalIfError(cache.RemoveRoot(path))
 
 	_, err = cache.GetImage("toserve.jpg", 10, 10)
@@ -62,7 +63,7 @@ func TestCache(t_in *testing.T) {
 func TestError(t_in *testing.T) {
 	t := T{t_in}
 
-	// 550MB cache
+	// 500MB cache
 	cache := NewCacherecent(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
@@ -71,4 +72,41 @@ func TestError(t_in *testing.T) {
 	if err == nil {
 		t.Fatal("No error, although querying nonexistent image.")
 	}
+}
+
+func TestCacheExit(t_in *testing.T) {
+	t := T{t_in}
+
+	// 50kB cache
+	cache := NewCacherecent(50 * 1024)
+
+	t.FatalIfError(cache.AddRoot(path))
+
+	for i := 0; i < 3; i++{
+		cache.GetImage("toserve.jpg", uint(100 - i), 100)
+	}
+
+	t.FatalIfError(cache.RemoveRoot(path))
+
+	_, err := cache.GetImage("toserve.jpg", 100, 100)
+	if err == nil {
+		t.Fatal("No error, although querying image that should not be in cache.")
+	}
+}
+
+func TestNoMemory(t_in *testing.T) {
+	t := T{t_in}
+
+	cache := NewCacherecent(0)
+
+	t.FatalIfError(cache.AddRoot(path))
+
+	_, err := cache.GetImage("toserve.jpg", 10, 10)
+	t.FatalIfError(err)
+
+	_, err = cache.GetImage("toserve.jpg", 104, 10)
+	t.FatalIfError(err)
+
+	_, err = cache.GetImage("toserve.jpg", 10, 10)
+	t.FatalIfError(err)
 }

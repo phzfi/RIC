@@ -35,6 +35,8 @@ func (self *Cacheless) GetImage(filename string, width, height uint) (blob image
 		return
 	}
 
+	defer image.Destroy()
+
 	wx := strconv.FormatUint(uint64(width), 10)
 	wy := strconv.FormatUint(uint64(height), 10)
 	log.Println("Resize to: " + wx + "x" + wy)
