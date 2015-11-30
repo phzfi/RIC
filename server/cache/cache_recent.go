@@ -1,8 +1,11 @@
 package cache
 
-import "github.com/phzfi/RIC/server/images"
+import (
+	"github.com/phzfi/RIC/server/images"
+	"sync"
+)
 
-type imageinfo struct {
+type imageInfo struct {
 	name          string
 	width, height uint
 }
@@ -10,22 +13,64 @@ type imageinfo struct {
 type CacheRecent struct {
 	Cacheless
 
-	blobs map[imageinfo]images.ImageBlob
+	sync.Mutex
+
+	blobs map[imageInfo]images.ImageBlob
+
+	deletionQueue            imageInfoQueue
+	maxMemory, currentMemory uint
+}
+
+func NewCacherecent(mm uint) *CacheRecent {
+	return &CacheRecent{maxMemory: mm}
 }
 
 func (c *CacheRecent) GetImage(filename string, width, height uint) (images.ImageBlob, error) {
 
-	info := imageinfo{filename, width, height}
+	info := imageInfo{filename, width, height}
 
-	if blob, ok := c.blobs[info]; ok {
+	if blob, ok := c.blobs[info]; !ok {
 		return blob, nil
 	}
 
+	// TODO: Prevent scenario where requesting the same imageinfo simultaneously leads to the image being resized many times.
 	blob, err := c.Cacheless.GetImage(filename, width, height)
-
 	if err == nil {
-		c.blobs[info] = blob
+		c.addBlob(info, blob)
 	}
 
 	return blob, err
+}
+
+func (c *CacheRecent) addBlob(info imageInfo, blob images.ImageBlob) {
+
+	// This is the only point where the cache is mutated, and therefore can't run in parallel.
+	// GetImage can be run in parallel even during this operation due map being thread safe.
+	c.Lock()
+	defer c.Unlock()
+
+	if _, ok := c.blobs[info]; ok {
+		return
+	}
+
+	size := uint(len(blob))
+
+	if size > c.maxMemory {
+		return
+	}
+
+	for c.currentMemory+size > c.maxMemory {
+		c.deleteOldest()
+	}
+
+	c.blobs[info] = blob
+	c.deletionQueue.Push(info)
+}
+
+func (c *CacheRecent) deleteOldest() {
+
+	to_delete := c.deletionQueue.Pop()
+
+	c.currentMemory -= uint(len(c.blobs[to_delete]))
+	delete(c.blobs, to_delete)
 }
