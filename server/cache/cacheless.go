@@ -15,8 +15,19 @@ type Cacheless struct {
 
 // Get the image with the desired size. Size params can be nil if the
 // original is desired.
-func (self *Cacheless) GetImage(filename string, width *uint, height *uint) (blob images.ImageBlob, err error) {
+func (c *Cacheless) GetImage(filename string, width *uint, height *uint) (blob images.ImageBlob, err error) {
 
+	// TODO: do something if width or height is unknown
+	if width == nil || height == nil {
+		return nil, errors.New("Unspecified image size not supported.")
+	}
+
+	blob, err = c.getImage(filename, *width, *height)
+	return
+}
+
+// Get image whose dimensions are known.
+func (self *Cacheless) getImage(filename string, width, height uint) (blob images.ImageBlob, err error) {
 	var image images.Image
 
 	for _, root := range self.Roots {
@@ -37,16 +48,14 @@ func (self *Cacheless) GetImage(filename string, width *uint, height *uint) (blo
 		return nil, err
 	}
 
-	// TODO: If only one is set?
-	if width != nil && height != nil {
-		wx := strconv.FormatUint(uint64(*width), 10)
-		wy := strconv.FormatUint(uint64(*height), 10)
-		log.Println("Resize to: " + wx + "x" + wy)
-		image, err = image.Resized(*width, *height)
-		if err != nil {
-			return nil, err
-		}
+	wx := strconv.FormatUint(uint64(width), 10)
+	wy := strconv.FormatUint(uint64(height), 10)
+	log.Println("Resize to: " + wx + "x" + wy)
+	image, err = image.Resized(width, height)
+	if err != nil {
+		return nil, err
 	}
+
 	blob = image.ToBlob()
 	return blob, nil
 }
