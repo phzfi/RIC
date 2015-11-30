@@ -82,8 +82,10 @@ func TestCacheExit(t_in *testing.T) {
 
 	t.FatalIfError(cache.AddRoot(path))
 
-	for i := 0; i < 3; i++{
-		cache.GetImage("toserve.jpg", uint(100 - i), 100)
+	for i := 0; i < 6; i++{
+		_, err := cache.GetImage("toserve.jpg", uint(100 - i), 100)
+		t.FatalIfError(err)
+		println(cache.currentMemory)
 	}
 
 	t.FatalIfError(cache.RemoveRoot(path))

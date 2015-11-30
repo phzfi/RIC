@@ -17,6 +17,11 @@ type Cacheless struct {
 func (self *Cacheless) GetImage(filename string, width, height uint) (blob images.ImageBlob, err error) {
 	var image images.Image
 
+	if len(self.Roots) == 0{
+		err = os.ErrNotExist
+		return
+	}
+
 	for _, root := range self.Roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
 		trial := filepath.Join(root, filename)

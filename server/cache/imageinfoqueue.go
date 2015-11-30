@@ -2,16 +2,16 @@ package cache
 
 type imageInfoQueue struct {
 	data       []imageInfo
-	head, tail uint
+	head, tail int
 }
 
 func (q *imageInfoQueue) Push(info imageInfo) {
 
-	if size, arraySize := q.Len(), uint(len(q.data)); size == arraySize {
+	if size, arraySize := q.Len(), len(q.data); size + 2 > arraySize {
 
 		new_data := make([]imageInfo, (size+1)*2)
 
-		for i := uint(0); i < size; i++ {
+		for i := 0; i < size; i++ {
 			new_data[i] = q.data[(q.head+i)%arraySize]
 		}
 		q.data = new_data
@@ -21,7 +21,7 @@ func (q *imageInfoQueue) Push(info imageInfo) {
 
 	q.data[q.tail] = info
 	q.tail++
-	q.tail %= uint(len(q.data))
+	q.tail %= len(q.data)
 }
 
 func (q *imageInfoQueue) Pop() (info imageInfo) {
@@ -32,15 +32,15 @@ func (q *imageInfoQueue) Pop() (info imageInfo) {
 
 	info = q.data[q.head]
 	q.head++
-	q.head %= uint(len(q.data))
+	q.head %= len(q.data)
 
 	return
 }
 
-func (q imageInfoQueue) Len() uint {
+func (q imageInfoQueue) Len() int {
 	size := q.tail - q.head
 	if size < 0 {
-		return uint(len(q.data)) - size
+		return len(q.data) + size
 	}
 	return size
 }

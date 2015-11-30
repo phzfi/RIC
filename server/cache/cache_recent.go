@@ -65,6 +65,7 @@ func (c *CacheRecent) addBlob(info imageInfo, blob images.ImageBlob) {
 	}
 
 	c.blobs[info] = blob
+	c.currentMemory += uint(len(blob))
 	c.deletionQueue.Push(info)
 }
 
