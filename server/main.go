@@ -23,7 +23,6 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	// ImageCache
 	images cache.ImageCache
 }
 
@@ -34,7 +33,7 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 	method := request.Method
 
 	// In the future we can use requester can detect request spammers!
-	// requester := (*request).RemoteAddr
+	// requester := request.RemoteAddr
 
 	// Increase request count
 	count := &(h.requests)
@@ -45,21 +44,19 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 		// GET an image by name
 		req := request.URL
 
-		// Get the filename
 		filename := req.Path
 
 		// Get parameters
 		query := req.Query()
 
 		// Extract width and height if needed
-		var width *uint = nil
-		var height *uint = nil
+		var width, height *uint
+
 		if len(query) > 0 {
 			strw, ok := query["width"]
 			if ok && len(strw) > 0 {
 				intw, err := strconv.ParseUint(strw[0], 10, 32)
 				if err == nil {
-					width = new(uint)
 					*width = uint(intw)
 				}
 				// For now, silent error if !ok
@@ -68,14 +65,12 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 			if ok && len(strh) > 0 {
 				inth, err := strconv.ParseUint(strh[0], 10, 32)
 				if err == nil {
-					height = new(uint)
 					*height = uint(inth)
 				}
 				// For now, silent error if !ok
 			}
 		}
 
-		// Get the image
 		h.RetrieveImage(writer, filename, width, height)
 
 	} else if method == "POST" {
