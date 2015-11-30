@@ -23,7 +23,7 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	images cache.ImageCache
+	images cache.AmbiguousSizeImageCache
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -109,7 +109,7 @@ func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 // This does not run the server however.
 func NewServer() (*graceful.Server, *MyHandler) {
 	// No cache (will be implemented in later sprints)
-	cacher := &cache.Cacheless{}
+	cacher := cache.AmbiguousSizeImageCache{&cache.Cacheless{}}
 
 	// Add roots
 	// TODO: This must be externalized outside the source code.
@@ -119,11 +119,6 @@ func NewServer() (*graceful.Server, *MyHandler) {
 
 	if cacher.AddRoot(".") != nil {
 		log.Println("Root not added .")
-	}
-
-	// Root count
-	if len(cacher.Roots) != 2 {
-		log.Fatal("All roots not added")
 	}
 
 	// Configure handler

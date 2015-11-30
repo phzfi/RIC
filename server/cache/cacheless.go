@@ -13,21 +13,8 @@ type Cacheless struct {
 	Roots []string
 }
 
-// Get the image with the desired size. Size params can be nil if the
-// original is desired.
-func (c *Cacheless) GetImage(filename string, width *uint, height *uint) (blob images.ImageBlob, err error) {
-
-	// TODO: do something if width or height is unknown
-	if width == nil || height == nil {
-		return nil, errors.New("Unspecified image size not supported.")
-	}
-
-	blob, err = c.getImage(filename, *width, *height)
-	return
-}
-
 // Get image whose dimensions are known.
-func (self *Cacheless) getImage(filename string, width, height uint) (blob images.ImageBlob, err error) {
+func (self *Cacheless) GetImage(filename string, width, height uint) (blob images.ImageBlob, err error) {
 	var image images.Image
 
 	for _, root := range self.Roots {
