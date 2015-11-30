@@ -19,7 +19,7 @@ func (self *Cacheless) GetImage(filename string, width, height uint) (blob image
 
 	for _, root := range self.Roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
-		trial := root + filename
+		trial := filepath.Join(root, filename)
 
 		image, err = images.LoadImage(trial)
 		if err == nil {
