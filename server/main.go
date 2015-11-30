@@ -39,44 +39,33 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 	count := &(h.requests)
 	atomic.AddUint64(count, 1)
 
-	// SPLIT on method
 	if method == "GET" {
-		// GET an image by name
-		req := request.URL
 
-		filename := req.Path
+		url := request.URL
+		filename := url.Path
 
-		// Get parameters
-		query := req.Query()
+		// GET parameters
+		query := url.Query()
 
-		// Extract width and height if needed
-		var width, height *uint
-
-		if len(query) > 0 {
-			strw, ok := query["width"]
-			if ok && len(strw) > 0 {
-				intw, err := strconv.ParseUint(strw[0], 10, 32)
-				if err == nil {
-					*width = uint(intw)
-				}
-				// For now, silent error if !ok
-			}
-			strh, ok := query["height"]
-			if ok && len(strh) > 0 {
-				inth, err := strconv.ParseUint(strh[0], 10, 32)
-				if err == nil {
-					*height = uint(inth)
-				}
-				// For now, silent error if !ok
-			}
-		}
-
-		h.RetrieveImage(writer, filename, width, height)
+		h.RetrieveImage(writer, filename, getIntParam(query, "width"), getIntParam(query, "height"))
 
 	} else if method == "POST" {
 		// POST is currently unused so we can use this for testing
 		h.RetrieveHello(writer)
 	}
+}
+
+func getIntParam(params map[string][]string, name string) (result *uint) {
+
+	strw, ok := params["width"]
+	if ok && len(strw) > 0 {
+		intw, err := strconv.ParseUint(strw[0], 10, 32)
+		if err == nil {
+			*result = uint(intw)
+		}
+		// For now, silent error if param is not set
+	}
+	return
 }
 
 // Respond to POST message by saying Hello
