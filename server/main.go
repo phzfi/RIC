@@ -47,7 +47,7 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 		// GET parameters
 		query := url.Query()
 
-		h.RetrieveImage(writer, filename, getIntParam(query, "width"), getIntParam(query, "height"))
+		h.RetrieveImage(writer, filename, getUintParam(query, "width"), getUintParam(query, "height"))
 
 	} else if method == "POST" {
 		// POST is currently unused so we can use this for testing
@@ -55,15 +55,14 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 	}
 }
 
-func getIntParam(params map[string][]string, name string) (result *uint) {
+// Returns a request parameter as *uint; nil if the parameter is not properly specified.
+func getUintParam(params map[string][]string, name string) (result *uint) {
 
-	strw, ok := params["width"]
-	if ok && len(strw) > 0 {
-		intw, err := strconv.ParseUint(strw[0], 10, 32)
+	if values := params["width"]; len(values) != 0 {
+		asUint, err := strconv.ParseUint(values[0], 10, 32)
 		if err == nil {
-			*result = uint(intw)
+			*result = uint(asUint)
 		}
-		// For now, silent error if param is not set
 	}
 	return
 }
