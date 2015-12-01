@@ -25,7 +25,7 @@ func TestNormalOperation(t_in *testing.T) {
 	t := T{t_in}
 
 	// 500MB cache
-	cache := NewCacherecent(500 * 1024 * 1024)
+	cache := NewFIFO(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
@@ -43,7 +43,7 @@ func TestCache(t_in *testing.T) {
 	t := T{t_in}
 
 	// 500MB cache
-	cache := NewCacherecent(500 * 1024 * 1024)
+	cache := NewFIFO(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
@@ -64,7 +64,7 @@ func TestError(t_in *testing.T) {
 	t := T{t_in}
 
 	// 500MB cache
-	cache := NewCacherecent(500 * 1024 * 1024)
+	cache := NewFIFO(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
@@ -78,12 +78,12 @@ func TestCacheExit(t_in *testing.T) {
 	t := T{t_in}
 
 	// 50kB cache
-	cache := NewCacherecent(50 * 1024)
+	cache := NewFIFO(50 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
-	for i := 0; i < 6; i++{
-		_, err := cache.GetImage("toserve.jpg", uint(100 - i), 100)
+	for i := 0; i < 6; i++ {
+		_, err := cache.GetImage("toserve.jpg", uint(100-i), 100)
 		t.FatalIfError(err)
 		println(cache.currentMemory)
 	}
@@ -99,7 +99,7 @@ func TestCacheExit(t_in *testing.T) {
 func TestNoMemory(t_in *testing.T) {
 	t := T{t_in}
 
-	cache := NewCacherecent(0)
+	cache := NewFIFO(0)
 
 	t.FatalIfError(cache.AddRoot(path))
 

@@ -108,8 +108,8 @@ func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 // Create a new graceful server and configure it.
 // This does not run the server however.
 func NewServer() (*graceful.Server, *MyHandler) {
-	// No cache (will be implemented in later sprints)
-	cacher := cache.AmbiguousSizeImageCache{&cache.CacheRecent{}}
+
+	cacher := cache.AmbiguousSizeImageCache{cache.NewFIFO(500 * 1024 * 1024)}
 
 	// Add roots
 	// TODO: This must be externalized outside the source code.
