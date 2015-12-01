@@ -21,9 +21,18 @@ func init() {
 	path = filepath.FromSlash("../testimages/cache")
 }
 
-func TestNormalOperation(t_in *testing.T) {
+func RunTests(policy func(uint) *Cache, t_in *testing.T) {
+
 	t := T{t_in}
 
+	normalOperation(t)
+	cache(t)
+	errorTest(t)
+	cacheExit(t)
+	noMemory(t)
+}
+
+func normalOperation(t T) {
 	// 500MB cache
 	cache := NewFIFO(500 * 1024 * 1024)
 
@@ -39,9 +48,7 @@ func TestNormalOperation(t_in *testing.T) {
 	t.FatalIfError(err)
 }
 
-func TestCache(t_in *testing.T) {
-	t := T{t_in}
-
+func cache(t T) {
 	// 500MB cache
 	cache := NewFIFO(500 * 1024 * 1024)
 
@@ -60,9 +67,7 @@ func TestCache(t_in *testing.T) {
 	t.FatalIfError(err)
 }
 
-func TestError(t_in *testing.T) {
-	t := T{t_in}
-
+func errorTest(t T) {
 	// 500MB cache
 	cache := NewFIFO(500 * 1024 * 1024)
 
@@ -74,9 +79,7 @@ func TestError(t_in *testing.T) {
 	}
 }
 
-func TestCacheExit(t_in *testing.T) {
-	t := T{t_in}
-
+func cacheExit(t T) {
 	// 50kB cache
 	cache := NewFIFO(50 * 1024)
 
@@ -96,9 +99,7 @@ func TestCacheExit(t_in *testing.T) {
 	}
 }
 
-func TestNoMemory(t_in *testing.T) {
-	t := T{t_in}
-
+func noMemory(t T) {
 	cache := NewFIFO(0)
 
 	t.FatalIfError(cache.AddRoot(path))

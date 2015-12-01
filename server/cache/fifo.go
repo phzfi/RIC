@@ -1,12 +1,12 @@
 package cache
 
+func NewFIFO(mm uint) *Cache {
+	return New(&FIFO{}, mm)
+}
+
 type FIFO struct {
 	data       []ImageInfo
 	head, tail int
-}
-
-func NewFIFO(mm uint) *Cache {
-	return New(&FIFO{}, mm)
 }
 
 func (q *FIFO) Visit(_ ImageInfo) {}
