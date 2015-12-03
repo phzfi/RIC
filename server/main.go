@@ -58,10 +58,11 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 // Returns a request parameter as *uint; nil if the parameter is not properly specified.
 func getUintParam(params map[string][]string, name string) (result *uint) {
 
-	if values := params["width"]; len(values) != 0 {
+	if values := params[name]; len(values) != 0 {
 		asUint, err := strconv.ParseUint(values[0], 10, 32)
 		if err == nil {
-			*result = uint(asUint)
+			u := uint(asUint)
+			result = &u
 		}
 	}
 	return
