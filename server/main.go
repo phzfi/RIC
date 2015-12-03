@@ -61,7 +61,7 @@ func getUintParam(params map[string][]string, name string) (result *uint) {
 	if values := params[name]; len(values) != 0 {
 		asUint, err := strconv.ParseUint(values[0], 10, 32)
 		if err == nil {
-                        val := uint(asUint)
+			val := uint(asUint)
 			result = &val
 		}
 	}
