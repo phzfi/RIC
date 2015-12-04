@@ -23,8 +23,7 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	// ImageCache
-	images cache.ImageCache
+	images cache.AmbiguousSizeImageCache
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -34,54 +33,39 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 	method := request.Method
 
 	// In the future we can use requester can detect request spammers!
-	// requester := (*request).RemoteAddr
+	// requester := request.RemoteAddr
 
 	// Increase request count
 	count := &(h.requests)
 	atomic.AddUint64(count, 1)
 
-	// SPLIT on method
 	if method == "GET" {
-		// GET an image by name
-		req := request.URL
 
-		// Get the filename
-		filename := req.Path
+		url := request.URL
+		filename := url.Path
 
-		// Get parameters
-		query := req.Query()
+		// GET parameters
+		query := url.Query()
 
-		// Extract width and height if needed
-		var width *uint = nil
-		var height *uint = nil
-		if len(query) > 0 {
-			strw, ok := query["width"]
-			if ok && len(strw) > 0 {
-				intw, err := strconv.ParseUint(strw[0], 10, 32)
-				if err == nil {
-					width = new(uint)
-					*width = uint(intw)
-				}
-				// For now, silent error if !ok
-			}
-			strh, ok := query["height"]
-			if ok && len(strh) > 0 {
-				inth, err := strconv.ParseUint(strh[0], 10, 32)
-				if err == nil {
-					height = new(uint)
-					*height = uint(inth)
-				}
-				// For now, silent error if !ok
-			}
-		}
-
-		// Get the image
-		h.RetrieveImage(writer, filename, width, height)
+		h.RetrieveImage(writer, filename, getUintParam(query, "width"), getUintParam(query, "height"))
 
 	} else if method == "POST" {
 		// POST is currently unused so we can use this for testing
 		h.RetrieveHello(writer)
 	}
+}
+
+// Returns a request parameter as *uint; nil if the parameter is not properly specified.
+func getUintParam(params map[string][]string, name string) (result *uint) {
+
+	if values := params[name]; len(values) != 0 {
+		asUint, err := strconv.ParseUint(values[0], 10, 32)
+		if err == nil {
+			u := uint(asUint)
+			result = &u
+		}
+	}
+	return
 }
 
 // Respond to POST message by saying Hello
@@ -125,8 +109,8 @@ func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 // Create a new graceful server and configure it.
 // This does not run the server however.
 func NewServer() (*graceful.Server, *MyHandler) {
-	// No cache (will be implemented in later sprints)
-	cacher := &cache.Cacheless{}
+
+	cacher := cache.AmbiguousSizeImageCache{cache.NewLRU(500 * 1024 * 1024)}
 
 	// Add roots
 	// TODO: This must be externalized outside the source code.
@@ -136,11 +120,6 @@ func NewServer() (*graceful.Server, *MyHandler) {
 
 	if cacher.AddRoot(".") != nil {
 		log.Println("Root not added .")
-	}
-
-	// Root count
-	if len(cacher.Roots) != 2 {
-		log.Fatal("All roots not added")
 	}
 
 	// Configure handler
