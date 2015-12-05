@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/logging"
 	"gopkg.in/tylerb/graceful.v1"
@@ -110,7 +111,10 @@ func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 // This does not run the server however.
 func NewServer() (*graceful.Server, *MyHandler) {
 
-	cacher := cache.AmbiguousSizeImageCache{cache.NewLRU(500 * 1024 * 1024)}
+	mem := flag.Uint("m", 500*1024*1024, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
+	flag.Parse()
+
+	cacher := cache.AmbiguousSizeImageCache{cache.NewLRU(*mem)}
 
 	// Add roots
 	// TODO: This must be externalized outside the source code.
