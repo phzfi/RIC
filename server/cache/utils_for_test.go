@@ -21,7 +21,7 @@ func init() {
 	path = filepath.FromSlash("../testimages/cache")
 }
 
-func RunTests(policy func(uint) *Cache, t_in *testing.T) {
+func RunTests(policy func(uint64) *Cache, t_in *testing.T) {
 
 	t := T{t_in}
 

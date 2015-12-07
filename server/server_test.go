@@ -2,15 +2,15 @@ package main
 
 import (
 	"bytes"
+	"errors"
+	"github.com/joonazan/imagick/imagick"
+	"github.com/phzfi/RIC/server/images"
 	"gopkg.in/tylerb/graceful.v1"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"testing"
 	"time"
-	"github.com/joonazan/imagick/imagick"
-	"github.com/phzfi/RIC/server/images"
-	"path/filepath"
-	"errors"
 )
 
 // This is an utility function to launch a graceful server.
@@ -24,7 +24,7 @@ func startServer(errors chan<- error, server *graceful.Server) {
 // raise any exceptions or errors. This also starts and stops
 // a web server instance for the duration of the test.
 func TestHello(test *testing.T) {
-	server, _ := NewServer()
+	server, _ := NewServer(500000)
 	errors := make(chan error)
 
 	go startServer(errors, server)
@@ -60,12 +60,10 @@ func TestHello(test *testing.T) {
 	}
 }
 
-
-
 // Test that the web server returns requested image at right size
 func TestGetImageFromServer(t *testing.T) {
 	const tolerance = 0.002
-	server, _ := NewServer()
+	server, _ := NewServer(500000)
 	errors := make(chan error)
 
 	go startServer(errors, server)
@@ -87,12 +85,11 @@ func TestGetImageFromServer(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
-	
+
 	if distortion > tolerance {
 		t.Fatal("Bad image returned. Distortion:", distortion, "Tolerance:", tolerance)
 	}
 }
-
 
 func GetDistortion(imageblob images.ImageBlob, filename_cmp string) (distortion float64, err error) {
 	const image_folder = "testimages/server/"
@@ -110,7 +107,6 @@ func GetDistortion(imageblob images.ImageBlob, filename_cmp string) (distortion 
 
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
-
 
 	mw.ReadImageBlob(imageblob)
 
