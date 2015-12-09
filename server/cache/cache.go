@@ -18,7 +18,7 @@ type Cache struct {
 	blobs map[ImageInfo]images.ImageBlob
 
 	policy                   Policy
-	maxMemory, currentMemory uint
+	maxMemory, currentMemory uint64
 }
 
 type Policy interface {
@@ -30,7 +30,7 @@ type Policy interface {
 }
 
 // Takes the caching policy and the maximum size of the cache in bytes.
-func New(policy Policy, mm uint) *Cache {
+func New(policy Policy, mm uint64) *Cache {
 	return &Cache{
 		maxMemory: mm,
 		policy:    policy,
@@ -67,7 +67,7 @@ func (c *Cache) addBlob(info ImageInfo, blob images.ImageBlob) {
 		return
 	}
 
-	size := uint(len(blob))
+	size := uint64(len(blob))
 
 	if size > c.maxMemory {
 		return
@@ -79,7 +79,7 @@ func (c *Cache) addBlob(info ImageInfo, blob images.ImageBlob) {
 
 	c.policy.Push(info)
 
-	c.currentMemory += uint(len(blob))
+	c.currentMemory += uint64(len(blob))
 	c.blobs[info] = blob
 }
 
@@ -87,6 +87,6 @@ func (c *Cache) deleteOldest() {
 
 	to_delete := c.policy.Pop()
 
-	c.currentMemory -= uint(len(c.blobs[to_delete]))
+	c.currentMemory -= uint64(len(c.blobs[to_delete]))
 	delete(c.blobs, to_delete)
 }

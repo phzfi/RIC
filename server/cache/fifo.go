@@ -1,6 +1,6 @@
 package cache
 
-func NewFIFO(mm uint) *Cache {
+func NewFIFO(mm uint64) *Cache {
 	return New(&FIFO{}, mm)
 }
 
