@@ -5,65 +5,37 @@ Created on 5 Nov 2015
 
 """
 import unittest
-import text_to_csv
+import csv_formatter
 
 class TestGenerator(unittest.TestCase):
 
 
-    def test_read_text_correct(self):
+    def test_read_csv_correct(self):
 
-        data = text_to_csv.read_text('testfiles/testtextcorrect.txt')
+        data = csv_formatter.read_csv('testfiles/correct.csv')
 
-        self.assertEqual(len(data), 10, 'data was not correct length')
+        correct_data = [['Date & Time',  'Trans',  'Elap Time',  'Data Trans',
+                         'Resp Time', 'Trans Rate',  'Throughput',  'Concurrent',
+                         'OKAY', 'Failed'],
+                        ['10/12/2015 20:00','49','39.02','26','0.1','1.26','0.67',
+                         '0.13','49','0'],
+                        [''],[''],
+                        ['Round trip time', 'Size', 'Path', 'Response'],
+                        [0.1, 1, 'a', 200], [0.2, 2, 'b', 200],
+                        [0.3, 3, 'c', 200], [0.4, 4, 'd', 200],
+                        [0.5, 5, 'e', 200], [0.6, 6, 'f', 200],
+                        [0.7, 7, 'g', 200], [0.8, 8, 'h', 200]]
 
-        for i in range(9):
-            self.assertEqual(data[i], [float(i), i * 10, 
-                        '/images/14857596084_b0105b8e88_o.jpg', 'HTTP/1.1 200'],
-                        'wrong line value ' + str(i))
+        self.assertEqual(len(data), 13, 'data was not correct length')
 
-    def test_read_text_error(self):
+        for i in range(13):
+            self.assertEqual(data[i], correct_data[i])
 
-        data = text_to_csv.read_text('testfiles/testtexterror.txt')
+    def test_read_csv_incorrect(self):
 
-        self.assertEqual(len(data), 10, 'data was not correct length')
-
-        for i in range(9):
-            self.assertEqual(data[i], [float(i), i * 10,
-                            '/images/14857596084_b0105b8e88_o.jpg', 'HTTP/1.1 200'],
-                            'wrong line value ' + str(i))
-
-    def test_read_text_empty(self):
-
-        data = text_to_csv.read_text('testfiles/testtextempty.txt')
+        data = csv_formatter.read_csv('testfiles/incorrect.csv')
 
         self.assertEqual(len(data), 0, 'data was not empty')
-
-
-    def test_read_log(self):
-
-        data = text_to_csv.read_log('testfiles/testlog.log')
-
-        self.assertEqual(len(data), 3, 'data was not correct length')
-
-        self.assertEqual(data['2015-10-29 16.34.29'],
-                         ['2015-10-29 16:34:29', '400', '24.50', '833',
-                          '0.54', '16.33', '34.00', '8.88', '400', '0'],
-                          'wrong data value 1')
-        self.assertEqual(data['2015-10-29 16.35.45'],
-                        ['2015-10-29 16:35:45', '400', '25.39', '833', 
-                         '0.60', '15.75', '32.81', '9.40', '400', '0'],
-                         'wrong data value 2')
-        self.assertEqual(data['2015-10-29 16.53.23'], 
-                        ['2015-10-29 16:53:23', '400', '23.98', '833',
-                         '0.45', '16.68', '34.74', '7.55', '400', '0'], 
-                         'wrong data value 3')
-
-    def test_read_log_empty(self):
-
-        data = text_to_csv.read_log('testfiles/testlogempty.log')
-
-        self.assertEqual(len(data), 0, 'data was not correct length')
-
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
