@@ -13,15 +13,18 @@ type Cacheless struct {
 	Roots []string
 }
 
-// Get the image with the desired size. Size params can be nil if the
-// original is desired.
-func (self *Cacheless) GetImage(filename string, width *uint, height *uint) (blob images.ImageBlob, err error) {
-
+// Get image whose dimensions are known.
+func (self *Cacheless) GetImage(filename string, width, height uint) (blob images.ImageBlob, err error) {
 	var image images.Image
+
+	if len(self.Roots) == 0 {
+		err = os.ErrNotExist
+		return
+	}
 
 	for _, root := range self.Roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
-		trial := root + filename
+		trial := filepath.Join(root, filename)
 
 		image, err = images.LoadImage(trial)
 		if err == nil {
@@ -29,26 +32,26 @@ func (self *Cacheless) GetImage(filename string, width *uint, height *uint) (blo
 			break
 		}
 		if !os.IsNotExist(err) {
-			return nil, err
+			return
 		}
 		log.Println("Not found: " + trial)
 	}
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	// TODO: If only one is set?
-	if width != nil && height != nil {
-		wx := strconv.FormatUint(uint64(*width), 10)
-		wy := strconv.FormatUint(uint64(*height), 10)
-		log.Println("Resize to: " + wx + "x" + wy)
-		image, err = image.Resized(*width, *height)
-		if err != nil {
-			return nil, err
-		}
+	defer image.Destroy()
+
+	wx := strconv.FormatUint(uint64(width), 10)
+	wy := strconv.FormatUint(uint64(height), 10)
+	log.Println("Resize to: " + wx + "x" + wy)
+	image, err = image.Resized(width, height)
+	if err != nil {
+		return
 	}
+
 	blob = image.ToBlob()
-	return blob, nil
+	return
 }
 
 // A very trivial (and inefficient way to handle roots)
