@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type Cacheless struct {
@@ -22,9 +23,16 @@ func (self *Cacheless) GetImage(filename string, width, height uint) (blob image
 		return
 	}
 
+	// Extract requested type/extension and id from filename
+	ext := strings.TrimLeft(filepath.Ext(filename), ".")
+	id := filename[0:len(filename)-len(ext) - 1]
+	
+	// Search requested image from all roots by trial and error
 	for _, root := range self.Roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
-		trial := filepath.Join(root, filename)
+		
+		// Assume image is stored as .jpg -> change extension to .jpg
+		trial := filepath.Join(root, id) + ".jpg"
 
 		image, err = images.LoadImage(trial)
 		if err == nil {
@@ -46,6 +54,14 @@ func (self *Cacheless) GetImage(filename string, width, height uint) (blob image
 	wy := strconv.FormatUint(uint64(height), 10)
 	log.Println("Resize to: " + wx + "x" + wy)
 	image, err = image.Resized(width, height)
+	if err != nil {
+		return
+	}
+	
+	//Convert image to requested format
+	// TODO: Unsupported format -> Convert does nothing and we get the default format (jpg). Is this behaviour fine?
+	log.Println("Converting: " + ext)
+	err = image.Convert(ext)
 	if err != nil {
 		return
 	}
