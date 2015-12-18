@@ -7,9 +7,9 @@ export GOPATH=/home/vagrant/go
 chown -R vagrant:vagrant /home/vagrant/go
 go get github.com/phzfi/RIC/...
 
-sudo mv ~/go/src/github.com/phzfi/RIC/server/testresults/ testresults
-sudo ln -s ~/testresults/ ~/go/src/github.com/phzfi/RIC/server/testresults
-sudo chown -R vagrant:vagrant ~/testresults/
+sudo mv /home/vagrant/go/src/github.com/phzfi/RIC/server/testresults/ testresults
+sudo ln -s /home/vagrant/testresults/ /home/vagrant/go/src/github.com/phzfi/RIC/server/testresults
+sudo chown -R vagrant:vagrant /home/vagrant/testresults/
 
 cd /tmp
 mkdir imagemagick
