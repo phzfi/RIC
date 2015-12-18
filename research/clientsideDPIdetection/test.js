@@ -2,6 +2,12 @@
 window.onload = function() {
   setImdivSize();
   setScreenInfo();
+  formats = [
+    ['webp', 'webp'],
+    ['jpeg', 'jpg'],
+    ['png', 'png'],
+    ['bmp', 'bmp']
+  ];
 }
 
 window.onresize = function() {
@@ -10,12 +16,29 @@ window.onresize = function() {
   document.getElementById('I').src = "";
 }
 
-// get image
-function buttonf(b) {
+function getImage() {
+  var id = document.getElementById('imgname').value;
   var imgW = document.getElementById('imdiv').clientWidth;
-  var imgH = Math.round(imgW / 16 * 9);
-  var url = 'http://ric.phz.fi:8005/'+b.innerHTML+'?width='+imgW+'&height='+imgH;
+  var imgH = document.getElementById('imdiv').clientHeight;
+
+  if (id.indexOf('.') === -1) {
+    for (var i = 0; i < formats.length; i++) {
+      if (supportsIMG(formats[i][0])) {
+        id += '.' + formats[i][1];
+        break;
+      }
+    }
+  }
+  var url = 'http://ric.phz.fi:8005/'+id+'?width='+imgW+'&height='+imgH;
   document.getElementById('I').src = url;
+}
+
+function supportsIMG(img) {
+  var canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  var uri = canvas.toDataURL('image/' + img);
+
+  return uri.match('image/' + img) !== null;
 }
 
 function setImdivSize() {
@@ -33,9 +56,7 @@ function setScreenInfo() {
   var text = 'Your logical screen size is: ' + w + 'x'+ h + ' (' + dpr + ')<br>';
   text += 'Maximum image size for you: ' + Math.round(w * dpr) + 'x';
   text += Math.round(h * dpr) + '<br>';
-  //text += 'imgdiv size: ' + imgW + 'x' + imgH;
   text += '<br>' + 'imgdiv clientWidth: ' + document.getElementById('imdiv').clientWidth;
-  text += '<br>' + 'imgdiv offsetWidth: ' + document.getElementById('imdiv').offsetWidth;
-  text += '<br>' + 'imgdiv scrollWidth: ' + document.getElementById('imdiv').scrollWidth;
+  text += '<br>' + 'imgdiv clientHeight: ' + document.getElementById('imdiv').clientHeight;
   document.getElementById('infodiv').innerHTML = text;
 }
