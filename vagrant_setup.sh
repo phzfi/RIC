@@ -7,7 +7,7 @@ export GOPATH=/home/vagrant/go
 chown -R vagrant:vagrant /home/vagrant/go
 go get github.com/phzfi/RIC/...
 
-mv ~/go/src/github.com/phzfi/RIC/server/testresults/ testresults
+sudo mv ~/go/src/github.com/phzfi/RIC/server/testresults/ testresults
 sudo ln -s ~/testresults/ github.com/phzfi/RIC/server/testresults
 sudo chown -R vagrant:vagrant ~/testresults/
 
