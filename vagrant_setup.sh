@@ -8,7 +8,7 @@ chown -R vagrant:vagrant /home/vagrant/go
 go get github.com/phzfi/RIC/...
 
 sudo mv ~/go/src/github.com/phzfi/RIC/server/testresults/ testresults
-sudo ln -s ~/testresults/ github.com/phzfi/RIC/server/testresults
+sudo ln -s ~/testresults/ ~/go/src/github.com/phzfi/RIC/server/testresults
 sudo chown -R vagrant:vagrant ~/testresults/
 
 cd /tmp
