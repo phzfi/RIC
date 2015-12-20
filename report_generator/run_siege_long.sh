@@ -1,8 +1,8 @@
 #!/bin/bash
 
 URLS_FILE=./urls.txt
-RAW_FILE=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
-OUT_FILE=./raw/$(date +%Y-%m-%d_%H-%M-%S).txt
+RAW_FILE=./raw/$(date +%Y-%m-%d_%H-%M-%S).txt
+OUT_FILE=./results/$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 SIEGE_CONF=./.siegerc
 CONCURRENT=2
