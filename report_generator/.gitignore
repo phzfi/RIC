@@ -1,7 +1,8 @@
 __pycache__/
 .project
 .pydevproject
-Report_Generator_error.log
+log/error.log
 *.pyc
-csvFiles/*
+results/*
+raw/*
 temp/*
