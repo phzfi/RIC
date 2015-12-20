@@ -16,8 +16,7 @@ The testResults are in the from_dir.
 The created csv files are saved into the to_dir.
 The main function goes throught test results and
 saves them as an edited csv file better used for
-data analysis. If the save is sucessful the test result is
-removed from the from_dir.
+data analysis.
 
 """
 
@@ -54,6 +53,13 @@ def read_csv(from_path):
 
             for l in reader:
                 data.append(l)
+
+            data[0] = [i.strip() for i in data[0]]
+            data[1] = [i.strip() for i in data[1]]
+
+            data.insert(2, [''])
+            data.insert(3, [''])
+            data.insert(4, ['Round trip time', 'Size', 'Path', 'Response'])
 
             for i in range(5, len(data)):
                 orig = data[i]

@@ -6,7 +6,7 @@ TMP=./temp/temp$(date +%Y-%m-%d_%H-%M-%S).tmp
 SIEGE_CONF=./.siegerc
 CONCURRENT=2
 DELAY=3
-TIME="40s"
+TIME="300s"
 
 # Siege
 siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --internet --delay=$DELAY --time=$TIME --log=$OUT_FILE --file=$URLS_FILE |
