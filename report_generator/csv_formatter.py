@@ -12,12 +12,10 @@ import codecs
 import traceback
 
 """
-The testResults are in the from_dir.
-The created csv files are saved into the to_dir.
-The main function goes throught test results and
-saves them as an edited csv file better used for
-data analysis.
-
+Raw file is given as first parameter on the command line
+Output file is given as second parameter on the command line
+The main function formats the raw file and saves it as csv file
+to the output file. The csv is better suited for data analysis.
 """
 
 logging.basicConfig(filename='log/error.log',
