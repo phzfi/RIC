@@ -1,0 +1,11 @@
+__pycache__/
+.project
+.pydevproject
+*.pyc
+results/*
+raw/*
+temp/*
+
+!results/test.csv
+!raw/test.txt
+!temp/test.tmp
