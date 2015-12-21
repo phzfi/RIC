@@ -1,7 +1,6 @@
 __pycache__/
 .project
 .pydevproject
-log/error.log
 *.pyc
 results/*
 raw/*
