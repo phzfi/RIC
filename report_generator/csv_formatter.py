@@ -12,45 +12,29 @@ import codecs
 import traceback
 
 """
-The testResults are in the from_dir.
-The created csv files are saved into the to_dir.
-The main function goes throught test results and
-saves them as an edited csv file better used for
-data analysis. If the save is sucessful the test result is
-removed from the from_dir.
-
+Raw file is given as first parameter on the command line
+Output file is given as second parameter on the command line
+The main function formats the raw file and saves it as csv file
+to the output file. The csv is better suited for data analysis.
 """
 
-logging.basicConfig(filename='Report_Generator_error.log',
+logging.basicConfig(filename='log/error.log',
                     level=logging.ERROR,
                     format='%(asctime)s: %(levelname)s: %(message)s')
 
 def main():
-    to_dir = 'csvFiles'
-    from_dir = 'testResults'
-
-    try:
-        text_dir_list = os.listdir(from_dir)
-    except Exception:
-        logging.critical(traceback.format_exc() +
-                         ' Critical error while listing text directory')
+    if len(sys.argv) != 3:
+        logging.critical('Wrong number of arguments. Usage: "python csv_formatter.py RAW_FILE OUT_FILE"')
         sys.exit(1)
+    raw_file = sys.argv[1]
+    out_file = sys.argv[2]
 
-    """
-    Goes through all files in from_dir and attempts to copy them to a
-    modified csv file. 
-    The text file is removed in the process if conversion is successful.
+    data = read_csv(raw_file)
+    if len(data) != 0:
+        save_csv(out_file, data)
+    else:
+        logging.error('Either empty file or unable to open: ' + raw_file)
 
-    """
-
-    for filename in text_dir_list:
-        data = read_csv(os.path.join(from_dir, filename))
-        if len(data) != 0:
-            save_csv(os.path.join(to_dir, filename), data)
-            try:
-                os.remove(os.path.join(from_dir, filename))
-            except OSError as o:
-                logging.error(str(o) + ' while attempting to remove: ' + filename)
 
 def read_csv(from_path):
     """

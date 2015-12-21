@@ -1,7 +1,0 @@
-__pycache__/
-.project
-.pydevproject
-Report_Generator_error.log
-*.pyc
-csvFiles/*
-temp/*
