@@ -1,14 +1,18 @@
 package cache
 
+
 import (
 	"github.com/phzfi/RIC/server/images"
 	"sync"
 )
 
+
 type ImageInfo struct {
 	name          string
 	width, height uint
+	original      bool
 }
+
 
 type Cache struct {
 	Cacheless
@@ -21,6 +25,7 @@ type Cache struct {
 	maxMemory, currentMemory uint64
 }
 
+
 type Policy interface {
 	Push(ImageInfo)
 	Pop() ImageInfo
@@ -28,6 +33,7 @@ type Policy interface {
 	// Image is requested and found in cache. Needs to be thread safe.
 	Visit(ImageInfo)
 }
+
 
 // Takes the caching policy and the maximum size of the cache in bytes.
 func New(policy Policy, mm uint64) *Cache {
@@ -38,23 +44,38 @@ func New(policy Policy, mm uint64) *Cache {
 	}
 }
 
+
+// Gets an image blob of requested dimensions
 func (c *Cache) GetImage(filename string, width, height uint) (images.ImageBlob, error) {
-
-	info := ImageInfo{filename, width, height}
-
+	info := ImageInfo{filename, width, height, false}
 	if blob, ok := c.blobs[info]; ok {
 		c.policy.Visit(info)
 		return blob, nil
 	}
-
-	// TODO: Prevent scenario where requesting the same ImageInfo simultaneously leads to the image being resized many times.
+	// TODO: Prevent scenario where requesting the same ImageInfo simultaneously leads to the image being loaded/resized many times.
 	blob, err := c.Cacheless.GetImage(filename, width, height)
 	if err == nil {
 		c.addBlob(info, blob)
 	}
-
 	return blob, err
 }
+
+
+// Gets and image blob of original image dimensions
+func (c *Cache) GetOriginal(filename string) (images.ImageBlob, error) {
+	info := ImageInfo{filename, 0, 0, true}
+	if blob, ok := c.blobs[info]; ok {
+		c.policy.Visit(info)
+		return blob, nil
+	}
+	// TODO: Prevent scenario where requesting the same ImageInfo simultaneously leads to the image being loaded/resized
+	blob, err := c.Cacheless.GetOriginal(filename)
+	if err == nil {
+		c.addBlob(info, blob)
+	}
+	return blob, err
+}
+
 
 func (c *Cache) addBlob(info ImageInfo, blob images.ImageBlob) {
 
@@ -82,6 +103,7 @@ func (c *Cache) addBlob(info ImageInfo, blob images.ImageBlob) {
 	c.currentMemory += uint64(len(blob))
 	c.blobs[info] = blob
 }
+
 
 func (c *Cache) deleteOldest() {
 

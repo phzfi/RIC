@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-// Returns binary ImageBlob of an image.
+// Returns Image from file.
 func LoadImage(filename string) (img Image, err error) {
 
 	reader, err := os.Open(filename)
