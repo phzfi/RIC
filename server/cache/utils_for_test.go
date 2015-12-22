@@ -1,3 +1,4 @@
+
 package cache
 
 import (
@@ -44,13 +45,13 @@ func normalOperation(t T) {
 	_, err = cache.GetImage("toserve.jpg", 104, 10)
 	t.FatalIfError(err)
 
-	_, err = cache.GetOriginal("toserve.jpg")
+	_, err = cache.GetImage("toserve.jpg", 50, 200)
 	t.FatalIfError(err)
 	
 	_, err = cache.GetImage("toserve.jpg", 100, 10)
 	t.FatalIfError(err)
 	
-	_, err = cache.GetOriginal("toserve.jpg")
+	_, err = cache.GetImage("toserve.jpg", 111, 111)
 	t.FatalIfError(err)
 }
 
@@ -80,11 +81,6 @@ func errorTest(t T) {
 	t.FatalIfError(cache.AddRoot(path))
 
 	_, err := cache.GetImage("tosslntvgerve.jpg", 10, 10)
-	if err == nil {
-		t.Fatal("No error, although querying nonexistent image.")
-	}
-	
-	_, err = cache.GetOriginal("tosslntvgerve.jpg")
 	if err == nil {
 		t.Fatal("No error, although querying nonexistent image.")
 	}

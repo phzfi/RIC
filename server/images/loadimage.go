@@ -57,3 +57,10 @@ func LoadImageWeb(url string) (image Image, err error) {
 
 	return
 }
+
+
+func ImageFromBlob(blob ImageBlob) (img Image, err error) {
+	img = NewImage()
+	err = img.ReadImageBlob(blob)
+	return
+}
