@@ -6,11 +6,10 @@ import (
 	"github.com/joonazan/imagick/imagick"
 	"github.com/phzfi/RIC/server/images"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
-func TestCachlessOriginals(t *testing.T) {
+func TestCachelessOriginals(t *testing.T) {
 	err := testCacheOriginals(NewCacheless())
 	if err != nil {
 		t.Fatal(err)
@@ -27,35 +26,18 @@ func TestCacheOriginals(t *testing.T) {
 func testCacheOriginals(c ImageCache) (err error) {
 
 	path := filepath.FromSlash("../testimages/originals/")
-	id := "original"
-	filename := id + ".jpg"
+	filename := "original.jpg"
 
 	err = c.AddRoot(path)
 	if err != nil {
 		return
 	}
-	blob, err := c.GetOriginalSizedImage(id)
+	blob, err := c.GetOriginalSizedImage(filename)
 	if err != nil {
 		return
 	}
 
-	mw := imagick.NewMagickWand()
-	defer mw.Destroy()
-
-	err = mw.ReadImageBlob(blob)
-	if err != nil {
-		return
-	}
-	err = mw.WriteImage(filepath.FromSlash(path + filename))
-	if err != nil {
-		return
-	}
-	if !strings.EqualFold(mw.GetImageFormat(), "jpeg") {
-		err = errors.New("Cache returned wrong blob format. Original is jpeg, got: " + mw.GetImageFormat())
-		return
-	}
-
-	err = CompareBlobToImage(blob, path+id+".jpg")
+	err = CompareBlobToImage(blob, path+filename)
 	return
 }
 

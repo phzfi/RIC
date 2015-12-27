@@ -55,7 +55,7 @@ func (a *AspectPreserver) GetOriginalSizedImage(filename string) (blob images.Im
 	if err != nil {
 		return
 	}
-	fmt.Println(filename, width, height)
+
 	blob, err = a.GetImage(filename, width, height)
 	return
 }
