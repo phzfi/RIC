@@ -50,3 +50,17 @@ func testAspect(t *testing.T, by_w bool) {
 		t.Fatal(fmt.Sprintf("Image size was %d %d. Expected 200 200.", w, h))
 	}
 }
+
+func TestOriginalSize(t *testing.T) {
+	dummy := DummyResizerForAspect{}
+	cache := AspectPreserver{&dummy}
+
+	cache.GetOriginalSizedImage("slt")
+
+	w := dummy[0][0]
+	h := dummy[0][1]
+
+	if w != 1000 || h != 1000 {
+		t.Fatal(fmt.Sprintf("Image size was %d %d. Expected 1000 1000.", w, h))
+	}
+}
