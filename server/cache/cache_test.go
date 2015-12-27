@@ -7,9 +7,9 @@ import (
 	"testing"
 )
 
-type DummyResizer bool
+type DummyResizerForCache bool
 
-func (d DummyResizer) GetImage(fn string, w, h uint) (images.ImageBlob, error) {
+func (d DummyResizerForCache) GetImage(fn string, w, h uint) (images.ImageBlob, error) {
 	if d {
 		if fn == "toserve.jpg" {
 			return make(images.ImageBlob, 1001), nil
@@ -21,23 +21,23 @@ func (d DummyResizer) GetImage(fn string, w, h uint) (images.ImageBlob, error) {
 	}
 }
 
-func (d DummyResizer) ImageSize(_ string) (uint, uint, error) {
+func (d DummyResizerForCache) ImageSize(_ string) (uint, uint, error) {
 	return 1000, 1000, nil
 }
 
-func (d *DummyResizer) AddRoot(_ string) error {
+func (d *DummyResizerForCache) AddRoot(_ string) error {
 	*d = true
 	return nil
 }
 
-func (d *DummyResizer) RemoveRoot(_ string) error {
+func (d *DummyResizerForCache) RemoveRoot(_ string) error {
 	*d = false
 	return nil
 }
 
 func makeCacheMaker(policyMaker func() Policy) CacheMaker {
 	return func(mm uint64) *Cache {
-		return NewCache(new(DummyResizer), policyMaker(), mm)
+		return NewCache(new(DummyResizerForCache), policyMaker(), mm)
 	}
 }
 
