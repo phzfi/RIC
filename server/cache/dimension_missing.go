@@ -11,11 +11,11 @@ type AspectPreserver struct {
 }
 
 func New(policy Policy, mm uint64) *AspectPreserver {
-	return &AspectPreserver{Resizer: NewCache(policy, mm)}
+	return &AspectPreserver{Resizer: NewCache(NewBasicResizer(), policy, mm)}
 }
 
 func NewCacheless() *AspectPreserver {
-	return &AspectPreserver{Resizer: new(BasicResizer)}
+	return &AspectPreserver{Resizer: NewBasicResizer()}
 }
 
 // Gets image blob by width only. Image is scaled and aspect ratio preserved.

@@ -21,20 +21,22 @@ func init() {
 	path = filepath.FromSlash("../testimages/cache")
 }
 
-func RunTests(policy func(uint64) ImageCache, t_in *testing.T) {
+type CacheMaker func(uint64) ImageCache
+
+func RunTests(newResizer CacheMaker, t_in *testing.T) {
 
 	t := T{t_in}
 
-	normalOperation(t)
-	cache(t)
-	errorTest(t)
-	cacheExit(t)
-	noMemory(t)
+	normalOperation(t, newResizer)
+	cache(t, newResizer)
+	errorTest(t, newResizer)
+	cacheExit(t, newResizer)
+	noMemory(t, newResizer)
 }
 
-func normalOperation(t T) {
+func normalOperation(t T, newResizer CacheMaker) {
 	// 500MB cache
-	cache := NewFIFO(500 * 1024 * 1024)
+	cache := newResizer(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
@@ -54,9 +56,9 @@ func normalOperation(t T) {
 	t.FatalIfError(err)
 }
 
-func cache(t T) {
+func cache(t T, newResizer CacheMaker) {
 	// 500MB cache
-	cache := NewFIFO(500 * 1024 * 1024)
+	cache := newResizer(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
@@ -73,9 +75,9 @@ func cache(t T) {
 	t.FatalIfError(err)
 }
 
-func errorTest(t T) {
+func errorTest(t T, newResizer CacheMaker) {
 	// 500MB cache
-	cache := NewFIFO(500 * 1024 * 1024)
+	cache := newResizer(500 * 1024 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
@@ -85,9 +87,9 @@ func errorTest(t T) {
 	}
 }
 
-func cacheExit(t T) {
+func cacheExit(t T, newResizer CacheMaker) {
 	// 50kB cache
-	cache := NewFIFO(50 * 1024)
+	cache := newResizer(50 * 1024)
 
 	t.FatalIfError(cache.AddRoot(path))
 
@@ -104,8 +106,8 @@ func cacheExit(t T) {
 	}
 }
 
-func noMemory(t T) {
-	cache := NewFIFO(0)
+func noMemory(t T, newResizer CacheMaker) {
+	cache := newResizer(0)
 
 	t.FatalIfError(cache.AddRoot(path))
 

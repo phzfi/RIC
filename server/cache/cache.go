@@ -38,9 +38,9 @@ type Policy interface {
 }
 
 // Takes the caching policy and the maximum size of the cache in bytes.
-func NewCache(policy Policy, mm uint64) *Cache {
+func NewCache(resizer Resizer, policy Policy, mm uint64) *Cache {
 	return &Cache{
-		Resizer:   new(BasicResizer),
+		Resizer:   resizer,
 		maxMemory: mm,
 		policy:    policy,
 		blobs:     make(map[ImageInfo]images.ImageBlob),

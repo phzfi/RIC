@@ -21,6 +21,11 @@ type Resizer interface {
 
 type BasicResizer struct {
 	Roots []string
+	sizes map[string][2]uint
+}
+
+func NewBasicResizer() *BasicResizer {
+	return &BasicResizer{sizes: make(map[string][2]uint)}
 }
 
 // Get image whose dimensions are known.
@@ -55,16 +60,21 @@ func (c *BasicResizer) GetImage(filename string, width, height uint) (blob image
 	return
 }
 
-func (c *BasicResizer) ImageSize(id string) (w uint, h uint, err error) {
-	logging.Debug(fmt.Sprintf("Get original image: %v", id))
+func (c *BasicResizer) ImageSize(fn string) (w uint, h uint, err error) {
+	logging.Debug(fmt.Sprintf("Get original image: %v", fn))
 
-	image, err := c.searchRoots(id)
+	if s, ok := c.sizes[fn]; ok {
+		return s[0], s[1], nil
+	}
+
+	image, err := c.searchRoots(fn)
 	if err != nil {
 		return
 	}
 
 	w = image.GetWidth()
 	h = image.GetHeight()
+	c.sizes[fn] = [2]uint{w, h}
 	return
 }
 
