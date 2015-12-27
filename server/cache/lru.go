@@ -24,13 +24,12 @@ func (lru *LRU) Push(id ImageInfo) {
 
 	l := list{id: id}
 
-	next := &lru.tail
-	l.next = next
-	next.prev = &l
-
 	prev := lru.tail.prev
 	l.prev = prev
 	prev.next = &l
+
+	l.next = &lru.tail
+	lru.tail.prev = &l
 
 	lru.toList[id] = &l
 }
@@ -68,11 +67,6 @@ type list struct {
 }
 
 func (l list) remove() {
-
-	if l.prev != nil {
-		l.prev.next = l.next
-	}
-	if l.next != nil {
-		l.next.prev = l.prev
-	}
+	l.prev.next = l.next
+	l.next.prev = l.prev
 }

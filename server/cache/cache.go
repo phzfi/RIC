@@ -13,11 +13,6 @@ type ImageInfo struct {
 	original      bool
 }
 
-type OriginalInfo struct {
-	filename      string
-	width, height uint
-}
-
 type Cache struct {
 	Resizer
 
