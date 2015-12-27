@@ -1,4 +1,3 @@
-
 package cache
 
 import (
@@ -22,7 +21,7 @@ func init() {
 	path = filepath.FromSlash("../testimages/cache")
 }
 
-func RunTests(policy func(uint64) *Cache, t_in *testing.T) {
+func RunTests(policy func(uint64) ImageCache, t_in *testing.T) {
 
 	t := T{t_in}
 
@@ -47,10 +46,10 @@ func normalOperation(t T) {
 
 	_, err = cache.GetImage("toserve.jpg", 50, 200)
 	t.FatalIfError(err)
-	
+
 	_, err = cache.GetImage("toserve.jpg", 100, 10)
 	t.FatalIfError(err)
-	
+
 	_, err = cache.GetImage("toserve.jpg", 111, 111)
 	t.FatalIfError(err)
 }
@@ -95,7 +94,6 @@ func cacheExit(t T) {
 	for i := 0; i < 6; i++ {
 		_, err := cache.GetImage("toserve.jpg", uint(100-i), 100)
 		t.FatalIfError(err)
-		println(cache.currentMemory)
 	}
 
 	t.FatalIfError(cache.RemoveRoot(path))

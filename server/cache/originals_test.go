@@ -1,23 +1,21 @@
 package cache
 
 import (
-	"testing"
-	"strings"
-	"path/filepath"
-	"github.com/joonazan/imagick/imagick"
 	"errors"
-	"github.com/phzfi/RIC/server/images"
 	"fmt"
+	"github.com/joonazan/imagick/imagick"
+	"github.com/phzfi/RIC/server/images"
+	"path/filepath"
+	"strings"
+	"testing"
 )
 
-
 func TestCachlessOriginals(t *testing.T) {
-	err := testCacheOriginals(new(Cacheless))
+	err := testCacheOriginals(NewCacheless())
 	if err != nil {
 		t.Fatal(err)
 	}
 }
-
 
 func TestCacheOriginals(t *testing.T) {
 	err := testCacheOriginals(New(&DummyPolicy{}, 512*1024*1024))
@@ -26,18 +24,17 @@ func TestCacheOriginals(t *testing.T) {
 	}
 }
 
-
 func testCacheOriginals(c ImageCache) (err error) {
-	
+
 	path := filepath.FromSlash("../testimages/originals/")
 	id := "original"
 	filename := id + ".jpg"
-	
+
 	err = c.AddRoot(path)
 	if err != nil {
 		return
 	}
-	_, blob, err := c.GetOriginal(id)
+	blob, err := c.GetOriginalSizedImage(id)
 	if err != nil {
 		return
 	}
@@ -58,7 +55,7 @@ func testCacheOriginals(c ImageCache) (err error) {
 		return
 	}
 
-	err = CompareBlobToImage(blob, path + id + ".jpg")
+	err = CompareBlobToImage(blob, path+id+".jpg")
 	return
 }
 

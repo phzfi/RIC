@@ -1,6 +1,6 @@
 package cache
 
-func NewLRU(mm uint64) *Cache {
+func NewLRU(mm uint64) ImageCache {
 	return New(NewLRUPolicy(), mm)
 }
 

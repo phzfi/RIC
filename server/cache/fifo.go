@@ -1,6 +1,6 @@
 package cache
 
-func NewFIFO(mm uint64) *Cache {
+func NewFIFO(mm uint64) ImageCache {
 	return New(&FIFO{}, mm)
 }
 
