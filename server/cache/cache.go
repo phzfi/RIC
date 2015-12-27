@@ -16,7 +16,7 @@ type ImageInfo struct {
 type Cache struct {
 	Resizer
 
-	sync.Mutex
+	sync.RWMutex
 
 	blobs map[ImageInfo]images.ImageBlob
 
@@ -45,11 +45,14 @@ func NewCache(resizer Resizer, policy Policy, mm uint64) *Cache {
 // Gets an image blob of requested dimensions
 func (c *Cache) GetImage(filename string, width, height uint) (blob images.ImageBlob, err error) {
 	logging.Debug(fmt.Sprintf("Get image: %v, %v, %v", filename, width, height))
+
 	info := ImageInfo{filename, width, height, false}
-	if blob, ok := c.blobs[info]; ok {
+
+	if blob, ok := c.getBlob(info); ok {
 		c.policy.Visit(info)
 		return blob, nil
 	}
+
 	// TODO: Requesting nonexistent images causes roots to be accessed unneccessarily. Could it be avoided?
 	// TODO: Prevent scenario where requesting the same ImageInfo simultaneously leads to the image being loaded/resized many times.
 	blob, err = c.Resizer.GetImage(filename, width, height)
@@ -59,10 +62,19 @@ func (c *Cache) GetImage(filename string, width, height uint) (blob images.Image
 	return
 }
 
+func (c *Cache) getBlob(info ImageInfo) (blob images.ImageBlob, ok bool) {
+
+	c.RLock()
+	defer c.RUnlock()
+
+	blob, ok = c.blobs[info]
+	return
+}
+
 func (c *Cache) addBlob(info ImageInfo, blob images.ImageBlob) {
 
-	// This is the only point where the cache is mutated, and therefore can't run in parallel.
-	// GetImage can be run in parallel even during this operation due map being thread safe.
+	// This is the only point where the cache is mutated.
+	// While this runs the there can be no reads from "blobs".
 	c.Lock()
 	defer c.Unlock()
 

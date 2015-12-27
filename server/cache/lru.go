@@ -1,10 +1,14 @@
 package cache
 
+import "sync"
+
 func NewLRU(mm uint64) ImageCache {
 	return New(NewLRUPolicy(), mm)
 }
 
 type LRU struct {
+	sync.Mutex
+
 	toList     map[ImageInfo]*list
 	head, tail list
 }
@@ -35,6 +39,10 @@ func (lru *LRU) Push(id ImageInfo) {
 }
 
 func (lru *LRU) Visit(id ImageInfo) {
+
+	lru.Lock()
+	defer lru.Unlock()
+
 	lru.toList[id].remove()
 	lru.Push(id)
 }
