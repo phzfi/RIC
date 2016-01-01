@@ -25,10 +25,10 @@ Vagrant.configure("2") do |config|
   # accessing "localhost:8080" will access port 80 on the guest machine.
 
   # Production port
-  config.vm.network "forwarded_port", guest: 80, host: 8080
+  #config.vm.network "forwarded_port", guest: 80, host: 8080
 
   # Staging / Development / Testing port
-  config.vm.network "forwarded_port", guest: 8000, host: 8000
+  config.vm.network "forwarded_port", guest: 8005, host: 8005
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -43,7 +43,7 @@ Vagrant.configure("2") do |config|
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
-  # config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.synced_folder "./", "/home/vagrant/go/github.com/phzfi/RIC/"
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -73,10 +73,6 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   
   # TODO: More?
-  config.vm.provision "shell", type: "shell" do |s|
-      s.inline = "sudo apt-get update"
-      s.inline = "sudo apt-get install -y libmagickwand-dev"
-      s.inline = "sudo apt-get install -y golang-go"
-  end
+  config.vm.provision "shell", path: "vagrant_setup.sh"
 
 end
