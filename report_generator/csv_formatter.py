@@ -6,7 +6,6 @@ Created on 5 Nov 2015
 """
 import csv
 import sys
-import os
 import logging
 import codecs
 import traceback
@@ -16,6 +15,7 @@ Raw file is given as first parameter on the command line
 Output file is given as second parameter on the command line
 The main function formats the raw file and saves it as csv file
 to the output file. The csv is better suited for data analysis.
+
 """
 
 logging.basicConfig(filename='log/error.log',
@@ -24,7 +24,8 @@ logging.basicConfig(filename='log/error.log',
 
 def main():
     if len(sys.argv) != 3:
-        logging.critical('Wrong number of arguments. Usage: "python csv_formatter.py RAW_FILE OUT_FILE"')
+        logging.critical('Wrong number of arguments.',
+                          'Usage: "python csv_formatter.py RAW_FILE OUT_FILE"')
         sys.exit(1)
     raw_file = sys.argv[1]
     out_file = sys.argv[2]
