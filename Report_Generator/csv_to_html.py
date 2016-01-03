@@ -16,6 +16,7 @@ make html tables. The different formatted csv paths are given as parameters.
 
 """
 
+
 HIGHLIGHT_HIGHER = (1,3,5,6,7,8)
 HIGHLIGHT_LOWER = (2,4,9)
 
@@ -27,7 +28,7 @@ logging.basicConfig(filename='log/error.log',
 def main():
     args = sys.argv
     if len(args) < 2:
-        logging.critical('Wrong number of arguments.' + 
+        logging.critical('Wrong number of arguments.' +
                          'Usage: "python csv_to_html.py testData*"' )
         sys.exit()
     data = []
@@ -55,18 +56,18 @@ def save_to_html(html, to_path):
             output.write(html)
 
     except:
-        logging.critical(traceback.format_exc() + 
+        logging.critical(traceback.format_exc() +
                          ' exception while saving html to: ' +
                           str(to_path))
         sys.exit
 
 def build_row(row_data, title, i):
     """
-    Returns row html built with the given row_data, title of row and 
+    Returns row html built with the given row_data, title of row and
     row index.
 
     """
- 
+
     column_html = '<td>%s</td>\n' % title
     if not is_neutral(i) and all(row_data[0] == data for data in row_data):
         for d in row_data:
@@ -83,7 +84,8 @@ def build_row(row_data, title, i):
     else:
         for d in row_data:
             column_html += ('<td>%s</td>\n' % d)
-    return ('<tr>%s</tr>\n' % column_html) 
+    return ('<tr>%s</tr>\n' % column_html)
+
 
 
 def buildHTML(software, data, titles):
@@ -106,11 +108,12 @@ def buildHTML(software, data, titles):
             row_data.append(d[i])
         html_table += build_row(row_data, titles[i], i)
 
+
     html =   '''<!DOCTYPE html>\n
                 <html>\n
                 <head>\n
-                <link rel="stylesheet" 
-                type="text/css" 
+                <link rel="stylesheet"
+                type="text/css"
                 href="tablestyle.css">
                 </head>\n
                 <body>\n
@@ -138,13 +141,13 @@ def read_csv_row(from_path, row_number):
                             float(l[4]),float(l[5]),
                             float(l[6]),float(l[7]),
                             int(l[8]),int(l[9])]
-                    return data 
+                    return data
                 elif i == row_number:
                     return l
                 i += 1
 
     except Exception:
-        logging.critical(traceback.format_exc() + 
+        logging.critical(traceback.format_exc() +
                          ' exception while reading csv from: ' +
                           str(from_path))
         sys.exit
