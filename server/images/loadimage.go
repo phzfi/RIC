@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-// Returns binary ImageBlob of an image.
+// Returns Image from file.
 func LoadImage(filename string) (img Image, err error) {
 
 	reader, err := os.Open(filename)
@@ -55,5 +55,12 @@ func LoadImageWeb(url string) (image Image, err error) {
 	image = NewImage()
 	err = image.ReadImageBlob(blob)
 
+	return
+}
+
+
+func ImageFromBlob(blob ImageBlob) (img Image, err error) {
+	img = NewImage()
+	err = img.ReadImageBlob(blob)
 	return
 }

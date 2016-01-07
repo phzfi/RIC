@@ -1,19 +1,22 @@
 package cache
 
 import (
+	"fmt"
 	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/logging"
 	"sync"
 )
 
 type ImageInfo struct {
 	name          string
 	width, height uint
+	original      bool
 }
 
 type Cache struct {
-	Cacheless
+	Resizer
 
-	sync.Mutex
+	sync.RWMutex
 
 	blobs map[ImageInfo]images.ImageBlob
 
@@ -30,36 +33,48 @@ type Policy interface {
 }
 
 // Takes the caching policy and the maximum size of the cache in bytes.
-func New(policy Policy, mm uint64) *Cache {
+func NewCache(resizer Resizer, policy Policy, mm uint64) *Cache {
 	return &Cache{
+		Resizer:   resizer,
 		maxMemory: mm,
 		policy:    policy,
 		blobs:     make(map[ImageInfo]images.ImageBlob),
 	}
 }
 
-func (c *Cache) GetImage(filename string, width, height uint) (images.ImageBlob, error) {
+// Gets an image blob of requested dimensions
+func (c *Cache) GetImage(filename string, width, height uint) (blob images.ImageBlob, err error) {
+	logging.Debug(fmt.Sprintf("Get image: %v, %v, %v", filename, width, height))
 
-	info := ImageInfo{filename, width, height}
+	info := ImageInfo{filename, width, height, false}
 
-	if blob, ok := c.blobs[info]; ok {
+	if blob, ok := c.getBlob(info); ok {
 		c.policy.Visit(info)
 		return blob, nil
 	}
 
-	// TODO: Prevent scenario where requesting the same ImageInfo simultaneously leads to the image being resized many times.
-	blob, err := c.Cacheless.GetImage(filename, width, height)
+	// TODO: Requesting nonexistent images causes roots to be accessed unneccessarily. Could it be avoided?
+	// TODO: Prevent scenario where requesting the same ImageInfo simultaneously leads to the image being loaded/resized many times.
+	blob, err = c.Resizer.GetImage(filename, width, height)
 	if err == nil {
 		c.addBlob(info, blob)
 	}
+	return
+}
 
-	return blob, err
+func (c *Cache) getBlob(info ImageInfo) (blob images.ImageBlob, ok bool) {
+
+	c.RLock()
+	defer c.RUnlock()
+
+	blob, ok = c.blobs[info]
+	return
 }
 
 func (c *Cache) addBlob(info ImageInfo, blob images.ImageBlob) {
 
-	// This is the only point where the cache is mutated, and therefore can't run in parallel.
-	// GetImage can be run in parallel even during this operation due map being thread safe.
+	// This is the only point where the cache is mutated.
+	// While this runs the there can be no reads from "blobs".
 	c.Lock()
 	defer c.Unlock()
 

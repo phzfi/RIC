@@ -1,10 +1,14 @@
 package cache
 
-func NewLRU(mm uint64) *Cache {
+import "sync"
+
+func NewLRU(mm uint64) ImageCache {
 	return New(NewLRUPolicy(), mm)
 }
 
 type LRU struct {
+	sync.Mutex
+
 	toList     map[ImageInfo]*list
 	head, tail list
 }
@@ -24,18 +28,21 @@ func (lru *LRU) Push(id ImageInfo) {
 
 	l := list{id: id}
 
-	next := &lru.tail
-	l.next = next
-	next.prev = &l
-
 	prev := lru.tail.prev
 	l.prev = prev
 	prev.next = &l
+
+	l.next = &lru.tail
+	lru.tail.prev = &l
 
 	lru.toList[id] = &l
 }
 
 func (lru *LRU) Visit(id ImageInfo) {
+
+	lru.Lock()
+	defer lru.Unlock()
+
 	lru.toList[id].remove()
 	lru.Push(id)
 }
@@ -68,11 +75,6 @@ type list struct {
 }
 
 func (l list) remove() {
-
-	if l.prev != nil {
-		l.prev.next = l.next
-	}
-	if l.next != nil {
-		l.next.prev = l.prev
-	}
+	l.prev.next = l.next
+	l.next.prev = l.prev
 }

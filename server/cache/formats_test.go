@@ -1,13 +1,12 @@
 package cache
 
 import (
-	"testing"
-	"path/filepath"
-	"github.com/joonazan/imagick/imagick"
 	"errors"
+	"github.com/joonazan/imagick/imagick"
+	"path/filepath"
 	"strings"
+	"testing"
 )
-
 
 func TestCacheGetPNG(t *testing.T) {
 	err := testCacheFormat("png")
@@ -16,14 +15,12 @@ func TestCacheGetPNG(t *testing.T) {
 	}
 }
 
-
 func TestCacheGetJPG(t *testing.T) {
 	err := testCacheFormat("jpg")
 	if err != nil {
 		t.Fatal(err)
 	}
 }
-
 
 func TestCacheGetWEBP(t *testing.T) {
 	err := testCacheFormat("webp")
@@ -32,14 +29,12 @@ func TestCacheGetWEBP(t *testing.T) {
 	}
 }
 
-
 func TestCacheGetTIFF(t *testing.T) {
 	err := testCacheFormat("tiff")
 	if err != nil {
 		t.Fatal(err)
 	}
 }
-
 
 func TestCacheGetGIF(t *testing.T) {
 	err := testCacheFormat("gif")
@@ -48,9 +43,8 @@ func TestCacheGetGIF(t *testing.T) {
 	}
 }
 
-
 func testCacheFormat(ext string) (err error) {
-	var cache Cacheless
+	cache := NewCacheless()
 	path := filepath.FromSlash("../testimages/formats")
 	err = cache.AddRoot(path)
 	if err != nil {
