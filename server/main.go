@@ -48,7 +48,11 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 		// GET parameters
 		query := url.Query()
 
-		h.RetrieveImage(writer, filename, getUintParam(query, "width"), getUintParam(query, "height"))
+		h.RetrieveImage(
+			writer, filename,
+			getUintParam(query, "width"),
+			getUintParam(query, "height"),
+			getStringParam(query, "mode"))
 
 	} else if method == "POST" {
 		// POST is currently unused so we can use this for testing
@@ -69,6 +73,14 @@ func getUintParam(params map[string][]string, name string) (result *uint) {
 	return
 }
 
+// Returns a request parameter as *string; nil if the parameter is not properly specified.
+func getStringParam(params map[string][]string, name string) (result *string) {
+	if values := params[name]; len(values) != 0 {
+		result = &values[0]
+	}
+	return
+}
+
 // Respond to POST message by saying Hello
 func (h MyHandler) RetrieveHello(writer http.ResponseWriter) {
 	result := "Hello world!"
@@ -84,7 +96,8 @@ func (h MyHandler) RetrieveHello(writer http.ResponseWriter) {
 func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 	filename string,
 	width *uint,
-	height *uint) {
+	height *uint,
+	mode *string) {
 
 	// TODO: filename must not be interpret as "absolute"
 	// implement a type that will abstract away the filesystem.
@@ -94,7 +107,7 @@ func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 	bank := h.images
 
 	// Load the image
-	blob, err := bank.GetImage(filename, width, height)
+	blob, err := bank.GetImage(filename, width, height, mode)
 	if err != nil {
 		// TODO:
 		// Classify different possible errors more but make sure
