@@ -2,6 +2,8 @@ package cache
 
 import (
 	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/logging"
+	"fmt"
 )
 
 type ImageCache interface {
@@ -22,47 +24,12 @@ type AmbiguousSizeImageCache struct {
 	ImageCache
 }
 
-func (a AmbiguousSizeImageCache) GetImage(filename string, width, height *uint, mode *string)  (blob images.ImageBlob, err error) {
-	
+func (a AmbiguousSizeImageCache) GetImage(filename string, width, height *uint, mode *string) (blob images.ImageBlob, err error) {
+	logging.Debug(fmt.Sprintf("Image request: filename=%v, width=%v, height=%v, mode=%v", filename, width, height, mode))
 	scalemode := SCALEMODE_DEFAULT
-
 	if mode != nil {
 		scalemode.FromString(*mode)
 	}
-
-	if scalemode == SCALEMODE_RESIZE {
-		if width == nil && height != nil {
-			blob, err = a.ImageCache.GetImageByHeight(filename, *height)
-			return
-		}
-		if width != nil && height == nil {
-			blob, err = a.ImageCache.GetImageByWidth(filename, *width)
-			return
-		}
-		if width == nil && height == nil {
-			blob, err = a.ImageCache.GetOriginalSizedImage(filename)
-			return
-		}
-		blob, err = a.ImageCache.GetImage(filename, *width, *height)
-		return
-	}
-
-	if scalemode == SCALEMODE_FIT {
-		if width == nil && height != nil {
-			blob, err = a.ImageCache.GetImageByHeight(filename, *height)
-			return
-		}
-		if width != nil && height == nil {
-			blob, err = a.ImageCache.GetImageByWidth(filename, *width)
-			return
-		}
-		if width == nil && height == nil {
-			blob, err = a.ImageCache.GetOriginalSizedImage(filename)
-			return
-		}
-		blob, err = a.ImageCache.GetImageFit(filename, *width, *height)
-		return
-	}
-
+	blob, err = scalemode.ScaleImage(a.ImageCache, filename, width, height)
 	return
 }

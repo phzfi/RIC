@@ -1,16 +1,21 @@
 package cache
 
-import "strings" 
-
-type ScaleMode int
-
-const (
-	SCALEMODE_RESIZE  = ScaleMode(iota)
-	SCALEMODE_FIT     = ScaleMode(iota)
-	//SCALEMODE_FILL  = ScaleMode(iota)
-	//SCALEMODE_CROP  = ScaleMode(iota)
-	SCALEMODE_DEFAULT = SCALEMODE_RESIZE
+import (
+	"strings"
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/logging"
+	"fmt"
 )
+
+type ScaleMode struct {
+	ScaleImage func(c ImageCache, filename string, width, height *uint) (img images.ImageBlob, err error)
+}
+
+var SCALEMODE_RESIZE  = ScaleMode{resize}
+var SCALEMODE_FIT     = ScaleMode{fit}
+//var SCALEMODE_FILL  = ScaleMode{fill}
+// var SCALEMODE_CROP  = ScaleMode{crop}
+var SCALEMODE_DEFAULT = SCALEMODE_RESIZE
 
 func (m *ScaleMode) FromString(s string) {
 	s = strings.ToLower(s)
@@ -23,5 +28,41 @@ func (m *ScaleMode) FromString(s string) {
 		return
 	}
 	*m = SCALEMODE_DEFAULT
+	return
+}
+
+func resize(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error){
+	logging.Debug(fmt.Sprintf("Scale mode: resize: filename=%v, width=%v, height=%v", filename, width, height))
+	if width == nil && height != nil {
+		blob, err = c.GetImageByHeight(filename, *height)
+		return
+	}
+	if width != nil && height == nil {
+		blob, err = c.GetImageByWidth(filename, *width)
+		return
+	}
+	if width == nil && height == nil {
+		blob, err = c.GetOriginalSizedImage(filename)
+		return
+	}
+	blob, err = c.GetImage(filename, *width, *height)
+	return
+}
+
+func fit(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error) {
+	logging.Debug(fmt.Sprintf("Scale mode: fit: filename=%v, width=%v, height=%v", filename, width, height))
+	if width == nil && height != nil {
+		blob, err = c.GetImageByHeight(filename, *height)
+		return
+	}
+	if width != nil && height == nil {
+		blob, err = c.GetImageByWidth(filename, *width)
+		return
+	}
+	if width == nil && height == nil {
+		blob, err = c.GetOriginalSizedImage(filename)
+		return
+	}
+	blob, err = c.GetImageFit(filename, *width, *height)
 	return
 }
