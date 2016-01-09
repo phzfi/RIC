@@ -107,14 +107,39 @@ func TestGetPNGByHeight(t *testing.T) {
 	err := testGetImageFromServer("toget.png", "?height=200", "pngbyheight.png")
 	if err != nil { t.Fatal(err); return }
 }
+// Test that the web server returns JPG fit to given dimensions
+func TestGetJPGFitByWidth(t *testing.T) {
+	err := testGetImageFromServer("toget.jpg", "?width=200&height=1000&mode=fit", "jpgfitbywidth.jpg")
+	if err != nil { t.Fatal(err); return }
+}
+// Test that the web server returns JPG fit to given dimensions
+func TestGetJPGFitByHeight(t *testing.T) {
+	err := testGetImageFromServer("toget.jpg", "?width=1000&height=200&mode=fit", "jpgfitbyheight.jpg")
+	if err != nil { t.Fatal(err); return }
+}
+// Test that the web server returns PNG fit to given dimensions
+func TestGetPNGFitByWidth(t *testing.T) {
+	err := testGetImageFromServer("toget.png", "?width=200&height=1000&mode=fit", "pngfitbywidth.png")
+	if err != nil { t.Fatal(err); return }
+}
+// Test that the web server returns PNG fit to given dimensions
+func TestGetPNGFitByHeight(t *testing.T) {
+	err := testGetImageFromServer("toget.png", "?width=1000&height=200&mode=fit", "pngfitbyheight.png")
+	if err != nil { t.Fatal(err); return }
+}
+// Test that the test fails with wrong sized PNG image (testing that tests work)
+func TestGetPNGFitByHeightFail(t *testing.T) {
+	err := testGetImageFromServer("toget.png", "?width=180&height=200", "pngbyheight.png")
+	if err == nil { t.Fatal("Test passed even with bad image - there is something seriously wrong with these tests"); return }
+}
 // Test that the web server returns JPG at original size
 func TestGetJPGOriginalSize(t *testing.T) {
-	err := testGetImageFromServer("toget.jpg", "", "jpgorigsize.jpg")
+	err := testGetImageFromServer("toget.jpg", "", "origref.jpg")
 	if err != nil { t.Fatal(err); return }
 }
 // Test that the web server returns original image 
 func TestGetOriginal(t *testing.T) {
-	err := testGetImageFromServer("toget", "", "toget.jpg")
+	err := testGetImageFromServer("toget", "", "origref")
 	if err != nil { t.Fatal(err); return }
 }
 
@@ -142,13 +167,13 @@ func testGetImageFromServer(getname string, params string, refname string) (err 
 	//defer mw.Destroy() TODO: Why does this line crash the test? Is mw destroyed somewhere else?
 	err = mw.ReadImageBlob(body)
 	if err != nil { return }
-	err = mw.WriteImage(filepath.FromSlash("testresults/server/" + getname))
+	err = mw.WriteImage(filepath.FromSlash("testresults/server/" + refname))
 	if err != nil { return }
 	
 	// Get distortion compared to refrence image and check it is inside tolerance
 	distortion, err := getDistortion(body, refname)
 	if err != nil { return }
-	if distortion > TOLERANCE { return errors.New(fmt.Sprintf("Bad image returned. Distortion: %v, Tolerance: %v", distortion)) }
+	if distortion > TOLERANCE { return errors.New(fmt.Sprintf("Bad image returned. Distortion: %v, Tolerance: %v", distortion, TOLERANCE)) }
 
 	// Check for server errors
 	select {

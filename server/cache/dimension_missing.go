@@ -58,7 +58,7 @@ func (a *AspectPreserver) GetImageFit(filename string, width uint, height uint) 
 
 	aspect := width / height
 	originalAspect := originalWidth / originalHeight
-	
+
 	if aspect <= originalAspect {
 		blob, err = a.GetImageByWidth(filename, width)
 	} else {

@@ -33,6 +33,35 @@ func TestAspectByHeight(t *testing.T) {
 	testAspect(t, false)
 }
 
+
+func TestFitImageByWidth(t *testing.T) {
+	testFitImage(t, true)
+}
+
+func TestFitImageByHeight(t *testing.T) {
+	testFitImage(t, false)
+}
+
+
+func testFitImage(t *testing.T, by_w bool) {
+	dummy := DummyResizerForAspect{}
+	cache := AspectPreserver{&dummy}
+	
+	if by_w {
+		cache.GetImageFit("slnv", 2000, 200)
+	} else {
+		cache.GetImageFit("slnv", 200, 2000)
+	}
+
+	w := dummy[0][0]
+	h := dummy[0][1]
+
+	if w != 200 || h != 200 {
+		t.Fatal(fmt.Sprintf("Image size was %d %d. Expected 200 200.", w, h))
+	}
+}
+
+
 func testAspect(t *testing.T, by_w bool) {
 	dummy := DummyResizerForAspect{}
 	cache := AspectPreserver{&dummy}
@@ -50,6 +79,7 @@ func testAspect(t *testing.T, by_w bool) {
 		t.Fatal(fmt.Sprintf("Image size was %d %d. Expected 200 200.", w, h))
 	}
 }
+
 
 func TestOriginalSize(t *testing.T) {
 	dummy := DummyResizerForAspect{}
