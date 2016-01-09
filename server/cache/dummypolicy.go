@@ -1,8 +1,6 @@
-
 package cache
 
-
-type DummyPolicy struct {}
+type DummyPolicy struct{}
 
 func (q DummyPolicy) Visit(_ ImageInfo) {}
 

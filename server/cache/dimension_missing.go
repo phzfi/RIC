@@ -47,6 +47,27 @@ func (a *AspectPreserver) GetImageByHeight(filename string, height uint) (blob i
 	return
 }
 
+// Get image fitted to w, h preserving aspect ratio
+func (a *AspectPreserver) GetImageFit(filename string, width uint, height uint) (blob images.ImageBlob, err error) {
+	logging.Debug(fmt.Sprintf("Get image fitted to: %v %v %v", filename, width, height))
+
+	originalWidth, originalHeight, err := a.ImageSize(filename)
+	if err != nil {
+		return
+	}
+
+	aspect := width / height
+	originalAspect := originalWidth / originalHeight
+
+	if aspect <= originalAspect {
+		blob, err = a.GetImageByWidth(filename, width)
+	} else {
+		blob, err = a.GetImageByHeight(filename, height)
+	}
+
+	return
+}
+
 // Gets original sized image blob.
 func (a *AspectPreserver) GetOriginalSizedImage(filename string) (blob images.ImageBlob, err error) {
 	logging.Debug(fmt.Sprintf("Get original sized image: %v", filename))

@@ -48,8 +48,13 @@ func (c *BasicResizer) GetImage(filename string, width, height uint) (blob image
 	}
 	// Extract requested format/extension from the filename
 	ext := strings.TrimLeft(filepath.Ext(filename), ".")
-	//Convert the resized image to requested format
-	// TODO: Unsupported format -> Convert does nothing and we get the default format (jpg). Is this behaviour fine?
+	// If no extension was given, return image as is.
+	if len(ext) == 0 {
+		logging.Debug("No extension provided, return image as is without convesion")
+		blob = image.ToBlob()
+		return
+	}
+	// Convert the resized image to requested format
 	logging.Debug("Converting: " + ext)
 	err = image.Convert(ext)
 	if err != nil {
