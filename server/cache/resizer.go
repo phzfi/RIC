@@ -49,7 +49,7 @@ func (c *BasicResizer) GetImage(filename string, width, height uint) (blob image
 	// Extract requested format/extension from the filename
 	ext := strings.TrimLeft(filepath.Ext(filename), ".")
 	// If no extension was given, return image as is.
-	if(len(ext) == 0) {
+	if len(ext) == 0 {
 		logging.Debug("No extension provided, return image as is without convesion")
 		blob = image.ToBlob()
 		return

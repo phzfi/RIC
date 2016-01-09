@@ -1,9 +1,9 @@
 package cache
 
 import (
+	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"fmt"
 )
 
 type ImageCache interface {
@@ -26,10 +26,7 @@ type AmbiguousSizeImageCache struct {
 
 func (a AmbiguousSizeImageCache) GetImage(filename string, width, height *uint, mode *string) (blob images.ImageBlob, err error) {
 	logging.Debug(fmt.Sprintf("Image request: filename=%v, width=%v, height=%v, mode=%v", filename, width, height, mode))
-	scalemode := SCALEMODE_DEFAULT
-	if mode != nil {
-		scalemode.FromString(*mode)
-	}
-	blob, err = scalemode.ScaleImage(a.ImageCache, filename, width, height)
+	scalefunc := ScaleFunc(mode)
+	blob, err = scalefunc(a.ImageCache, filename, width, height)
 	return
 }

@@ -1,37 +1,40 @@
 package cache
 
 import (
-	"strings"
+	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"fmt"
+	"strings"
 )
 
-type ScaleMode struct {
-	ScaleImage func(c ImageCache, filename string, width, height *uint) (img images.ImageBlob, err error)
-}
+var SCALEFUNC_RESIZE = resize
+var SCALEFUNC_FIT = fit
 
-var SCALEMODE_RESIZE  = ScaleMode{resize}
-var SCALEMODE_FIT     = ScaleMode{fit}
-//var SCALEMODE_FILL  = ScaleMode{fill}
-// var SCALEMODE_CROP  = ScaleMode{crop}
-var SCALEMODE_DEFAULT = SCALEMODE_RESIZE
+//var SCALEFUNC_FILL  = fill
+// var SCALEFUNC_CROP  = crop
+var SCALEFUNC_DEFAULT = SCALEFUNC_RESIZE
 
-func (m *ScaleMode) FromString(s string) {
-	s = strings.ToLower(s)
-	switch s {
-	case "resize":
-		*m = SCALEMODE_RESIZE
-		return
-	case "fit":
-		*m = SCALEMODE_FIT
+// Get ScaleFunction according to given mode string (eg. "resize", "fit", "crop", ...). If given string is nil, default scale function is returned.
+func ScaleFunc(s *string) (f func(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error)) {
+	if s == nil {
+		f = SCALEFUNC_DEFAULT
 		return
 	}
-	*m = SCALEMODE_DEFAULT
+	t := strings.ToLower(*s)
+	switch t {
+	case "resize":
+		f = SCALEFUNC_RESIZE
+		return
+	case "fit":
+		f = SCALEFUNC_FIT
+		return
+	}
+	f = SCALEFUNC_DEFAULT
 	return
 }
 
-func resize(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error){
+// ScaleFunction for resize mode
+func resize(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error) {
 	logging.Debug(fmt.Sprintf("Scale mode: resize: filename=%v, width=%v, height=%v", filename, width, height))
 	if width == nil && height != nil {
 		blob, err = c.GetImageByHeight(filename, *height)
@@ -49,6 +52,7 @@ func resize(c ImageCache, filename string, width, height *uint) (blob images.Ima
 	return
 }
 
+// ScaleFunction for fit mode
 func fit(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error) {
 	logging.Debug(fmt.Sprintf("Scale mode: fit: filename=%v, width=%v, height=%v", filename, width, height))
 	if width == nil && height != nil {
