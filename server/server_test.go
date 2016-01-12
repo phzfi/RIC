@@ -23,7 +23,7 @@ func startServer(srverr chan<- error, server *graceful.Server) {
 
 // Stop server and block until stopped
 func stopServer(server *graceful.Server) {
-	server.Stop(0)
+	server.Stop(10 * time.Millisecond)
 	<-server.StopChan()
 }
 
@@ -222,6 +222,7 @@ func testGetImageFromServer(getname string, params string, refname string) (err 
 	if err != nil {
 		return
 	}
+
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
