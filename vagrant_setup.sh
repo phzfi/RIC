@@ -5,13 +5,10 @@ sudo apt-get install -y golang-go dpkg-dev build-essential
 echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bashrc
 export GOPATH=/home/vagrant/go
 chown -R vagrant:vagrant /home/vagrant/go
-go get github.com/joonazan/imagick/imagick
-go get gopkg.in/tylerb/graceful.v1
-go install github.com/phzfi/RIC/server
 
-sudo mv /home/vagrant/go/src/github.com/phzfi/RIC/server/testresults/ testresults
-sudo ln -s /home/vagrant/testresults/ /home/vagrant/go/src/github.com/phzfi/RIC/server/testresults
-sudo chown -R vagrant:vagrant /home/vagrant/testresults/
+go get github.com/phzfi/RIC/...
+sudo rm -rf /home/vagrant/go/src/github.com/phzfi
+sudo mv /home/vagrant/go/phzfi /home/vagrant/go/src/github.com
 
 cd /tmp
 mkdir imagemagick
