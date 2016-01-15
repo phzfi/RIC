@@ -5,11 +5,9 @@ sudo apt-get install -y golang-go dpkg-dev build-essential
 echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bashrc
 export GOPATH=/home/vagrant/go
 chown -R vagrant:vagrant /home/vagrant/go
-go get github.com/phzfi/RIC/...
 
-sudo mv /home/vagrant/go/src/github.com/phzfi/RIC/server/testresults/ testresults
-sudo ln -s /home/vagrant/testresults/ /home/vagrant/go/src/github.com/phzfi/RIC/server/testresults
-sudo chown -R vagrant:vagrant /home/vagrant/testresults/
+cd /home/vagrant/go/src/github.com/phzfi/RIC/
+go get -t ./...
 
 cd /tmp
 mkdir imagemagick
