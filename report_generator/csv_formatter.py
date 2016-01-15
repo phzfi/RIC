@@ -6,7 +6,6 @@ Created on 5 Nov 2015
 """
 import csv
 import sys
-import os
 import logging
 import codecs
 import traceback
@@ -16,6 +15,7 @@ Raw file is given as first parameter on the command line
 Output file is given as second parameter on the command line
 The main function formats the raw file and saves it as csv file
 to the output file. The csv is better suited for data analysis.
+
 """
 
 logging.basicConfig(filename='log/error.log',
@@ -24,7 +24,8 @@ logging.basicConfig(filename='log/error.log',
 
 def main():
     if len(sys.argv) != 3:
-        logging.critical('Wrong number of arguments. Usage: "python csv_formatter.py RAW_FILE OUT_FILE"')
+        logging.critical('Wrong number of arguments.',
+                          'Usage: "python csv_formatter.py RAW_FILE OUT_FILE"')
         sys.exit(1)
     raw_file = sys.argv[1]
     out_file = sys.argv[2]
@@ -47,12 +48,18 @@ def read_csv(from_path):
 
     try:
         with codecs.open(from_path, 'r', 'utf-8') as inp:
-            reader = csv.reader(inp, dialect = 'excel', lineterminator='\n')
+            reader = csv.reader(inp, dialect='excel', lineterminator='\n')
 
             for l in reader:
                 data.append(l)
 
             data[0] = [i.strip() for i in data[0]]
+            data[0][1] += ' / hits'
+            data[0][2] += ' / s'
+            data[0][3] += ' / MB'
+            data[0][4] += ' / s'
+            data[0][5] += ' / trans/s'
+            data[0][6] += ' / MB/s'
             data[1] = [i.strip() for i in data[1]]
 
             data.insert(2, [''])
@@ -68,9 +75,10 @@ def read_csv(from_path):
         logging.critical(str(o) + ' while reading csv file from: ' + from_path)
 
     except Exception:
-        logging.critical(traceback.format_exc() + 
+        logging.critical(traceback.format_exc() +
                          ' exception while reading csv from: ' + from_path)
     return []
+
 
 def save_csv(to_path, data):
     """
@@ -80,7 +88,7 @@ def save_csv(to_path, data):
 
     try:
         with codecs.open(to_path, 'w', 'utf-8') as output:
-            writer = csv.writer(output, dialect = 'excel', lineterminator='\n')
+            writer = csv.writer(output, dialect='excel', lineterminator='\n')
             writer.writerows(data)
 
     except OSError as o:

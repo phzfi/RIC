@@ -3,9 +3,10 @@ __pycache__/
 .pydevproject
 *.pyc
 results/*
+log/error.log
 raw/*
 temp/*
-
+graph.html
 !results/test.csv
 !raw/test.txt
-!temp/test.tmp
+!temp/empty.txt
