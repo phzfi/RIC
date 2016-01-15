@@ -6,9 +6,8 @@ echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bashrc
 export GOPATH=/home/vagrant/go
 chown -R vagrant:vagrant /home/vagrant/go
 
-go get github.com/phzfi/RIC/...
-sudo rm -rf /home/vagrant/go/src/github.com/phzfi
-sudo mv /home/vagrant/go/phzfi /home/vagrant/go/src/github.com
+cd /home/vagrant/go/src/github.com/phzfi/RIC/
+go get -t ./...
 
 cd /tmp
 mkdir imagemagick
