@@ -17,8 +17,8 @@ make html tables. The different formatted csv paths are given as parameters.
 """
 
 
-HIGHLIGHT_HIGHER = (1,3,5,6,7,8)
-HIGHLIGHT_LOWER = (2,4,9)
+HIGHLIGHT_HIGHER = (1, 3, 5, 6, 7, 8)
+HIGHLIGHT_LOWER = (2, 4, 9)
 
 logging.basicConfig(filename='log/error.log',
                     level=logging.ERROR,
@@ -29,7 +29,7 @@ def main():
     args = sys.argv
     if len(args) < 2:
         logging.critical('Wrong number of arguments.' +
-                         'Usage: "python csv_to_html.py testData*"' )
+                         'Usage: "python csv_to_html.py testData*"')
         sys.exit()
     data = []
     software = []
@@ -50,6 +50,7 @@ def is_neutral(i):
 
     return not (i in HIGHLIGHT_HIGHER or i in HIGHLIGHT_LOWER)
 
+
 def save_to_html(html, to_path):
     try:
         with codecs.open(to_path, 'w', 'utf-8') as output:
@@ -58,8 +59,9 @@ def save_to_html(html, to_path):
     except:
         logging.critical(traceback.format_exc() +
                          ' exception while saving html to: ' +
-                          str(to_path))
+                         str(to_path))
         sys.exit
+
 
 def build_row(row_data, title, i):
     """
@@ -87,13 +89,11 @@ def build_row(row_data, title, i):
     return ('<tr>%s</tr>\n' % column_html)
 
 
-
 def buildHTML(software, data, titles):
     """
     Builds the html to display the given data in a table.
 
     """
-
 
     html_table = '''<table>\n
                   <tr>\n
@@ -123,6 +123,7 @@ def buildHTML(software, data, titles):
                 </html> ''' % html_table
     return html
 
+
 def read_csv_row(from_path, row_number):
     """
     Reads a row in a csv file formatted with the csv_formatter script.
@@ -131,16 +132,16 @@ def read_csv_row(from_path, row_number):
 
     try:
         with codecs.open(from_path, 'r', 'utf-8') as inp:
-            reader = csv.reader(inp, dialect = 'excel', lineterminator='\n')
+            reader = csv.reader(inp, dialect='excel', lineterminator='\n')
             i = 0
             for l in reader:
                 if i == row_number and i != 0:
                     data = [x.strip() for x in l]
-                    data = [l[0],int(l[1]),
-                            float(l[2]),int(l[3]),
-                            float(l[4]),float(l[5]),
-                            float(l[6]),float(l[7]),
-                            int(l[8]),int(l[9])]
+                    data = [l[0], int(l[1]),
+                            float(l[2]), int(l[3]),
+                            float(l[4]), float(l[5]),
+                            float(l[6]), float(l[7]),
+                            int(l[8]), int(l[9])]
                     return data
                 elif i == row_number:
                     return l
