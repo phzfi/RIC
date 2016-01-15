@@ -112,6 +112,7 @@ def buildHTML(software, data, titles):
     html =   '''<!DOCTYPE html>\n
                 <html>\n
                 <head>\n
+                <title>Results</title>\n
                 <link rel="stylesheet"
                 type="text/css"
                 href="tablestyle.css">
