@@ -229,9 +229,13 @@ func testGetImageFromServer(getname string, params string, refname string) (err 
 		return
 	}
 
+	imagick.Initialize()
+	defer imagick.Terminate()
+
 	// Save retrieved image to testresults
 	mw := imagick.NewMagickWand()
-	//defer mw.Destroy() TODO: Why does this line crash the test? Is mw destroyed somewhere else?
+	defer mw.Destroy()
+
 	err = mw.ReadImageBlob(body)
 	if err != nil {
 		return
@@ -262,8 +266,6 @@ func testGetImageFromServer(getname string, params string, refname string) (err 
 
 func getDistortion(imageblob images.ImageBlob, filename_cmp string) (distortion float64, err error) {
 	const image_folder = "testimages/server/"
-	imagick.Initialize()
-	defer imagick.Terminate()
 
 	mw_cmp := imagick.NewMagickWand()
 	defer mw_cmp.Destroy()
