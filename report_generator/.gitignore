@@ -7,7 +7,6 @@ log/error.log
 raw/*
 temp/*
 graph.html
-siegeresults.html
 !results/test.csv
 !raw/test.txt
 !temp/empty.txt
