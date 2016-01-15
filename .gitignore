@@ -2,4 +2,4 @@
 *.swo
 *~
 .vagrant
-
+testresults/*
