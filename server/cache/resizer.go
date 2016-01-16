@@ -42,7 +42,7 @@ func (c *BasicResizer) GetImage(filename string, width, height uint) (blob image
 	wx := strconv.FormatUint(uint64(width), 10)
 	wy := strconv.FormatUint(uint64(height), 10)
 	logging.Debug("Resize to: " + wx + "x" + wy)
-	image, err = image.Resized(width, height)
+	resized, err := image.Resized(width, height)
 	if err != nil {
 		return
 	}
@@ -51,17 +51,17 @@ func (c *BasicResizer) GetImage(filename string, width, height uint) (blob image
 	// If no extension was given, return image as is.
 	if len(ext) == 0 {
 		logging.Debug("No extension provided, return image as is without convesion")
-		blob = image.ToBlob()
+		blob = resized.ToBlob()
 		return
 	}
 	// Convert the resized image to requested format
 	logging.Debug("Converting: " + ext)
-	err = image.Convert(ext)
+	err = resized.Convert(ext)
 	if err != nil {
 		return
 	}
 	// Get blob from the image. This destroys the image object.
-	blob = image.ToBlob()
+	blob = resized.ToBlob()
 	return
 }
 
@@ -76,6 +76,7 @@ func (c *BasicResizer) ImageSize(fn string) (w uint, h uint, err error) {
 	if err != nil {
 		return
 	}
+	defer image.Destroy()
 
 	w = image.GetWidth()
 	h = image.GetHeight()
