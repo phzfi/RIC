@@ -229,18 +229,6 @@ func GetImageFromServer(getname string, params string, refname string) (err erro
 		return
 	}
 
-	// Save retrieved image to testresults
-	mw := imagick.NewMagickWand()
-	//defer mw.Destroy() TODO: Why does this line crash the test? Is mw destroyed somewhere else?
-	err = mw.ReadImageBlob(body)
-	if err != nil {
-		return
-	}
-	err = mw.WriteImage(filepath.FromSlash("testresults/server/" + refname))
-	if err != nil {
-		return
-	}
-
 	// Get distortion compared to refrence image and check it is inside tolerance
 	distortion, err := getDistortion(body, refname)
 	if err != nil {
@@ -262,6 +250,7 @@ func GetImageFromServer(getname string, params string, refname string) (err erro
 
 func getDistortion(imageblob images.ImageBlob, filename_cmp string) (distortion float64, err error) {
 	const image_folder = "testimages/server/"
+
 	imagick.Initialize()
 	defer imagick.Terminate()
 
@@ -276,6 +265,12 @@ func getDistortion(imageblob images.ImageBlob, filename_cmp string) (distortion 
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
 	err = mw.ReadImageBlob(imageblob)
+	if err != nil {
+		return
+	}
+
+	// Save image, just in case someone wants to look at it
+	err = mw.WriteImage(filepath.FromSlash("testresults/server/" + filename_cmp))
 	if err != nil {
 		return
 	}
