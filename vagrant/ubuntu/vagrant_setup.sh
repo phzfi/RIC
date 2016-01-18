@@ -1,10 +1,8 @@
 #!/bin/bash
 sudo apt-get update
 sudo apt-get install -y libmagickwand-dev
-sudo apt-get install -y golang-go dpkg-dev 
-build-essential
-echo "export GOPATH=/home/vagrant/go" >> 
-/home/vagrant/.bashrc
+sudo apt-get install -y golang-go dpkg-dev build-essential
+echo "export GOPATH=/home/vagrant/go" >> /home/vagrant/.bashrc
 export GOPATH=/home/vagrant/go
 chown -R vagrant:vagrant /home/vagrant/go
 
