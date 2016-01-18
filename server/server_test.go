@@ -66,7 +66,7 @@ const TOLERANCE = 0.0005
 
 // Test that the web server returns requested JPG image at right size
 func TestGetJPGFromServer(t *testing.T) {
-	err := testGetImageFromServer("toget.jpg", "?width=100&height=100", "getref.jpg")
+	err := GetImageFromServer("toget.jpg", "?width=100&height=100", "getref.jpg")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -75,7 +75,7 @@ func TestGetJPGFromServer(t *testing.T) {
 
 // Test that the web server returns requested JPG image at right size
 func TestGetPNGFromServer(t *testing.T) {
-	err := testGetImageFromServer("toget.png", "?width=100&height=100", "getref.png")
+	err := GetImageFromServer("toget.png", "?width=100&height=100", "getref.png")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -84,7 +84,7 @@ func TestGetPNGFromServer(t *testing.T) {
 
 // Test that the web server returns requested JPG image at right size
 func TestGetGIFFromServer(t *testing.T) {
-	err := testGetImageFromServer("toget.gif", "?width=100&height=100", "getref.gif")
+	err := GetImageFromServer("toget.gif", "?width=100&height=100", "getref.gif")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -93,7 +93,7 @@ func TestGetGIFFromServer(t *testing.T) {
 
 // Test that the web server returns requested JPG image at right size
 func TestGetTIFFFromServer(t *testing.T) {
-	err := testGetImageFromServer("toget.tiff", "?width=100&height=100", "getref.tiff")
+	err := GetImageFromServer("toget.tiff", "?width=100&height=100", "getref.tiff")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -102,7 +102,7 @@ func TestGetTIFFFromServer(t *testing.T) {
 
 // Test that the web server returns requested JPG image at right size
 func TestGetWEBPFromServer(t *testing.T) {
-	err := testGetImageFromServer("toget.webp", "?width=100&height=100", "getref.webp")
+	err := GetImageFromServer("toget.webp", "?width=100&height=100", "getref.webp")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -111,7 +111,7 @@ func TestGetWEBPFromServer(t *testing.T) {
 
 // Test that the web server returns JPG requested by defining width only
 func TestGetJPGByWidth(t *testing.T) {
-	err := testGetImageFromServer("toget.jpg", "?width=200", "jpgbywidth.jpg")
+	err := GetImageFromServer("toget.jpg", "?width=200", "jpgbywidth.jpg")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -120,7 +120,7 @@ func TestGetJPGByWidth(t *testing.T) {
 
 // Test that the web server returns PNG requested by defining width only
 func TestGetPNGByWidth(t *testing.T) {
-	err := testGetImageFromServer("toget.png", "?width=200", "pngbywidth.png")
+	err := GetImageFromServer("toget.png", "?width=200", "pngbywidth.png")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -129,7 +129,7 @@ func TestGetPNGByWidth(t *testing.T) {
 
 // Test that the web server returns JPG requested by defining width only
 func TestGetJPGByHeight(t *testing.T) {
-	err := testGetImageFromServer("toget.jpg", "?height=200", "jpgbyheight.jpg")
+	err := GetImageFromServer("toget.jpg", "?height=200", "jpgbyheight.jpg")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -138,7 +138,7 @@ func TestGetJPGByHeight(t *testing.T) {
 
 // Test that the web server returns PNG requested by defining width only
 func TestGetPNGByHeight(t *testing.T) {
-	err := testGetImageFromServer("toget.png", "?height=200", "pngbyheight.png")
+	err := GetImageFromServer("toget.png", "?height=200", "pngbyheight.png")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -147,7 +147,7 @@ func TestGetPNGByHeight(t *testing.T) {
 
 // Test that the web server returns JPG fit to given dimensions
 func TestGetJPGFitByWidth(t *testing.T) {
-	err := testGetImageFromServer("toget.jpg", "?width=200&height=1000&mode=fit", "jpgfitbywidth.jpg")
+	err := GetImageFromServer("toget.jpg", "?width=200&height=1000&mode=fit", "jpgfitbywidth.jpg")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -156,7 +156,7 @@ func TestGetJPGFitByWidth(t *testing.T) {
 
 // Test that the web server returns JPG fit to given dimensions
 func TestGetJPGFitByHeight(t *testing.T) {
-	err := testGetImageFromServer("toget.jpg", "?width=1000&height=200&mode=fit", "jpgfitbyheight.jpg")
+	err := GetImageFromServer("toget.jpg", "?width=1000&height=200&mode=fit", "jpgfitbyheight.jpg")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -165,7 +165,7 @@ func TestGetJPGFitByHeight(t *testing.T) {
 
 // Test that the web server returns PNG fit to given dimensions
 func TestGetPNGFitByWidth(t *testing.T) {
-	err := testGetImageFromServer("toget.png", "?width=200&height=1000&mode=fit", "pngfitbywidth.png")
+	err := GetImageFromServer("toget.png", "?width=200&height=1000&mode=fit", "pngfitbywidth.png")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -174,7 +174,7 @@ func TestGetPNGFitByWidth(t *testing.T) {
 
 // Test that the web server returns PNG fit to given dimensions
 func TestGetPNGFitByHeight(t *testing.T) {
-	err := testGetImageFromServer("toget.png", "?width=1000&height=200&mode=fit", "pngfitbyheight.png")
+	err := GetImageFromServer("toget.png", "?width=1000&height=200&mode=fit", "pngfitbyheight.png")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -183,7 +183,7 @@ func TestGetPNGFitByHeight(t *testing.T) {
 
 // Test that the test fails with wrong sized PNG image (testing that tests work)
 func TestGetPNGFitByHeightFail(t *testing.T) {
-	err := testGetImageFromServer("toget.png", "?width=180&height=200", "pngbyheight.png")
+	err := GetImageFromServer("toget.png", "?width=180&height=200", "pngbyheight.png")
 	if err == nil {
 		t.Fatal("Test passed even with bad image - there is something seriously wrong with these tests")
 		return
@@ -192,7 +192,7 @@ func TestGetPNGFitByHeightFail(t *testing.T) {
 
 // Test that the web server returns JPG at original size
 func TestGetJPGOriginalSize(t *testing.T) {
-	err := testGetImageFromServer("toget.jpg", "", "origref.jpg")
+	err := GetImageFromServer("toget.jpg", "", "origref.jpg")
 	if err != nil {
 		t.Fatal(err)
 		return
@@ -201,14 +201,14 @@ func TestGetJPGOriginalSize(t *testing.T) {
 
 // Test that the web server returns original image
 func TestGetOriginal(t *testing.T) {
-	err := testGetImageFromServer("toget", "", "origref")
+	err := GetImageFromServer("toget", "", "origref")
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
 }
 
-func testGetImageFromServer(getname string, params string, refname string) (err error) {
+func GetImageFromServer(getname string, params string, refname string) (err error) {
 
 	// Start the server
 	server, _ := NewServer(500000)
