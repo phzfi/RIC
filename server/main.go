@@ -4,10 +4,11 @@ import (
 	"flag"
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/valyala/fasthttp"
 	"gopkg.in/tylerb/graceful.v1"
-	"io"
+	//"io"
 	"log"
-	"net/http"
+	//"net/http"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -30,8 +31,8 @@ type MyHandler struct {
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
 // TODO: Check that ServeHTTP is called inside a goroutine?
-func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	method := request.Method
+func (h *MyHandler) ServeHTTP(/*writer http.ResponseWriter, request *http.Request*/ctx *fasthttp.RequestCtx) {
+	//method := request.Method
 
 	// In the future we can use requester can detect request spammers!
 	// requester := request.RemoteAddr
@@ -40,23 +41,39 @@ func (h *MyHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 	count := &(h.requests)
 	atomic.AddUint64(count, 1)
 
-	if method == "GET" {
+	if /*method == "GET"*/ctx.IsGet() {
 
-		url := request.URL
-		filename := url.Path
+		//url := request.URL
+		//filename := url.Path
+		url := ctx.URI()
+		filename := string(ctx.Path())
 
 		// GET parameters
-		query := url.Query()
+		//query := url.Query()
+		query := url.QueryArgs()
 
+		qw, _ := query.GetUint("width")
+		qh, _ := query.GetUint("height")
+		qm, _ := query.GetUint("mode")
+		uqw := uint(qw)
+		uqh := uint(qh)
+		uqm := uint(qm)
+		puqw := &uqw
+		puqh := &uqh
+		puqm := &uqm
 		h.RetrieveImage(
-			writer, filename,
-			getUintParam(query, "width"),
-			getUintParam(query, "height"),
-			getStringParam(query, "mode"))
+			//writer, filename,
+			//getUintParam(query, "width"),
+			//getUintParam(query, "height"),
+			//getStringParam(query, "mode"))
+			ctx, filename,
+			puqw,
+			puqh,
+			puqm)
 
-	} else if method == "POST" {
+	} else if ctx.IsPost()/*method == "POST"*/ {
 		// POST is currently unused so we can use this for testing
-		h.RetrieveHello(writer)
+		h.RetrieveHello(ctx)
 	}
 }
 
@@ -82,9 +99,11 @@ func getStringParam(params map[string][]string, name string) (result *string) {
 }
 
 // Respond to POST message by saying Hello
-func (h MyHandler) RetrieveHello(writer http.ResponseWriter) {
-	result := "Hello world!"
+func (h MyHandler) RetrieveHello(/*writer http.ResponseWriter*/ctx *fasthttp.RequestCtx) {
+	_, err := ctx.WriteString("Hello world!")
+	/*
 	_, err := io.WriteString(writer, result)
+	*/
 	if err != nil {
 		log.Println(err)
 	}
@@ -93,7 +112,7 @@ func (h MyHandler) RetrieveHello(writer http.ResponseWriter) {
 // Write image by filename into ResponseWriter with the
 // desired width and height being pointed to. If there
 // are no desired width or height, that parameter is nil.
-func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
+func (h *MyHandler) RetrieveImage(/*writer http.ResponseWriter*/ctx *fasthttp.RequestCtx,
 	filename string,
 	width *uint,
 	height *uint,
@@ -112,12 +131,15 @@ func (h *MyHandler) RetrieveImage(writer http.ResponseWriter,
 		// TODO:
 		// Classify different possible errors more but make sure
 		// no "internal" information is leaked.
-		writer.WriteHeader(http.StatusNotFound)
-		io.WriteString(writer, "Image not found!")
+		//writer.WriteHeader(http.StatusNotFound)
+		//io.WriteString(writer, "Image not found!")
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		ctx.WriteString("Image not found!")
 		logging.Debug(err)
 		return
 	}
-	writer.Write(blob)
+	//writer.Write(blob)
+	ctx.Write(blob)
 }
 
 // Create a new graceful server and configure it.
@@ -145,7 +167,7 @@ func NewServer(maxMemory uint64) (*graceful.Server, *MyHandler) {
 	// Configure server
 	server := &graceful.Server{
 		Timeout: 8 * time.Second,
-		Server: &http.Server{
+		Server: &fasthttp.Server{
 			Addr:           ":8005",
 			Handler:        handler,
 			ReadTimeout:    8 * time.Second,
