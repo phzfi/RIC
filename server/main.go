@@ -100,7 +100,10 @@ func (h *MyHandler) RetrieveImage(ctx *fasthttp.RequestCtx,
 	ctx.Write(blob)
 }
 
-func newHandler(maxMemory uint64) (*MyHandler) {
+// Create a new fasthttp server and configure it.
+// This does not run the server however.
+func NewServer(maxMemory uint64) (*fasthttp.Server, *MyHandler) {
+
 	cacher := cache.AmbiguousSizeImageCache{cache.NewLRU(maxMemory)}
 
 	// Add roots
@@ -118,7 +121,15 @@ func newHandler(maxMemory uint64) (*MyHandler) {
 		requests: 0,
 		images:   cacher,
 	}
-	return handler
+
+	// Configure server
+	server := &fasthttp.Server{
+		Handler: 				handler.ServeHTTP,
+		ReadTimeout:		8 * time.Second,
+		WriteTimeout:		8 * time.Second,
+		ReadBufferSize:	1 << 20,			// this also limits max header size
+	}
+	return server, handler
 }
 
 func main() {
@@ -127,11 +138,11 @@ func main() {
 	mem := flag.Uint64("m", 500*1024*1024, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
 
-	handler := newHandler(*mem)
+	server, handler := NewServer(*mem)
 
 	log.Println("Server starting...")
 	handler.started = time.Now()
-	err := fasthttp.ListenAndServe(":8005", handler.ServeHTTP)
+	err := server.ListenAndServe(":8005")
 	end := time.Now()
 
 	// Get number of requests
