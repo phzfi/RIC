@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
+	"net"
 )
 
 // MyHandler type is used to encompass HandlerFunc interface.
@@ -47,13 +48,12 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 		qw, _ := query.GetUint("width")
 		qh, _ := query.GetUint("height")
-		qm, _ := query.GetUint("mode")
+		qm := string(query.Peek("mode"))
 		uqw := uint(qw)
 		uqh := uint(qh)
-		uqm := string(qm)
 		puqw := &uqw
 		puqh := &uqh
-		puqm := &uqm
+		puqm := &qm
 		h.RetrieveImage(ctx, filename, puqw, puqh, puqm)
 
 	} else if ctx.IsPost() {
@@ -102,7 +102,7 @@ func (h *MyHandler) RetrieveImage(ctx *fasthttp.RequestCtx,
 
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
-func NewServer(maxMemory uint64) (*fasthttp.Server, *MyHandler) {
+func NewServer(maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
 
 	cacher := cache.AmbiguousSizeImageCache{cache.NewLRU(maxMemory)}
 
@@ -129,7 +129,8 @@ func NewServer(maxMemory uint64) (*fasthttp.Server, *MyHandler) {
 		WriteTimeout:		8 * time.Second,
 		ReadBufferSize:	1 << 20,			// this also limits max header size
 	}
-	return server, handler
+	ln, _ := net.Listen("tcp", ":8005")
+	return server, handler, ln
 }
 
 func main() {
@@ -138,11 +139,12 @@ func main() {
 	mem := flag.Uint64("m", 500*1024*1024, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
 
-	server, handler := NewServer(*mem)
+	server, handler, ln := NewServer(*mem)
 
 	log.Println("Server starting...")
 	handler.started = time.Now()
-	err := server.ListenAndServe(":8005")
+	//err := server.ListenAndServe(":8005")
+	err := server.Serve(ln)
 	end := time.Now()
 
 	// Get number of requests
