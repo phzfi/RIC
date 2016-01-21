@@ -153,7 +153,6 @@ func main() {
 
 	log.Println("Server starting...")
 	handler.started = time.Now()
-	//err := server.ListenAndServe(":8005")
 	err := server.Serve(ln)
 	end := time.Now()
 

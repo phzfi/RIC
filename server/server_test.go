@@ -7,16 +7,13 @@ import (
 	"github.com/joonazan/imagick/imagick"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/valyala/fasthttp"
-	//"gopkg.in/tylerb/graceful.v1"
-	//"io/ioutil"
-	//"net/http"
 	"net"
 	"path/filepath"
 	"testing"
 	"time"
 )
 
-// This is an utility function to launch a graceful server.
+// This is an utility function to launch a server.
 // This is intended to be run as a goroutine as it takes an
 // error channel as the first parameter.
 func startServer(srverr chan<- error, server *fasthttp.Server, ln net.Listener) {
