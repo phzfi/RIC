@@ -104,7 +104,7 @@ func TestGetWEBPFromServer(t *testing.T) {
 		return
 	}
 }
-/*
+
 // Test that the web server returns JPG requested by defining width only
 func TestGetJPGByWidth(t *testing.T) {
 	err := GetImageFromServer("toget.jpg", "?width=200", "jpgbywidth.jpg")
@@ -184,7 +184,7 @@ func TestGetPNGFitByHeightFail(t *testing.T) {
 		t.Fatal("Test passed even with bad image - there is something seriously wrong with these tests")
 		return
 	}
-}*/
+}
 
 // Test that the web server returns JPG at original size
 func TestGetJPGOriginalSize(t *testing.T) {

@@ -45,21 +45,31 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 		// GET parameters
 		query := url.QueryArgs()
-
-		qw, _ := query.GetUint("width")
-		qh, _ := query.GetUint("height")
-		qm := string(query.Peek("mode"))
-		uqw := uint(qw)
-		uqh := uint(qh)
-		puqw := &uqw
-		puqh := &uqh
-		puqm := &qm
-		h.RetrieveImage(ctx, filename, puqw, puqh, puqm)
+		width, height, mode := getParams(query)
+		h.RetrieveImage(ctx, filename, width, height, mode)
 
 	} else if ctx.IsPost() {
 		// POST is currently unused so we can use this for testing
 		h.RetrieveHello(ctx)
 	}
+}
+
+func getParams(a *fasthttp.Args) (w *uint, h *uint, m *string) {
+	qw, e := a.GetUint("width")
+	if e == nil {
+		uqw := uint(qw)
+		w = &uqw
+	}
+	qh, e := a.GetUint("height")
+	if e == nil {
+		uqh := uint(qh)
+		h = &uqh
+	}
+	if a.Has("mode") {
+		sm := string(a.Peek("mode"))
+		m = &sm
+	}
+	return
 }
 
 // Respond to POST message by saying Hello
