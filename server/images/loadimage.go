@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	//"io/ioutil"
+	"github.com/valyala/fasthttp"
 	"os"
 )
 
@@ -34,22 +34,23 @@ func LoadImage(filename string) (img Image, err error) {
 // Return binary ImageBlob of an image from web.
 func LoadImageWeb(url string) (image Image, err error) {
 
-	resp, err := http.Get(url)
+	//resp, err := http.Get(url)
+	statuscode, body, err := fasthttp.Get(nil, url)
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
+	//defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		err = errors.New(fmt.Sprintf("Couldn't load image. Server returned %i", resp.StatusCode))
+	if statuscode != 200 {
+		err = errors.New(fmt.Sprintf("Couldn't load image. Server returned %i", statuscode))
 		return
 	}
-
+	/*
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
-
+	*/
 	blob := body
 
 	image = NewImage()

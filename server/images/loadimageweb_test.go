@@ -2,17 +2,25 @@ package images
 
 import (
 	"bytes"
-	"gopkg.in/tylerb/graceful.v1"
-	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+	"github.com/valyala/fasthttp"
+	"net"
+	"time"
 )
 
-type TestHandler struct {
+type TestHandler struct {}
+type NotFoundHandler struct {}
+
+
+func stopServer(ln net.Listener) {
+	ln.Close()
+	time.Sleep(100 * time.Millisecond)
 }
 
-func (h *TestHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
+
+func (h *TestHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	reader, err := os.Open("../testimages/loadimage/test.jpg")
 	if err != nil {
 		return
@@ -24,22 +32,26 @@ func (h *TestHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	buffer.ReadFrom(reader)
 	blob := ImageBlob(buffer.Bytes())
 
-	w.Write(blob)
+	ctx.Write(blob)
 }
+
+func (h *NotFoundHandler) Serve404 (ctx *fasthttp.RequestCtx) {
+	ctx.SetStatusCode(fasthttp.StatusNotFound)
+	ctx.WriteString("Image not found!")
+}
+
 
 func TestImageWeb(t *testing.T) {
 	handler := &TestHandler{}
-	server := graceful.Server{
-		Server: &http.Server{
-			Addr:    ":8006",
-			Handler: handler,
-		},
+	server := &fasthttp.Server{
+		Handler: handler.ServeHTTP,
 	}
+	ln, _ := net.Listen("tcp", ":8005")
+	go server.Serve(ln)
+	defer stopServer(ln)
+	time.Sleep(100 * time.Millisecond)
 
-	go server.ListenAndServe()
-	defer server.Stop(0)
-
-	image, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
+	image, err := LoadImageWeb("http://localhost:8005/mikäliekuva.jpg")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,17 +77,16 @@ func TestImageWeb(t *testing.T) {
 
 func TestImageWebWrongImage(t *testing.T) {
 	handler := &TestHandler{}
-	server := graceful.Server{
-		Server: &http.Server{
-			Addr:    ":8006",
-			Handler: handler,
-		},
+	server := &fasthttp.Server{
+		Handler: handler.ServeHTTP,
 	}
+	ln, _ := net.Listen("tcp", ":8005")
+	go server.Serve(ln)
+	defer stopServer(ln)
+	time.Sleep(100 * time.Millisecond)
 
-	go server.ListenAndServe()
-	defer server.Stop(0)
 
-	image, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
+	image, err := LoadImageWeb("http://localhost:8005/mikäliekuva.jpg")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,16 +113,15 @@ func TestImageWebWrongImage(t *testing.T) {
 }
 
 func TestImageWeb404(t *testing.T) {
-
-	server := graceful.Server{
-		Server: &http.Server{
-			Addr:    ":8006",
-			Handler: http.NotFoundHandler(),
-		},
+	handler := &NotFoundHandler{}
+	server := &fasthttp.Server{
+		Handler: handler.Serve404,
 	}
+	ln, _ := net.Listen("tcp", ":8006")
+	go server.Serve(ln)
+	defer stopServer(ln)
+	time.Sleep(100 * time.Millisecond)
 
-	go server.ListenAndServe()
-	defer server.Stop(0)
 
 	_, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
 	if err == nil {
