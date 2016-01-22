@@ -23,6 +23,7 @@ func startServer(srverr chan<- error, server *fasthttp.Server, ln net.Listener) 
 // Stop server and block until stopped
 func stopServer(ln net.Listener) {
 	ln.Close()
+	time.Sleep(100 * time.Millisecond)
 }
 
 // Test that the web server return "Hello world" and does not
