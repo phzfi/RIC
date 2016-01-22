@@ -134,10 +134,7 @@ func NewServer(maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
 
 	// Configure server
 	server := &fasthttp.Server{
-		Handler: 				handler.ServeHTTP,
-		ReadTimeout:		8 * time.Second,
-		WriteTimeout:		8 * time.Second,
-		ReadBufferSize:	1 << 20,			// this also limits max header size
+		Handler: handler.ServeHTTP,
 	}
 	ln, _ := net.Listen("tcp", ":8005")
 	return server, handler, ln
