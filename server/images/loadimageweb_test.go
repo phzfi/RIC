@@ -47,19 +47,22 @@ func TestImageWeb(t *testing.T) {
 	defer stopServer(ln)
 	time.Sleep(100 * time.Millisecond)
 
-	image, err := 
-LoadImageWeb("http://localhost:8009/mikäliekuva.jpg")
+	img := NewImage()
+	defer img.Destroy()
+	err := img.FromWeb("http://localhost:8009/mikäliekuva.jpg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	
+	img_cmp := NewImage()
+	defer img_cmp.Destroy()
+	err = img_cmp.FromFile(filepath.FromSlash("../testimages/loadimage/test.jpg"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	image_cmp, err := LoadImage(filepath.FromSlash("../testimages/loadimage/test.jpg"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	blob := image.ToBlob()
-	blob_cmp := image_cmp.ToBlob()
+	blob := img.Blob()
+	blob_cmp := img_cmp.Blob()
 
 	if len(blob) != len(blob_cmp) {
 		t.Fatal("Image size different")
@@ -82,19 +85,22 @@ func TestImageWebWrongImage(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 
-	image, err := 
-LoadImageWeb("http://localhost:8009/mikäliekuva.jpg")
+	img := NewImage()
+	defer img.Destroy()
+	err := img.FromWeb("http://localhost:8009/mikäliekuva.jpg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	
+	img_cmp := NewImage()
+	defer img_cmp.Destroy()
+	err := img_cmp.FromFile(filepath.FromSlash("../testimages/loadimage/test.png"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	image_cmp, err := LoadImage(filepath.FromSlash("../testimages/loadimage/test.png"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	blob := image.ToBlob()
-	blob_cmp := image_cmp.ToBlob()
+	blob := img.Blob()
+	blob_cmp := img_cmp.Blob()
 
 	if len(blob) != len(blob_cmp) {
 		return

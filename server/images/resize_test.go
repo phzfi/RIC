@@ -52,20 +52,22 @@ func GetDistortion(filename, filename_cmp string) (distortion float64, err error
 
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
-
-	image, err := LoadImage(filepath.FromSlash(image_folder + filename))
+	
+	img := NewImage()
+	defer img.Destroy()
+	err = img.FromFile(filepath.FromSlash(image_folder + filename))
 	if err != nil {
 		err = errors.New("LoadImage failed:" + err.Error())
 		return
 	}
 
-	resized, err := image.Resized(100, 100)
+	err := img.Resize(100, 100)
 	if err != nil {
 		err = errors.New("Resize failed:" + err.Error())
 		return
 	}
 
-	mw.ReadImageBlob(resized.ToBlob())
+	mw.ReadImageBlob(img.ToBlob())
 
 	trash, distortion := mw.CompareImages(mw_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
 	trash.Destroy()

@@ -2,14 +2,14 @@ package cache
 
 import "sync"
 
-func NewLRU(mm uint64) ImageCache {
-	return New(NewLRUPolicy(), mm)
+func NewLRU(mm uint64) *Cache {
+	return NewCache(NewLRUPolicy(), mm)
 }
 
 type LRU struct {
 	sync.Mutex
 
-	toList     map[ImageInfo]*list
+	toList     map[cacheKey]*list
 	head, tail list
 }
 
@@ -17,14 +17,14 @@ func NewLRUPolicy() *LRU {
 
 	lru := new(LRU)
 
-	lru.toList = make(map[ImageInfo]*list)
+	lru.toList = make(map[cacheKey]*list)
 	lru.head.next = &lru.tail
 	lru.tail.prev = &lru.head
 
 	return lru
 }
 
-func (lru *LRU) Push(id ImageInfo) {
+func (lru *LRU) Push(id cacheKey) {
 
 	l := list{id: id}
 
@@ -38,7 +38,7 @@ func (lru *LRU) Push(id ImageInfo) {
 	lru.toList[id] = &l
 }
 
-func (lru *LRU) Visit(id ImageInfo) {
+func (lru *LRU) Visit(id cacheKey) {
 
 	lru.Lock()
 	defer lru.Unlock()
@@ -47,7 +47,7 @@ func (lru *LRU) Visit(id ImageInfo) {
 	lru.Push(id)
 }
 
-func (lru *LRU) Pop() (id ImageInfo) {
+func (lru *LRU) Pop() (id cacheKey) {
 
 	first := lru.first()
 	if first == &lru.tail {
@@ -71,7 +71,7 @@ func (lru LRU) last() *list {
 
 type list struct {
 	next, prev *list
-	id         ImageInfo
+	id         cacheKey
 }
 
 func (l list) remove() {

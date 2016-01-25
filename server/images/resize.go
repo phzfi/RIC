@@ -4,11 +4,6 @@ import (
 	"github.com/joonazan/imagick/imagick"
 )
 
-func (img Image) Resized(w, h uint) (resized Image, err error) {
-
-	resized = img.Clone()
-
-	err = resized.ResizeImage(w, h, imagick.FILTER_LANCZOS, 1)
-
-	return
+func (img Image) Resize(w, h int) error {
+	return img.ResizeImage(uint(w), uint(h), imagick.FILTER_LANCZOS, 1)
 }
