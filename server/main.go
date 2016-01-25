@@ -85,7 +85,7 @@ func (h *MyHandler) RetrieveImage(ctx *fasthttp.RequestCtx,
 	filename string,
 	width *uint,
 	height *uint,
-	mode *string) {
+	mode string) {
 
 	// TODO: filename must not be interpret as "absolute"
 	// implement a type that will abstract away the filesystem.
