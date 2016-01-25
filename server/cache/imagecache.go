@@ -24,7 +24,7 @@ type AmbiguousSizeImageCache struct {
 	ImageCache
 }
 
-func (a AmbiguousSizeImageCache) GetImage(filename string, width, height *uint, mode *string) (blob images.ImageBlob, err error) {
+func (a AmbiguousSizeImageCache) GetImage(filename string, width, height *uint, mode string) (blob images.ImageBlob, err error) {
 	logging.Debug(fmt.Sprintf("Image request: filename=%v, width=%v, height=%v, mode=%v", filename, width, height, mode))
 	scalefunc := ScaleFunc(mode)
 	blob, err = scalefunc(a.ImageCache, filename, width, height)
