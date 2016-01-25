@@ -46,6 +46,11 @@ func (c *BasicResizer) GetImage(filename string, width, height uint) (blob image
 	if err != nil {
 		return
 	}
+	// Add watermark
+	err = resized.Watermark()
+	if err != nil {
+		return
+	}
 	// Extract requested format/extension from the filename
 	ext := strings.TrimLeft(filepath.Ext(filename), ".")
 	// If no extension was given, return image as is.

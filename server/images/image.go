@@ -3,14 +3,42 @@ package images
 import (
 	"errors"
 	"github.com/joonazan/imagick/imagick"
+	"github.com/phzfi/RIC/server/logging"
+	"gopkg.in/gcfg.v1"
 	"strings"
 )
 
+var conf = struct {
+	watermark struct {
+		path string
+	}
+
+	min struct {
+		width uint
+		height uint
+	}
+
+	max struct {
+		width uint
+		height uint
+	}
+
+	alignment struct {
+		horizontal float64
+		vertical float64
+	}
+}{}
+
 func init() {
 	imagick.Initialize()
+	logging.Debug("Reading config")
+	err := gcfg.ReadFileInto(&conf, "watermark-config.gcfg")
+	if err != nil {
+		logging.Debug("Couldn't read watermark config." + err.Error())
+	}
 }
 
-// Imageblob is just an image file dumped, byte by byte to an byte array.
+// ImageBlob is just an image file dumped, byte by byte to an byte array.
 type ImageBlob []byte
 
 // Image is an uncompressed image that must be convertd to blob before serving to a client.
@@ -61,4 +89,22 @@ func (img Image) ToBlob() (blob ImageBlob) {
 	blob = img.GetImageBlob()
 	img.Destroy()
 	return
+}
+
+// Watermark watermarks image.
+func (img Image) Watermark() (err error) {
+	if img.GetHeight() < conf.min.height && img.GetWidth() < conf.min.width && img.GetHeight() > conf.max.height && img.GetWidth() > conf.max.width {
+		return
+	}
+
+	logging.Debug(conf)
+
+	watermark, err := LoadImage(conf.watermark.path)
+	if err != nil {
+		logging.Debug("Error loading watermark image." + err.Error())
+		return
+	}
+	x := int(float64((img.GetWidth() - watermark.GetWidth())) * conf.alignment.horizontal)
+	y := int(float64((img.GetHeight() - watermark.GetHeight())) * conf.alignment.vertical)
+	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)
 }
