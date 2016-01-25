@@ -11,6 +11,11 @@ import (
 
 func init() {
 	imagick.Initialize()
+	logging.Debug("Reading config")
+	err := gcfg.ReadFileInto(&conf, "watermark-config.gcfg")
+	if err != nil {
+		logging.Debug("Couldn't read watermark config." + err.Error())
+	}
 }
 
 // ImageBlob is just an image file dumped, byte by byte to an byte array.
@@ -66,39 +71,18 @@ func (img Image) Blob() ImageBlob {
 
 // Watermark watermarks image.
 func (img Image) Watermark() (err error) {
-	logging.Debug("Watermarking")
-  logging.Debug(*config.Config())
-	minHeight, err := config.WatermarkInt("minheight")
-	minWidth, err := config.WatermarkInt("minwidth")
-	maxHeight, err := config.WatermarkInt("maxheight")
-	maxWidth, err := config.WatermarkInt("maxwidth")
-
-	if err != nil {
-		logging.Debug("Error reading config size restrictions." + err.Error())
+	if img.GetHeight() < conf.min.height && img.GetWidth() < conf.min.width && img.GetHeight() > conf.max.height && img.GetWidth() > conf.max.width {
 		return
 	}
 
-	heightOK := img.GetHeight() > uint(minHeight) && img.GetHeight() < uint(maxHeight)
-	widthOK := img.GetWidth() > uint(minWidth) && img.GetWidth() < uint(maxWidth)
-	if (!heightOK && !widthOK) {
-		return
-	}
+	logging.Debug(conf)
 
-	watermark, err := LoadImage(config.Watermark("path"))
+	watermark, err := LoadImage(conf.watermark.path)
 	if err != nil {
 		logging.Debug("Error loading watermark image." + err.Error())
 		return
 	}
-
-	horizontal, err := config.WatermarkFloat64("horizontal")
-	vertical, err := config.WatermarkFloat64("vertical")
-
-	if err != nil {
-		logging.Debug("Error loading config alignment." + err.Error())
-		return
-	}
-
-	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
-	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
+	x := int(float64((img.GetWidth() - watermark.GetWidth())) * conf.alignment.horizontal)
+	y := int(float64((img.GetHeight() - watermark.GetHeight())) * conf.alignment.vertical)
 	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)
 }
