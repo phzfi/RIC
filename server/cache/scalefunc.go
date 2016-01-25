@@ -15,21 +15,16 @@ var SCALEFUNC_FIT = fit
 var SCALEFUNC_DEFAULT = SCALEFUNC_RESIZE
 
 // Get ScaleFunction according to given mode string (eg. "resize", "fit", "crop", ...). If given string is nil, default scale function is returned.
-func ScaleFunc(s *string) (f func(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error)) {
-	if s == nil {
-		f = SCALEFUNC_DEFAULT
-		return
-	}
-	t := strings.ToLower(*s)
+func ScaleFunc(s string) (f func(c ImageCache, filename string, width, height *uint) (blob images.ImageBlob, err error)) {
+	t := strings.ToLower(s)
 	switch t {
 	case "resize":
 		f = SCALEFUNC_RESIZE
-		return
 	case "fit":
 		f = SCALEFUNC_FIT
-		return
+	default:
+		f = SCALEFUNC_DEFAULT
 	}
-	f = SCALEFUNC_DEFAULT
 	return
 }
 

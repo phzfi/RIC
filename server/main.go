@@ -54,7 +54,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func getParams(a *fasthttp.Args) (w *uint, h *uint, m *string) {
+func getParams(a *fasthttp.Args) (w *uint, h *uint, m string) {
 	qw, e := a.GetUint("width")
 	if e == nil {
 		uqw := uint(qw)
@@ -65,10 +65,8 @@ func getParams(a *fasthttp.Args) (w *uint, h *uint, m *string) {
 		uqh := uint(qh)
 		h = &uqh
 	}
-	if a.Has("mode") {
-		sm := string(a.Peek("mode"))
-		m = &sm
-	}
+
+	m = string(a.Peek("mode"))
 	return
 }
 
