@@ -1,40 +1,36 @@
 package main
 
-
 import (
-	"testing"
-	"github.com/phzfi/RIC/server/ops"
-	"github.com/phzfi/RIC/server/cache"
-	"github.com/phzfi/RIC/server/images"
-	"github.com/joonazan/imagick/imagick"
-	"path/filepath"
 	"errors"
 	"fmt"
+	"github.com/joonazan/imagick/imagick"
+	"github.com/phzfi/RIC/server/cache"
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/ops"
+	"path/filepath"
+	"testing"
 )
-
 
 const (
-	testfolder = "testimages/"
+	testfolder    = "testimages/"
 	resultsfolder = "testresults/"
-	testgroup = "resize/"
+	testgroup     = "resize/"
 )
 
-
-const TOLERANCE = 0.0005
-
+const TOLERANCE = 0.002
 
 func TestResize(t *testing.T) {
-	operator := cache.MakeOperator(512*1024*1024)
+	operator := cache.MakeOperator(512 * 1024 * 1024)
 	src := ops.ImageSource{}
 	src.AddRoot(testfolder + testgroup)
 	blob, err := operator.GetBlob(
-		src.LoadImageOp("resized.jpg"),
+		src.LoadImageOp("toresize.jpg"),
 		ops.Resize{100, 100},
 	)
 	if err != nil {
 		return
 	}
-	d, err := getDistortion(blob, "resized.jpg" )
+	d, err := getDistortion(blob, "resized.jpg")
 	if err != nil {
 		return
 	}
@@ -42,7 +38,6 @@ func TestResize(t *testing.T) {
 		t.Fatal(fmt.Sprintf("Bad image returned. Distortion: %v, Tolerance: %v", d, TOLERANCE))
 	}
 }
-
 
 func getDistortion(blob images.ImageBlob, filename_cmp string) (distortion float64, err error) {
 	const image_folder = testfolder + testgroup
