@@ -9,8 +9,17 @@ import (
 	"strings"
 )
 
+type idToSize map[string][2]uint
+
 type ImageSource struct {
 	roots []string
+	sizes idToSize
+}
+
+func MakeImageSource() ImageSource {
+	return ImageSource{
+		sizes: make(idToSize),
+	}
 }
 
 func (i *ImageSource) LoadImageOp(id string) Operation {
@@ -41,6 +50,27 @@ func (i *ImageSource) searchRoots(filename string, img images.Image) (err error)
 		}
 		logging.Debug("Not found: " + trial)
 	}
+	return
+}
+
+func (c *BasicResizer) ImageSize(fn string) (w uint, h uint, err error) {
+	logging.Debug(fmt.Sprintf("Get original image: %v", fn))
+
+	if s, ok := c.sizes[fn]; ok {
+		return s[0], s[1], nil
+	}
+
+	image := images.NewImage()
+	defer image.Destroy()
+
+	err = c.searchRoots(fn)
+	if err != nil {
+		return
+	}
+
+	w = image.GetWidth()
+	h = image.GetHeight()
+	c.sizes[fn] = [2]uint{w, h}
 	return
 }
 
