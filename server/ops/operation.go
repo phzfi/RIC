@@ -8,6 +8,6 @@ type Operation interface {
 
 type OperationFunc func(images.Image) error
 
-func (o OperationFunc) Apply (img images.Image) error {
+func (o OperationFunc) Apply(img images.Image) error {
 	return o(img)
 }

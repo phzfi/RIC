@@ -1,6 +1,5 @@
 package cache
 
-
 import (
 	"fmt"
 	"github.com/phzfi/RIC/server/images"
@@ -8,16 +7,13 @@ import (
 	"sync"
 )
 
-
 type cacheKey string
-
 
 // Returns a unique representation of an ops chain. This unique representation can be used as a map key unlike the original ops chain (slice cannot be a key).
 func toKey(operations []ops.Operation) cacheKey {
 	//TODO: Currently returns go source code representation of operations which is a very long string. Possibly find a way to shorten the key.
 	return cacheKey(fmt.Sprintf("%#v", operations))
 }
-
 
 type Cache struct {
 	sync.RWMutex
@@ -28,7 +24,6 @@ type Cache struct {
 	maxMemory, currentMemory uint64
 }
 
-
 type Policy interface {
 	// Push and Pop do not need to be thread safe
 	Push(cacheKey)
@@ -37,7 +32,6 @@ type Policy interface {
 	// Image is requested and found in cache. Needs to be thread safe.
 	Visit(cacheKey)
 }
-
 
 // Takes the caching policy and the maximum size of the cache in bytes.
 func NewCache(policy Policy, mm uint64) *Cache {
@@ -48,7 +42,6 @@ func NewCache(policy Policy, mm uint64) *Cache {
 	}
 }
 
-
 // Gets an image blob of requested dimensions
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
@@ -56,14 +49,13 @@ func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, foun
 	c.RLock()
 	blob, found = c.blobs[key]
 	c.RUnlock()
-	
+
 	if found {
 		c.policy.Visit(key)
 	}
 
 	return
 }
-
 
 func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 
@@ -87,7 +79,6 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 	c.currentMemory += uint64(len(blob))
 	c.blobs[key] = blob
 }
-
 
 func (c *Cache) deleteOldest() {
 	to_delete := c.policy.Pop()

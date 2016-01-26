@@ -52,7 +52,7 @@ func GetDistortion(filename, filename_cmp string) (distortion float64, err error
 
 	mw := imagick.NewMagickWand()
 	defer mw.Destroy()
-	
+
 	img := NewImage()
 	defer img.Destroy()
 	err = img.FromFile(filepath.FromSlash(image_folder + filename))

@@ -1,19 +1,19 @@
 package ops
 
 import (
+	"errors"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"os"
-	"strings"
 	"path/filepath"
-	"errors"
+	"strings"
 )
 
-type ImageSource struct{
+type ImageSource struct {
 	roots []string
 }
 
-func (i *ImageSource) LoadImageOp(id string) Operation{
+func (i *ImageSource) LoadImageOp(id string) Operation {
 	return OperationFunc(func(img images.Image) error {
 		return i.searchRoots(id, img)
 	})
@@ -43,7 +43,6 @@ func (i *ImageSource) searchRoots(filename string, img images.Image) (err error)
 	}
 	return
 }
-
 
 // A very trivial (and inefficient way to handle roots)
 // Can be used for development work, however.

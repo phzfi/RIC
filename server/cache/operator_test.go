@@ -7,7 +7,7 @@ import (
 )
 
 type DummyOperation struct {
-	log *[]int
+	log  *[]int
 	name int
 }
 
@@ -23,17 +23,17 @@ func TestOperator(t *testing.T) {
 		&DummyOperation{&log, 1},
 		&DummyOperation{&log, 2},
 	}
-	operator := MakeOperator(512*1024*1024)
-	
+	operator := MakeOperator(512 * 1024 * 1024)
+
 	_, err := operator.GetBlob(operations)
-	if err!= nil {
+	if err != nil {
 		t.Error(err)
 	}
 
 	if len(log) != 3 {
 		t.Fatal("Too many or too few operations done")
 	}
-	for i,v := range log {
+	for i, v := range log {
 		if i != v {
 			t.Fatal("Wrong operation")
 		}

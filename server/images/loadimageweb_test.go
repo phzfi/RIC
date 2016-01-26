@@ -2,20 +2,18 @@ package images
 
 import (
 	"bytes"
+	"github.com/valyala/fasthttp"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
-	"github.com/valyala/fasthttp"
-	"net"
 	"time"
 )
-
 
 func stopServer(ln net.Listener) {
 	ln.Close()
 	time.Sleep(100 * time.Millisecond)
 }
-
 
 func HandleTest(ctx *fasthttp.RequestCtx) {
 	reader, err := os.Open("../testimages/loadimage/test.jpg")
@@ -32,11 +30,10 @@ func HandleTest(ctx *fasthttp.RequestCtx) {
 	ctx.Write(blob)
 }
 
-func status404 (ctx *fasthttp.RequestCtx) {
+func status404(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusNotFound)
 	ctx.WriteString("Image not found!")
 }
-
 
 func TestImageWeb(t *testing.T) {
 	server := fasthttp.Server{
@@ -53,7 +50,7 @@ func TestImageWeb(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	img_cmp := NewImage()
 	defer img_cmp.Destroy()
 	err = img_cmp.FromFile(filepath.FromSlash("../testimages/loadimage/test.jpg"))
@@ -84,14 +81,13 @@ func TestImageWebWrongImage(t *testing.T) {
 	defer stopServer(ln)
 	time.Sleep(100 * time.Millisecond)
 
-
 	img := NewImage()
 	defer img.Destroy()
 	err := img.FromWeb("http://localhost:8009/mikäliekuva.jpg")
 	if err != nil {
 		t.Fatal(err)
 	}
-	
+
 	img_cmp := NewImage()
 	defer img_cmp.Destroy()
 	err := img_cmp.FromFile(filepath.FromSlash("../testimages/loadimage/test.png"))
@@ -123,7 +119,6 @@ func TestImageWeb404(t *testing.T) {
 	go server.Serve(ln)
 	defer stopServer(ln)
 	time.Sleep(100 * time.Millisecond)
-
 
 	_, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
 	if err == nil {

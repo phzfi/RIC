@@ -2,7 +2,7 @@ package ops
 
 import "github.com/phzfi/RIC/server/images"
 
-type Resize struct{
+type Resize struct {
 	Width, Height int
 }
 
