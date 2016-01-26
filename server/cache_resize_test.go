@@ -47,10 +47,12 @@ func TestResize(t *testing.T) {
 	}
 }
 
+// Machines cannot appreciate the result of the Liquid Rescale, so it must be verified manually.
+// This function only ensures that no errors occur.
 func TestLiquidRescale(t *testing.T) {
 	operator, src := setup()
 
-	const fn = "toresize.jpg"
+	const fn = "toresize2.jpg"
 	w, h, err := src.ImageSize(fn)
 	if err != nil {
 		t.Fatal(err)
