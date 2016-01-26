@@ -7,6 +7,8 @@ import (
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -19,10 +21,16 @@ const (
 
 const TOLERANCE = 0.002
 
-func TestResize(t *testing.T) {
-	operator := cache.MakeOperator(512 * 1024 * 1024)
-	src := ops.ImageSource{}
+func setup() (operator cache.Operator, src ops.ImageSource) {
+	operator = cache.MakeOperator(512 * 1024 * 1024)
+	src = ops.MakeImageSource()
 	src.AddRoot(testfolder + testgroup)
+	return
+}
+
+func TestResize(t *testing.T) {
+	operator, src := setup()
+
 	blob, err := operator.GetBlob(
 		src.LoadImageOp("toresize.jpg"),
 		ops.Resize{100, 100},
@@ -36,6 +44,29 @@ func TestResize(t *testing.T) {
 	}
 	if d > TOLERANCE {
 		t.Fatal(fmt.Sprintf("Bad image returned. Distortion: %v, Tolerance: %v", d, TOLERANCE))
+	}
+}
+
+func TestLiquidRescale(t *testing.T) {
+	operator, src := setup()
+
+	const fn = "toresize.jpg"
+	w, h, err := src.ImageSize(fn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	blob, err := operator.GetBlob(
+		src.LoadImageOp(fn),
+		ops.LiquidRescale{w / 3, h},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = ioutil.WriteFile(resultsfolder+testgroup+"liquidrescaled.jpg", blob, os.ModePerm)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 

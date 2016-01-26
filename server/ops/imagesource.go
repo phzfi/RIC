@@ -53,24 +53,23 @@ func (i *ImageSource) searchRoots(filename string, img images.Image) (err error)
 	return
 }
 
-func (c *BasicResizer) ImageSize(fn string) (w uint, h uint, err error) {
-	logging.Debug(fmt.Sprintf("Get original image: %v", fn))
+func (i *ImageSource) ImageSize(fn string) (w uint, h uint, err error) {
 
-	if s, ok := c.sizes[fn]; ok {
+	if s, ok := i.sizes[fn]; ok {
 		return s[0], s[1], nil
 	}
 
 	image := images.NewImage()
 	defer image.Destroy()
 
-	err = c.searchRoots(fn)
+	err = i.searchRoots(fn, image)
 	if err != nil {
 		return
 	}
 
 	w = image.GetWidth()
 	h = image.GetHeight()
-	c.sizes[fn] = [2]uint{w, h}
+	i.sizes[fn] = [2]uint{w, h}
 	return
 }
 
