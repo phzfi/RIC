@@ -17,39 +17,24 @@ func TestOperatorConvert(t *testing.T) {
 	resfolder := "../testresults/convert/"
 	tolerance := 0.002
 	
-	type testCase struct {
-		testfn, reffn, resfn string
-		format string
-	}
-	
-	cases := [...]testCase {
-		{testimage, testfolder + "converted.jpg",  resfolder + "converted.jpg",  "JPEG"},
-		{testimage, testfolder + "converted.webp", resfolder + "converted.webp", "WEBP"},
-		{testimage, testfolder + "converted.tiff", resfolder + "converted.tiff", "TIFF"},
-		{testimage, testfolder + "converted.gif",  resfolder + "converted.gif",  "GIF"},
-		{testimage, testfolder + "converted.png",  resfolder + "converted.png",  "PNG"},
-		{testimage, testfolder + "converted.bmp",  resfolder + "converted.bmp",  "BMP"},
+	cases := [...]images.FormatTestCase {
+		{images.TestCase{testimage, testfolder + "converted.jpg",  resfolder + "converted.jpg"},  "JPEG"},
+		{images.TestCase{testimage, testfolder + "converted.webp", resfolder + "converted.webp"}, "WEBP"},
+		{images.TestCase{testimage, testfolder + "converted.tiff", resfolder + "converted.tiff"}, "TIFF"},
+		{images.TestCase{testimage, testfolder + "converted.gif",  resfolder + "converted.gif"},  "GIF"},
+		{images.TestCase{testimage, testfolder + "converted.png",  resfolder + "converted.png"},  "PNG"},
+		{images.TestCase{testimage, testfolder + "converted.bmp",  resfolder + "converted.bmp"},  "BMP"},
 	}
 	
 	for _, c := range cases {
-		
-		logging.Debug(fmt.Sprintf("Testing convert: %v, %v, %v, %v", c.testfn, c.reffn, c.format, c.resfn))
-		
-		blob, err := operator.GetBlob(src.LoadImageOp(c.testfn), ops.Convert{c.format})
+		logging.Debug(fmt.Sprintf("Testing convert: %v, %v, %v, %v", c.Testfn, c.Reffn, c.Format, c.Resfn))
+
+		blob, err := operator.GetBlob(src.LoadImageOp(c.Testfn), ops.Convert{c.Format})
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		img := images.NewImage()
-		defer img.Destroy()
-		img.FromBlob(blob)
-
-		f := img.GetImageFormat()
-		if f != c.format {
-			t.Fatal(fmt.Sprintf("Bad image format. Requested %v, Got %v", c.format, f))
-		}
-
-		err = images.CheckDistortion(blob, c.reffn, tolerance, c.resfn)
+		
+		err = images.FormatTest(c, blob, tolerance)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -65,41 +50,26 @@ func TestOperatorResize(t *testing.T) {
 	testimage := testfolder + "toresize"
 	resfolder := "../testresults/operator/"
 	tolerance := 0.002
-
-	type testCase struct {
-		testfn, reffn, resfn string
-		w, h int
-	}
 	
-	cases := [...]testCase {
-		{testimage, testfolder + "100x100.jpg", resfolder + "100x100.jpg", 100, 100},
-		{testimage, testfolder + "200x200.jpg", resfolder + "200x200.jpg", 200, 200},
-		{testimage, testfolder + "300x400.jpg", resfolder + "300x400.jpg", 300, 400},
-		{testimage, testfolder + "500x200.jpg", resfolder + "500x200.jpg", 500, 200},
-		{testimage, testfolder + "30x20.jpg",   resfolder + "30x20.jpg",  30, 20},
-		{testimage, testfolder + "600x600.jpg", resfolder + "600x600.jpg", 600, 600},
+	cases := [...]images.SizeTestCase {
+		{images.TestCase{testimage, testfolder + "100x100.jpg", resfolder + "100x100.jpg"}, 100, 100},
+		{images.TestCase{testimage, testfolder + "200x200.jpg", resfolder + "200x200.jpg"}, 200, 200},
+		{images.TestCase{testimage, testfolder + "300x400.jpg", resfolder + "300x400.jpg"}, 300, 400},
+		{images.TestCase{testimage, testfolder + "500x200.jpg", resfolder + "500x200.jpg"}, 500, 200},
+		{images.TestCase{testimage, testfolder + "30x20.jpg",   resfolder + "30x20.jpg"},   30, 20},
+		{images.TestCase{testimage, testfolder + "600x600.jpg", resfolder + "600x600.jpg"}, 600, 600},
 	}
 	
 	for _, c := range cases {
 
-		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", c.testfn, c.reffn, c.w, c.h, c.resfn))
+		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", c.Testfn, c.Reffn, c.W, c.H, c.Resfn))
 		
-		blob, err := operator.GetBlob(src.LoadImageOp(c.testfn), ops.Resize{c.w, c.h})
+		blob, err := operator.GetBlob(src.LoadImageOp(c.Testfn), ops.Resize{c.W, c.H})
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		img := images.NewImage()
-		defer img.Destroy()
-		img.FromBlob(blob)
 		
-		w := img.GetWidth()
-		h := img.GetHeight()
-		if w != c.w || h != c.h {
-			t.Fatal(fmt.Sprintf("Bad image size. Requested (%v, %v) , Got (%v, %v)", c.w, c.h, w, h))
-		}
-
-		err = images.CheckDistortion(blob, c.reffn, tolerance, c.resfn)
+		err = images.SizeTest(c, blob, tolerance)
 		if err != nil {
 			t.Fatal(err)
 		}

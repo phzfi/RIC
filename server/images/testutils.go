@@ -2,10 +2,10 @@ package images
 
 
 import (
-	"github.com/phzfi/RIC/server/logging"
 	"github.com/joonazan/imagick/imagick"
 	"path/filepath"
 	"errors"
+	"fmt"
 )
 
 
@@ -15,16 +15,14 @@ func CheckDistortion(blob ImageBlob, reffn string, tol float64, resfn string) (e
 	defer ref.Destroy()
 	err = ref.FromFile(reffn)
 	if err != nil {
-		logging.Debug("Could not load image")
-		return
+		return errors.New(fmt.Sprintf("Could not ref image: %v Err: %v", reffn, err))
 	}
 
 	img := NewImage()
 	defer img.Destroy()
 	err = img.FromBlob(blob)
 	if err != nil {
-		logging.Debug("Could not load image")
-		return
+		return errors.New(fmt.Sprintf("Could not load blob. Err: %v", err))
 	}
 
 	trash, d := img.CompareImages(ref.MagickWand, imagick.METRIC_MEAN_SQUARED_ERROR)
@@ -33,14 +31,80 @@ func CheckDistortion(blob ImageBlob, reffn string, tol float64, resfn string) (e
 
 	err = img.WriteImage(filepath.FromSlash(resfn))
 	if err != nil {
-		logging.Debug("Could not write result file:%v", resfn)
-		err = nil
+		return errors.New(fmt.Sprintf("Could not write result file: %v. Err: %v", resfn, err))
 	}
 	
 	if d > tol {
-		logging.Debug("Too much distortion. res:%v, ref:%v, tol:%v, dist:%v", resfn, reffn, tol, d)
-		err = errors.New("Too much distrotion.")
+		return errors.New(fmt.Sprintf("Too much distortion. res: %v, ref: %v, tol: %v, dist: %v", resfn, reffn, tol, d))
 	}
 
 	return
+}
+
+
+type TestCase struct {
+	Testfn, Reffn, Resfn string
+}
+
+
+type FormatTestCase struct {
+	TestCase
+	Format string
+}
+
+type SizeTestCase struct {
+	TestCase
+	W, H int
+}
+
+
+func CheckImage(blob ImageBlob, c TestCase, tol float64, f func (Image) error) (err error) {
+	img := NewImage()
+	defer img.Destroy()
+	img.FromBlob(blob)
+	
+	err = f(img)
+	if err != nil {
+		return
+	}
+
+	err = CheckDistortion(blob, c.Reffn, tol, c.Resfn)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+
+func CheckFormatFunc(c FormatTestCase) func (Image) error {
+	return func(img Image) error {
+		f := img.GetImageFormat()
+		if f != c.Format {
+			return errors.New(fmt.Sprintf("Bad image format. Requested %v, Got %v", c.Format, f))
+		}
+		return nil
+	}
+}
+
+
+func CheckSizeFunc(c SizeTestCase) func (Image) error {
+	return func(img Image) error {
+		w := img.GetWidth()
+		h := img.GetHeight()
+		if w != c.W || h != c.H {
+			return errors.New(fmt.Sprintf("Bad image size. Requested (%v, %v) , Got (%v, %v)", c.W, c.H, w, h))
+		}
+		return nil
+	}
+}
+
+
+func FormatTest(c FormatTestCase, blob ImageBlob, tolerance float64) error {
+	return CheckImage(blob, c.TestCase, tolerance, CheckFormatFunc(c))
+}
+
+
+func SizeTest(c SizeTestCase, blob ImageBlob, tolerance float64) error {
+	return CheckImage(blob, c.TestCase, tolerance, CheckSizeFunc(c))
 }
