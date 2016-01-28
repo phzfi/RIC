@@ -90,7 +90,7 @@ func TestImageWebWrongImage(t *testing.T) {
 
 	img_cmp := NewImage()
 	defer img_cmp.Destroy()
-	err := img_cmp.FromFile(filepath.FromSlash("../testimages/loadimage/test.png"))
+	err = img_cmp.FromFile(filepath.FromSlash("../testimages/loadimage/test.png"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,9 @@ func TestImageWeb404(t *testing.T) {
 	defer stopServer(ln)
 	time.Sleep(100 * time.Millisecond)
 
-	_, err := LoadImageWeb("http://localhost:8006/mikäliekuva.jpg")
+	img := NewImage()
+	defer img.Destroy()
+	err := img.FromWeb("http://localhost:8006/mikäliekuva.jpg")
 	if err == nil {
 		t.Fatal("LoadImageWeb didn't return error when 404 received")
 	}

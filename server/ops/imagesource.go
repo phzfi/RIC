@@ -9,7 +9,8 @@ import (
 	"strings"
 )
 
-type idToSize map[string][2]uint
+type dim [2]int
+type idToSize map[string]dim
 
 type ImageSource struct {
 	roots []string
@@ -22,14 +23,15 @@ func MakeImageSource() ImageSource {
 	}
 }
 
-func (i *ImageSource) LoadImageOp(id string) Operation {
+func (i ImageSource) LoadImageOp(id string) Operation {
 	return OperationFunc(func(img images.Image) error {
+		logging.Debug("Loading: %v", id)
 		return i.searchRoots(id, img)
 	})
 }
 
 // Search root for an image. Returned image should be destroyed by image.Destroy, image.Resized or image.ToBlob or other.
-func (i *ImageSource) searchRoots(filename string, img images.Image) (err error) {
+func (i ImageSource) searchRoots(filename string, img images.Image) (err error) {
 	if len(i.roots) == 0 {
 		logging.Debug("No roots")
 		err = os.ErrNotExist
@@ -53,7 +55,7 @@ func (i *ImageSource) searchRoots(filename string, img images.Image) (err error)
 	return
 }
 
-func (i *ImageSource) ImageSize(fn string) (w uint, h uint, err error) {
+func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 
 	if s, ok := i.sizes[fn]; ok {
 		return s[0], s[1], nil
@@ -69,7 +71,7 @@ func (i *ImageSource) ImageSize(fn string) (w uint, h uint, err error) {
 
 	w = image.GetWidth()
 	h = image.GetHeight()
-	i.sizes[fn] = [2]uint{w, h}
+	i.sizes[fn] = dim{w, h}
 	return
 }
 

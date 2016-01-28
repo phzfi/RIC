@@ -37,13 +37,13 @@ func (img Image) Convert(ext string) (err error) {
 }
 
 // Returns image width
-func (img Image) GetWidth() (width uint) {
-	return img.GetImageWidth()
+func (img Image) GetWidth() (width int) {
+	return int(img.GetImageWidth())
 }
 
 // Returns image height
-func (img Image) GetHeight() (height uint) {
-	return img.GetImageHeight()
+func (img Image) GetHeight() (height int) {
+	return int(img.GetImageHeight())
 }
 
 // Returns filename extension of the image e.g. jpg, gif, webp

@@ -31,7 +31,7 @@ func CompareBlobToImage(blob_base64 string, filename string) error {
 	blob_cmp, err := base64.StdEncoding.DecodeString(blob_base64)
 	img := NewImage()
 	defer img.Destroy()
-	err := img.FromFile(filepath.FromSlash(filename))
+	err = img.FromFile(filepath.FromSlash(filename))
 
 	if err != nil {
 		return errors.New("LoadImage failed: " + err.Error())

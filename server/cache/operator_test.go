@@ -11,9 +11,9 @@ type DummyOperation struct {
 	name int
 }
 
-func (o *DummyOperation) Apply(img images.Image) (images.Image, error) {
+func (o *DummyOperation) Apply(img images.Image) error {
 	*(o.log) = append(*(o.log), o.name)
-	return img, nil
+	return nil
 }
 
 func TestOperator(t *testing.T) {
@@ -25,7 +25,7 @@ func TestOperator(t *testing.T) {
 	}
 	operator := MakeOperator(512 * 1024 * 1024)
 
-	_, err := operator.GetBlob(operations)
+	_, err := operator.GetBlob(operations...)
 	if err != nil {
 		t.Error(err)
 	}
