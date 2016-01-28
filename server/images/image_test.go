@@ -17,7 +17,7 @@ func TestImageConvert(t *testing.T) {
 		{TestCase{testimage, testfolder + "converted.jpg",  resfolder + "converted.jpg"},  "JPEG"},
 		{TestCase{testimage, testfolder + "converted.webp", resfolder + "converted.webp"}, "WEBP"},
 		{TestCase{testimage, testfolder + "converted.tiff", resfolder + "converted.tiff"}, "TIFF"},
-		{TestCase{testimage, testfolder + "converted.gif",  resfolder + "converted.gif"},  "GIF"},
+		// {TestCase{testimage, testfolder + "converted.gif",  resfolder + "converted.gif"},  "GIF"}, This test takes too much time
 		{TestCase{testimage, testfolder + "converted.png",  resfolder + "converted.png"},  "PNG"},
 		{TestCase{testimage, testfolder + "converted.bmp",  resfolder + "converted.bmp"},  "BMP"},
 	}

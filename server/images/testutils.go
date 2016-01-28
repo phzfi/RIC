@@ -15,7 +15,7 @@ func CheckDistortion(blob ImageBlob, reffn string, tol float64, resfn string) (e
 	defer ref.Destroy()
 	err = ref.FromFile(reffn)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Could not ref image: %v Err: %v", reffn, err))
+		return errors.New(fmt.Sprintf("Could not load ref image: %v Err: %v", reffn, err))
 	}
 
 	img := NewImage()
@@ -54,6 +54,12 @@ type FormatTestCase struct {
 
 type SizeTestCase struct {
 	TestCase
+	W, H int
+}
+
+type TestCaseAll struct {
+	TestCase
+	Format string
 	W, H int
 }
 
@@ -100,6 +106,22 @@ func CheckSizeFunc(c SizeTestCase) func (Image) error {
 }
 
 
+func CheckAllFunc(c TestCaseAll) func (Image) error {
+	return func(img Image) error {
+		w := img.GetWidth()
+		h := img.GetHeight()
+		if w != c.W || h != c.H {
+			return errors.New(fmt.Sprintf("Bad image size. Requested (%v, %v) , Got (%v, %v)", c.W, c.H, w, h))
+		}
+		f := img.GetImageFormat()
+		if f != c.Format {
+			return errors.New(fmt.Sprintf("Bad image format. Requested %v, Got %v", c.Format, f))
+		}
+		return nil
+	}	
+}
+
+
 func FormatTest(c FormatTestCase, blob ImageBlob, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckFormatFunc(c))
 }
@@ -107,4 +129,8 @@ func FormatTest(c FormatTestCase, blob ImageBlob, tolerance float64) error {
 
 func SizeTest(c SizeTestCase, blob ImageBlob, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckSizeFunc(c))
+}
+
+func TestAll(c TestCaseAll, blob ImageBlob, tolerance float64) error {
+	return CheckImage(blob, c.TestCase, tolerance, CheckAllFunc(c))
 }
