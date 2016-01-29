@@ -63,7 +63,7 @@ func TestImageResize(t *testing.T) {
 	testimage2 := testfolder + "toresize2.jpg"
 	testimage3 := testfolder + "toresize3.jpg"
 	testimage4 := testfolder + "toresize4.jpg"
-	resfolder := "../testresults/images"
+	resfolder := "../testresults/images/"
 	tolerance := 0.002
 	
 	cases := []SizeTestCase {
