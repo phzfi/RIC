@@ -1,9 +1,10 @@
 package cache
 
 import (
-	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/logging"
+	"fmt"
 	"sync"
 )
 
@@ -35,6 +36,7 @@ type Policy interface {
 
 // Takes the caching policy and the maximum size of the cache in bytes.
 func NewCache(policy Policy, mm uint64) *Cache {
+	logging.Debugf("Cache create: mem:%v", mm)
 	return &Cache{
 		maxMemory: mm,
 		policy:    policy,
@@ -45,15 +47,18 @@ func NewCache(policy Policy, mm uint64) *Cache {
 // Gets an image blob of requested dimensions
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
+	logging.Debugf("Cache get with key: %v", key)
 
 	c.RLock()
 	blob, found = c.blobs[key]
 	c.RUnlock()
 
 	if found {
+		logging.Debugf("Cache found: %v", key)
 		c.policy.Visit(key)
 	}
 
+	logging.Debugf("Cache not found: %v", key)
 	return
 }
 
@@ -68,6 +73,7 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 	}
 
 	key := toKey(operations)
+	logging.Debugf("Cache add: %v", key)
 
 	c.Lock()
 	defer c.Unlock()
@@ -82,6 +88,7 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 
 func (c *Cache) deleteOldest() {
 	to_delete := c.policy.Pop()
+	logging.Debugf("Cache delete: %v", to_delete)
 	c.currentMemory -= uint64(len(c.blobs[to_delete]))
 	delete(c.blobs, to_delete)
 }

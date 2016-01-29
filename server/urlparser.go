@@ -27,11 +27,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	operations = []ops.Operation{source.LoadImageOp(filename)}
 
 	adjustWidth := func() {
-		w = h * ow / oh
+		w = int(float32(h * ow) / float32(oh) + 0.5)
 	}
 
 	adjustHeight := func() {
-		h = w * oh / ow
+		h = int(float32(w * oh) / float32(ow) + 0.5)
 	}
 
 	resize := func(){

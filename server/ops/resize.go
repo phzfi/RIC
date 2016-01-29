@@ -3,6 +3,7 @@ package ops
 import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
+	"fmt"
 )
 
 
@@ -11,6 +12,6 @@ type Resize struct {
 }
 
 func (r Resize) Apply(img images.Image) error {
-	logging.Debug("Resizing image to: %v, %v", r.Width, r.Height)
+	logging.Debug(fmt.Sprintf("Resizing image to: %v, %v", r.Width, r.Height))
 	return img.Resize(r.Width, r.Height)
 }

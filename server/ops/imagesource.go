@@ -24,10 +24,7 @@ func MakeImageSource() ImageSource {
 }
 
 func (i ImageSource) LoadImageOp(id string) Operation {
-	return OperationFunc(func(img images.Image) error {
-		logging.Debug("Loading: %v", id)
-		return i.searchRoots(id, img)
-	})
+	return loadImageOp{i, id}
 }
 
 // Search root for an image. Returned image should be destroyed by image.Destroy, image.Resized or image.ToBlob or other.
