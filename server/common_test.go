@@ -93,3 +93,36 @@ func TestOperatorResize(t *testing.T) {
 		}
 	}
 }
+
+
+func TestOperatorLiquidRescale(t *testing.T) {
+
+	operator, src := SetupOperatorSource()
+	
+	testfolder := "testimages/resize/"
+	testimage := testfolder + "toresize"
+	testimage2 := testfolder + "toresize2"
+	resfolder := "testresults/common/"
+	tolerance := 0.002
+	
+	cases := []images.SizeTestCase {
+		{images.TestCase{testimage, testfolder + "liquid1_100x100.jpg", resfolder + "liquid1_100x100.jpg"}, 100, 100},
+		{images.TestCase{testimage, testfolder + "liquid1_500x200.jpg", resfolder + "liquid1_500x200.jpg"}, 500, 200},
+		{images.TestCase{testimage2, testfolder + "liquid2_200x200.jpg", resfolder + "liquid2_200x200.jpg"}, 200, 200},
+	}
+	
+	for _, c := range cases {
+
+		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", c.Testfn, c.Reffn, c.W, c.H, c.Resfn))
+		
+		blob, err := operator.GetBlob(src.LoadImageOp(c.Testfn), ops.LiquidRescale{c.W, c.H})
+		if err != nil {
+			t.Fatal(err)
+		}
+		
+		err = images.SizeTest(c, blob, tolerance)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
