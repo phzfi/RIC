@@ -95,7 +95,7 @@ func TestGetImageFit(t *testing.T) {
 }
 
 
-// Test GETting different sized and formats with mode=fit
+// Test GETting few liquid rescaled images
 func TestGetImageSingleParam(t *testing.T) {
 	testfolder := "testimages/server/"
 	resfolder := "testresults/server/"
@@ -126,4 +126,22 @@ func TestGetImageSingleParam(t *testing.T) {
 }
 
 
-// TODO: Tests for different modes and parameters (get by aspect etc.)
+
+// Test GETting different sized and formats with mode=fit
+func TestGetLiquid(t *testing.T) {
+	testfolder := "testimages/server/"
+	resfolder := "testresults/server/"
+	
+	cases := []images.TestCaseAll {
+		{images.TestCase{testfolder + "01.jpg?width=143&height=100&mode=liquid", testfolder + "liquid_01_143x100.jpg", resfolder + "liquid_01_143x100.jpg"}, "JPEG", 143, 100},
+		{images.TestCase{testfolder + "02.jpg?width=200&height=140&mode=liquid", testfolder + "liquid_02_200x140.jpg", resfolder + "liquid_02_200x140.jpg"}, "JPEG", 200, 140},
+		{images.TestCase{testfolder + "03.jpg?width=300&mode=liquid", testfolder + "liquid_03_w300.jpg", resfolder + "liquid_03_w300.jpg"}, "JPEG", 300, 210},
+		{images.TestCase{testfolder + "03.jpg?height=300&mode=liquid", testfolder + "liquid_03_h300.jpg", resfolder + "liquid_03_h300.jpg"}, "JPEG", 429, 300},
+
+	}
+
+	err := testGetImages(cases)
+	if err != nil {
+		t.Fatal(err)
+	}
+}

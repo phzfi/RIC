@@ -33,8 +33,8 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	adjustHeight := func() {
 		h = int(float32(w * oh) / float32(ow) + 0.5)
 	}
-
-	resize := func(){
+	
+	adjustSize := func(){
 		if herr != nil && werr == nil {
 			adjustHeight()
 		} else if herr == nil && werr != nil {
@@ -42,13 +42,19 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 		} else if werr != nil && herr != nil {
 			w, h = ow, oh
 		}
+	}
+
+	resize := func() {
+		adjustSize()
 		operations = append(operations, ops.Resize{w, h})
 	}
-	
-	switch mode {
-	case "resize":
-		resize()
-	case "fit":
+
+	liquid := func() {
+		adjustSize()
+		operations = append(operations, ops.LiquidRescale{w, h})
+	}
+
+	fit := func() {
 		if werr == nil && herr == nil {
 			if ow * h > w * oh {
 				adjustHeight()
@@ -59,6 +65,16 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 		} else {
 			resize()
 		}
+	}
+
+
+	switch mode {
+	case "resize":
+		adjustSize()
+	case "fit":
+		fit()
+	case "liquid":
+		liquid()
 	default:
 		resize()
 	}
