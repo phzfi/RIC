@@ -1,20 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"github.com/phzfi/RIC/server/cache"
-	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/images"
-	"github.com/valyala/fasthttp"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/ops"
+	"github.com/valyala/fasthttp"
 	"net"
 	"time"
-	"fmt"
 )
-
 
 // Port will be incremented for each server created in the test
 var port = 8022
-
 
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
@@ -22,13 +20,12 @@ func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error)
 	port++
 	server, _, ln = NewServer(port, 500000)
 	srverr = make(chan error)
-	go func () {
+	go func() {
 		srverr <- server.Serve(ln)
 	}()
 	time.Sleep(100 * time.Millisecond)
 	return
 }
-
 
 // Stop server and block until stopped
 func stopServer(server *fasthttp.Server, ln net.Listener, srverr chan error) error {
@@ -51,10 +48,9 @@ func SetupOperatorSource() (operator cache.Operator, src ops.ImageSource) {
 	return
 }
 
-
 // Gets blob from server. package variable port is used as port and lovalhost as address
 func getBlobFromServer(getname string) (blob images.ImageBlob, err error) {
-	_, blob, err = fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port) + getname)
+	_, blob, err = fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
 	if err != nil {
 		return
 	}
@@ -62,16 +58,15 @@ func getBlobFromServer(getname string) (blob images.ImageBlob, err error) {
 	return
 }
 
-
 // Tests getting images. c.Testfn is treated as GET string (filename?params).
 // Executes the tests supported by TestCaseAll.
 func testGetImages(cases []images.TestCaseAll) (err error) {
-	
+
 	s, ln, srverr := startServer()
 	defer stopServer(s, ln, srverr)
-	
+
 	tolerance := 0.002
-	
+
 	for _, c := range cases {
 		logging.Debug(fmt.Sprintf("Testing get: %v, %v, %v, %v, %v", c.Testfn, c.Reffn, c.Resfn, c.W, c.H))
 		blob, err := getBlobFromServer(c.Testfn)

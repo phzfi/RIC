@@ -3,17 +3,19 @@ package main
 import (
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 func ExtToFormat(ext string) string {
 	ext = strings.ToUpper(strings.TrimLeft(ext, "."))
-	if ext == "JPG" { return "JPEG" }
+	if ext == "JPG" {
+		return "JPEG"
+	}
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Operation, err error){
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Operation, err error) {
 	args := uri.QueryArgs()
 	filename := string(uri.Path())
 	w, werr := args.GetUint("width")
@@ -27,14 +29,14 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	operations = []ops.Operation{source.LoadImageOp(filename)}
 
 	adjustWidth := func() {
-		w = int(float32(h * ow) / float32(oh) + 0.5)
+		w = int(float32(h*ow)/float32(oh) + 0.5)
 	}
 
 	adjustHeight := func() {
-		h = int(float32(w * oh) / float32(ow) + 0.5)
+		h = int(float32(w*oh)/float32(ow) + 0.5)
 	}
-	
-	adjustSize := func(){
+
+	adjustSize := func() {
 		if herr != nil && werr == nil {
 			adjustHeight()
 		} else if herr == nil && werr != nil {
@@ -44,7 +46,17 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 		}
 	}
 
+	denyUpscale := func() {
+		if w > ow {
+			w = ow
+		}
+		if h > oh {
+			h = oh
+		}
+	}
+
 	resize := func() {
+		denyUpscale()
 		adjustSize()
 		operations = append(operations, ops.Resize{w, h})
 	}
@@ -56,7 +68,8 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 
 	fit := func() {
 		if werr == nil && herr == nil {
-			if ow * h > w * oh {
+			denyUpscale()
+			if ow*h > w*oh {
 				adjustHeight()
 			} else {
 				adjustWidth()
@@ -66,7 +79,6 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 			resize()
 		}
 	}
-
 
 	switch mode {
 	case "resize":
@@ -78,7 +90,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	default:
 		resize()
 	}
-	
+
 	ext := filepath.Ext(filename)
 	if ext != "" {
 		operations = append(operations, ops.Convert{ExtToFormat(ext)})
@@ -86,5 +98,3 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 
 	return
 }
-
-

@@ -2,17 +2,17 @@ package main
 
 import (
 	"flag"
-	"github.com/phzfi/RIC/server/cache"
-	"github.com/phzfi/RIC/server/ops"
-	"github.com/phzfi/RIC/server/logging"
-	"github.com/valyala/fasthttp"
+	"fmt"
 	"github.com/joonazan/imagick/imagick"
+	"github.com/phzfi/RIC/server/cache"
+	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/ops"
+	"github.com/valyala/fasthttp"
 	"log"
 	"net"
 	"strconv"
 	"sync/atomic"
 	"time"
-	"fmt"
 )
 
 // MyHandler type is used to encompass HandlerFunc interface.
@@ -26,7 +26,7 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	operator cache.Operator
+	operator    cache.Operator
 	imageSource ops.ImageSource
 }
 
@@ -91,7 +91,6 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
 func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
@@ -110,9 +109,9 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 
 	// Configure handler
 	handler := &MyHandler{
-		requests: 0,
+		requests:    0,
 		imageSource: imageSource,
-		operator: cache.MakeOperator(maxMemory),
+		operator:    cache.MakeOperator(maxMemory),
 	}
 
 	// Configure server
@@ -120,22 +119,21 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 		Handler: handler.ServeHTTP,
 	}
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil{
+	if err != nil {
 		log.Fatal("Error creating listener:" + err.Error())
 	}
 	return server, handler, ln
 }
-
 
 func main() {
 
 	// CLI arguments
 	mem := flag.Uint64("m", 500*1024*1024, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
-	
+
 	imagick.Initialize()
 	defer imagick.Terminate()
-	
+
 	log.Println("Server starting...")
 	logging.Debug("Debug enabled")
 

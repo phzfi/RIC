@@ -1,11 +1,10 @@
 package ops
 
 import (
+	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"fmt"
 )
-
 
 type Convert struct {
 	Format string

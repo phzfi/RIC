@@ -3,8 +3,8 @@
 package logging
 
 import (
-	"log"
 	"fmt"
+	"log"
 )
 
 func Debug(v ...interface{}) {

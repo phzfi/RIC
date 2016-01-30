@@ -1,10 +1,10 @@
 package cache
 
 import (
-	"github.com/phzfi/RIC/server/images"
-	"github.com/phzfi/RIC/server/ops"
-	"github.com/phzfi/RIC/server/logging"
 	"fmt"
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/ops"
 	"sync"
 )
 
