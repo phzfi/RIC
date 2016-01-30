@@ -94,11 +94,12 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
 func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
-
+	logging.Debug("Creating server")
 	imageSource := ops.MakeImageSource()
 
 	// Add roots
 	// TODO: This must be externalized outside the source code.
+	logging.Debug("Adding roots")
 	if imageSource.AddRoot("/var/www") != nil {
 		log.Fatal("Root not added /var/www")
 	}
@@ -108,6 +109,7 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 	}
 
 	// Configure handler
+	logging.Debug("Configuring handler")
 	handler := &MyHandler{
 		requests:    0,
 		imageSource: imageSource,
@@ -118,10 +120,13 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 	server := &fasthttp.Server{
 		Handler: handler.ServeHTTP,
 	}
+
+	logging.Debug("Beginning to listen")
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal("Error creating listener:" + err.Error())
 	}
+	logging.Debug("Server ready")
 	return server, handler, ln
 }
 

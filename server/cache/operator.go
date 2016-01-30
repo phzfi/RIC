@@ -4,11 +4,16 @@ import "github.com/phzfi/RIC/server/ops"
 import "github.com/phzfi/RIC/server/images"
 
 type Operator struct {
-	cache *Cache
+	cache  *Cache
+	tokens chan bool
 }
 
 func MakeOperator(mm uint64) Operator {
-	return Operator{NewLRU(mm)}
+	o := Operator{NewLRU(mm), make(chan bool, 4)}
+	for i := 0; i < 4; i++ {
+		o.tokens <- true
+	}
+	return o
 }
 
 func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
@@ -18,6 +23,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		return blob, nil
 	}
 
+	t := <-o.tokens
 	img := images.NewImage()
 	defer img.Destroy()
 
@@ -27,6 +33,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 			return
 		}
 	}
+	o.tokens <- t
 
 	blob = img.Blob()
 	o.cache.AddBlob(operations, blob)
