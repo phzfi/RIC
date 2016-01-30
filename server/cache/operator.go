@@ -10,7 +10,7 @@ type Operator struct {
 
 func MakeOperator(mm uint64) Operator {
 	o := Operator{NewLRU(mm), make(chan bool, 4)}
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 2; i++ {
 		o.tokens <- true
 	}
 	return o
