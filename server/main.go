@@ -2,14 +2,17 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"github.com/joonazan/imagick/imagick"
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"log"
+	"net"
 	"strconv"
 	"sync/atomic"
 	"time"
-	"net"
 )
 
 // MyHandler type is used to encompass HandlerFunc interface.
@@ -23,7 +26,8 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	images cache.AmbiguousSizeImageCache
+	operator    cache.Operator
+	imageSource ops.ImageSource
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -41,16 +45,25 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
-		filename := string(ctx.Path())
-
-		// GET parameters
-		query := url.QueryArgs()
-		width, height, mode := getParams(query)
-		h.RetrieveImage(ctx, filename, width, height, mode)
+		operations, err := ParseURI(url, h.imageSource)
+		if err != nil {
+			ctx.NotFound()
+			logging.Debug(err)
+			return
+		}
+		blob, err := h.operator.GetBlob(operations...)
+		if err != nil {
+			ctx.NotFound()
+			logging.Debug(err)
+		} else {
+			ctx.Write(blob)
+			logging.Debug("Blob returned")
+		}
 
 	} else if ctx.IsPost() {
 		// POST is currently unused so we can use this for testing
 		h.RetrieveHello(ctx)
+		logging.Debug("Post request received")
 	}
 }
 
@@ -78,63 +91,42 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-// Write image by filename into ResponseWriter with the
-// desired width and height being pointed to. If there
-// are no desired width or height, that parameter is nil.
-func (h *MyHandler) RetrieveImage(ctx *fasthttp.RequestCtx,
-	filename string,
-	width *uint,
-	height *uint,
-	mode string) {
-
-	// TODO: filename must not be interpret as "absolute"
-	// implement a type that will abstract away the filesystem.
-	logging.Debug("Find: " + filename)
-
-	// Get cache
-	bank := h.images
-
-	// Load the image
-	blob, err := bank.GetImage(filename, width, height, mode)
-	if err != nil {
-		// TODO:
-		// Classify different possible errors more but make sure
-		// no "internal" information is leaked.
-		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		ctx.WriteString("Image not found!")
-		logging.Debug(err)
-		return
-	}
-	ctx.Write(blob)
-}
-
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
-func NewServer(maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
-
-	cacher := cache.AmbiguousSizeImageCache{cache.NewLRU(maxMemory)}
+func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
+	logging.Debug("Creating server")
+	imageSource := ops.MakeImageSource()
 
 	// Add roots
 	// TODO: This must be externalized outside the source code.
-	if cacher.AddRoot("/var/www") != nil {
+	logging.Debug("Adding roots")
+	if imageSource.AddRoot("/var/www") != nil {
 		log.Fatal("Root not added /var/www")
 	}
 
-	if cacher.AddRoot(".") != nil {
+	if imageSource.AddRoot(".") != nil {
 		log.Println("Root not added .")
 	}
 
 	// Configure handler
+	logging.Debug("Configuring handler")
 	handler := &MyHandler{
-		requests: 0,
-		images:   cacher,
+		requests:    0,
+		imageSource: imageSource,
+		operator:    cache.MakeOperator(maxMemory),
 	}
 
 	// Configure server
 	server := &fasthttp.Server{
 		Handler: handler.ServeHTTP,
 	}
-	ln, _ := net.Listen("tcp", ":8005")
+
+	logging.Debug("Beginning to listen")
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		log.Fatal("Error creating listener:" + err.Error())
+	}
+	logging.Debug("Server ready")
 	return server, handler, ln
 }
 
@@ -144,9 +136,13 @@ func main() {
 	mem := flag.Uint64("m", 500*1024*1024, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
 
-	server, handler, ln := NewServer(*mem)
+	imagick.Initialize()
+	defer imagick.Terminate()
 
 	log.Println("Server starting...")
+	logging.Debug("Debug enabled")
+
+	server, handler, ln := NewServer(8005, *mem)
 	handler.started = time.Now()
 	err := server.Serve(ln)
 	end := time.Now()

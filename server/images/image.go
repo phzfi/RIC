@@ -22,7 +22,7 @@ func NewImage() Image {
 	return Image{imagick.NewMagickWand()}
 }
 
-// Clone an image. Remember images and made clones need to be destroyed using Destroy(), ToBlob() or Resize().
+// Clone an image. Remember images and made clones need to be destroyed using Destroy().
 func (img Image) Clone() Image {
 	return Image{img.MagickWand.Clone()}
 }
@@ -37,13 +37,13 @@ func (img Image) Convert(ext string) (err error) {
 }
 
 // Returns image width
-func (img Image) GetWidth() (width uint) {
-	return img.GetImageWidth()
+func (img Image) GetWidth() (width int) {
+	return int(img.GetImageWidth())
 }
 
 // Returns image height
-func (img Image) GetHeight() (height uint) {
-	return img.GetImageHeight()
+func (img Image) GetHeight() (height int) {
+	return int(img.GetImageHeight())
 }
 
 // Returns filename extension of the image e.g. jpg, gif, webp
@@ -56,9 +56,7 @@ func (img Image) GetExtension() (ext string) {
 	return
 }
 
-// Method for converting Image to ImageBlob. Note: Method Destroys the used Image and frees the memory used.
-func (img Image) ToBlob() (blob ImageBlob) {
-	blob = img.GetImageBlob()
-	img.Destroy()
-	return
+// Method for converting Image to ImageBlob.
+func (img Image) Blob() ImageBlob {
+	return img.GetImageBlob()
 }

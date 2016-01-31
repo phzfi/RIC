@@ -1,21 +1,21 @@
 package cache
 
-func NewFIFO(mm uint64) ImageCache {
-	return New(&FIFO{}, mm)
+func NewFIFO(mm uint64) *Cache {
+	return NewCache(&FIFO{}, mm)
 }
 
 type FIFO struct {
-	data       []ImageInfo
+	data       []cacheKey
 	head, tail int
 }
 
-func (q *FIFO) Visit(_ ImageInfo) {}
+func (q *FIFO) Visit(_ cacheKey) {}
 
-func (q *FIFO) Push(info ImageInfo) {
+func (q *FIFO) Push(info cacheKey) {
 
 	if size, arraySize := q.Len(), len(q.data); size+2 > arraySize {
 
-		new_data := make([]ImageInfo, (size+1)*2)
+		new_data := make([]cacheKey, (size+1)*2)
 
 		for i := 0; i < size; i++ {
 			new_data[i] = q.data[(q.head+i)%arraySize]
@@ -30,7 +30,7 @@ func (q *FIFO) Push(info ImageInfo) {
 	q.tail %= len(q.data)
 }
 
-func (q *FIFO) Pop() (info ImageInfo) {
+func (q *FIFO) Pop() (info cacheKey) {
 
 	if q.Len() == 0 {
 		panic("Queue underflow")
