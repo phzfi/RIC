@@ -24,7 +24,16 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 	}
 
 	t := <- o.tokens
+
+	//Check if some other thread already cached the image while we were blocked
+	blob, found = o.cache.GetBlob(operations)
+	if found {
+		o.tokens <- t
+		return blob, nil
+	}
+
 	img := images.NewImage()
+
 	defer func(){
 		img.Destroy()
 		o.tokens <- t
