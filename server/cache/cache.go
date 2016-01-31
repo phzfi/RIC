@@ -54,7 +54,7 @@ func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, foun
 	// solution ok?
 	c.RLock()
 	blob, found = c.blobs[key]
-	c.RUnlock()
+	defer c.RUnlock()
 
 	if found {
 		logging.Debugf("Cache found: %v", key)
