@@ -83,6 +83,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	switch mode {
 	case "resize":
 		adjustSize()
+		resize()
 	case "fit":
 		fit()
 	case "liquid":

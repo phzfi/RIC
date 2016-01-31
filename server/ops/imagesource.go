@@ -5,6 +5,7 @@ import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"os"
+	"sync"
 	"path/filepath"
 	"strings"
 )
@@ -55,7 +56,7 @@ func (i ImageSource) searchRoots(filename string, img images.Image) (err error) 
 
 // TODO: This is a temp solution for ImageSize creating too many Images.
 // Limit to creating only one at time for finding the image size
-var block = false
+var imagesizemutex sync.Mutex
 
 func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 
@@ -64,12 +65,12 @@ func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 	}
 	
 	// TODO: Figure out another way to find out image size so no blocking is needed
-	block = true
+	imagesizemutex.Lock()
 
 	image := images.NewImage()
 	defer func () {
 		image.Destroy()
-		block = false
+		imagesizemutex.Unlock()
 	}()
 
 	err = i.searchRoots(fn, image)

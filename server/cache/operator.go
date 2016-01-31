@@ -9,7 +9,7 @@ type Operator struct {
 }
 
 func MakeOperator(mm uint64) Operator {
-	o := Operator{NewLRU(mm), make(chan bool, 4)}
+	o := Operator{NewLRU(mm), make(chan bool, 3)}
 	for i := 0; i < 2; i++ {
 		o.tokens <- true
 	}
@@ -23,9 +23,12 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		return blob, nil
 	}
 
-	t := <-o.tokens
+	t := <- o.tokens
 	img := images.NewImage()
-	defer img.Destroy()
+	defer func(){
+		img.Destroy()
+		o.tokens <- t
+	}()
 
 	for _, op := range operations {
 		err = op.Apply(img)
@@ -33,7 +36,6 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 			return
 		}
 	}
-	o.tokens <- t
 
 	blob = img.Blob()
 	o.cache.AddBlob(operations, blob)

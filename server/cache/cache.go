@@ -48,7 +48,10 @@ func NewCache(policy Policy, mm uint64) *Cache {
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
 	logging.Debugf("Cache get with key: %v", key)
-
+	
+	// TODO: GetBlob calls policy.Visit(), AddBlob calls policy.Push().
+	// Figure out how thread safety should be handled. Is this current
+	// solution ok?
 	c.RLock()
 	blob, found = c.blobs[key]
 	c.RUnlock()
@@ -56,9 +59,10 @@ func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, foun
 	if found {
 		logging.Debugf("Cache found: %v", key)
 		c.policy.Visit(key)
+	} else {
+		logging.Debugf("Cache not found: %v", key)
 	}
 
-	logging.Debugf("Cache not found: %v", key)
 	return
 }
 
@@ -77,16 +81,15 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 
 	c.Lock()
 	defer c.Unlock()
-
 	for c.currentMemory+size > c.maxMemory {
-		c.deleteOldest()
+		c.deleteOne()
 	}
 	c.policy.Push(key)
 	c.currentMemory += uint64(len(blob))
 	c.blobs[key] = blob
 }
 
-func (c *Cache) deleteOldest() {
+func (c *Cache) deleteOne() {
 	to_delete := c.policy.Pop()
 	logging.Debugf("Cache delete: %v", to_delete)
 	c.currentMemory -= uint64(len(c.blobs[to_delete]))
