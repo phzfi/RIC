@@ -52,14 +52,25 @@ func (i ImageSource) searchRoots(filename string, img images.Image) (err error) 
 	return
 }
 
+
+// TODO: This is a temp solution for ImageSize creating too many Images.
+// Limit to creating only one at time for finding the image size
+var block = false
+
 func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 
 	if s, ok := i.sizes[fn]; ok {
 		return s[0], s[1], nil
 	}
+	
+	// TODO: Figure out another way to find out image size so no blocking is needed
+	block = true
 
 	image := images.NewImage()
-	defer image.Destroy()
+	defer func () {
+		image.Destroy()
+		block = false
+	}()
 
 	err = i.searchRoots(fn, image)
 	if err != nil {
