@@ -49,9 +49,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	denyUpscale := func() {
 		if w > ow {
 			w = ow
+			adjustHeight()
 		}
 		if h > oh {
 			h = oh
+			adjustWidth()
 		}
 	}
 
@@ -62,6 +64,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	}
 
 	liquid := func() {
+		denyUpscale()
 		adjustSize()
 		operations = append(operations, ops.LiquidRescale{w, h})
 	}

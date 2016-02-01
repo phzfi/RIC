@@ -32,7 +32,6 @@ type MyHandler struct {
 
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
-// TODO: Check that ServeHTTP is called inside a goroutine?
 func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 	// In the future we can use requester can detect request spammers!
