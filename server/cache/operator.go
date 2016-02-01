@@ -23,21 +23,17 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		return blob, nil
 	}
 
-	t := <- o.tokens
+	t := <-o.tokens
+	defer func() { o.tokens <- t }()
 
 	//Check if some other thread already cached the image while we were blocked
 	blob, found = o.cache.GetBlob(operations)
 	if found {
-		o.tokens <- t
 		return blob, nil
 	}
 
 	img := images.NewImage()
-
-	defer func(){
-		img.Destroy()
-		o.tokens <- t
-	}()
+	defer img.Destroy()
 
 	for _, op := range operations {
 		err = op.Apply(img)
@@ -49,5 +45,4 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 	blob = img.Blob()
 	o.cache.AddBlob(operations, blob)
 	return
-
 }
