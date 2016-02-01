@@ -1,6 +1,7 @@
 package cache
 
 import (
+	
 	"errors"
 	"fmt"
 	"github.com/phzfi/RIC/server/images"
@@ -47,6 +48,7 @@ func (c *BasicResizer) GetImage(filename string, width, height uint) (blob image
 		return
 	}
 	// Add watermark
+
 	err = resized.Watermark()
 	if err != nil {
 		return
