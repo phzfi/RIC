@@ -1,3 +1,4 @@
+# Modified by Nicholas for RIC
 # VCCW
 
 This is a Vagrant configuration designed for development of WordPress plugins, themes, or websites.
@@ -7,8 +8,9 @@ To get started, check out <http://vccw.cc/>
 ## Configuration
 
 1. Copy `provision/default.yml` to `site.yml`.
-1. Edit the `site.yml`.
-1. Run `vagrant up`.
+2. Edit the `site.yml`.
+3. Run 'vagrant plugin install vagrant-hostsupdater' (on Windows maybe have to manually add "192.168.33.10 vccw.dev" to your windows/system32/drivers/etc/hosts)
+4. Run `vagrant up`.
 
 ### Note
 
