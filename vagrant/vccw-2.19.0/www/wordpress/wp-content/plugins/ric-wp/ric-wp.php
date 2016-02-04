@@ -75,7 +75,7 @@ function run_ric_wp() {
 
 function load_js_file()
 {
-	wp_enqueue_script('test_js', plugins_url('../../../../../../../research/clientsideDPIdetection/test.js',__FILE__);
+	wp_enqueue_script('test_js', plugins_url('/client.js',__FILE__));
 }
 
 
