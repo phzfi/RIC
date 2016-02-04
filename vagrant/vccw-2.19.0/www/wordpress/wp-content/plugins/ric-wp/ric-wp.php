@@ -72,4 +72,12 @@ function run_ric_wp() {
 	$plugin->run();
 
 }
+
+function load_js_file()
+{
+	wp_enqueue_script('test_js', plugins_url('../../../../../../../research/clientsideDPIdetection/test.js',__FILE__);
+}
+
+
 run_ric_wp();
+add_action('wp_head', 'load_js_file');
