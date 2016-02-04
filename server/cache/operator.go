@@ -10,6 +10,7 @@ type Operator struct {
 
 func MakeOperator(mm uint64) Operator {
 	o := Operator{NewLRU(mm), make(chan bool, 3)}
+	// TODO: Currently only 2 simult. operations allowed. Increate tokens and make them configurable.
 	for i := 0; i < 2; i++ {
 		o.tokens <- true
 	}
