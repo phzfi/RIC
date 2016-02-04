@@ -12,5 +12,5 @@ func Debug(v ...interface{}) {
 }
 
 func Debugf(s string, v ...interface{}) {
-	Debug(fmt.Sprintf(s, v))
+	Debug(fmt.Sprintf(s, v...))
 }

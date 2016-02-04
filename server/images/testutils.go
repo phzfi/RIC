@@ -9,24 +9,24 @@ import (
 
 func CheckDistortion(blob ImageBlob, reffn string, tol float64, resfn string) (err error) {
 
-	ref := NewImage()
+	ref := imagick.NewMagickWand()
 	defer ref.Destroy()
-	err = ref.FromFile(reffn)
+	err = ref.ReadImage(reffn)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Could not load ref image: %v Err: %v", reffn, err))
 	}
 
-	img := NewImage()
-	defer img.Destroy()
-	err = img.FromBlob(blob)
+	mw := imagick.NewMagickWand()
+	defer mw.Destroy()
+	err = mw.ReadImageBlob(blob)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Could not load blob. Err: %v", err))
 	}
-
-	trash, d := img.CompareImages(ref.MagickWand, imagick.METRIC_MEAN_SQUARED_ERROR)
+	
+	trash, d := mw.CompareImages(ref, imagick.METRIC_MEAN_SQUARED_ERROR)
 	trash.Destroy()
 
-	err = img.WriteImage(filepath.FromSlash(resfn))
+	err = mw.WriteImage(filepath.FromSlash(resfn))
 	if err != nil {
 		return errors.New(fmt.Sprintf("Could not write result file: %v. Err: %v", resfn, err))
 	}

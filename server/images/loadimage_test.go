@@ -3,7 +3,6 @@ package images
 import (
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"github.com/joonazan/imagick/imagick"
 	"path/filepath"
 	"testing"
@@ -39,12 +38,11 @@ func CompareBlobToImage(blob_base64 string, filename string) error {
 
 	img_cmp := imagick.NewMagickWand()
 	img_cmp.ReadImageBlob(blob_cmp)
-	trash, distortion := img.CompareImages(img_cmp, imagick.METRIC_MEAN_SQUARED_ERROR)
-	trash.Destroy()
 
-	const tolerance = 0.0002
-	if distortion > tolerance {
-		return errors.New(fmt.Sprintf("Image load failed. Distortion: %f, Tolerance: %f", distortion, tolerance))
+	const tolerance = 0.0004
+	err = CheckDistortion(img.Blob(), filename, tolerance, "../testresults/images/cmp")
+	if err != nil {
+		return err
 	}
 
 	return nil

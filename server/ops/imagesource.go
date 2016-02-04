@@ -28,7 +28,7 @@ func (i ImageSource) LoadImageOp(id string) Operation {
 	return loadImageOp{i, id}
 }
 
-// Search root for an image. Returned image should be destroyed by image.Destroy, image.Resized or image.ToBlob or other.
+// Search root for an image. If found load to given img. Otherwise error.
 func (i ImageSource) searchRoots(filename string, img images.Image) (err error) {
 	if len(i.roots) == 0 {
 		logging.Debug("No roots")
@@ -45,7 +45,7 @@ func (i ImageSource) searchRoots(filename string, img images.Image) (err error) 
 		trial := filepath.Join(root, id) + ".jpg"
 		err = img.FromFile(trial)
 		if err == nil {
-			logging.Debug("Found: " + trial)
+			logging.Debugf("Found: %v", trial)
 			break
 		}
 		logging.Debug("Not found: " + trial)
