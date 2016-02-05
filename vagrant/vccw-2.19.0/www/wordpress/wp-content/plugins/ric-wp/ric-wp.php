@@ -140,7 +140,7 @@ class RicSettingsPage
     {        
         register_setting(
             'ric_option_group', // Option group
-            'ric_option_name', // Option name
+            'ric_option', // Option name
             array( $this, 'sanitize' ) // Sanitize
         );
 
