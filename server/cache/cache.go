@@ -1,11 +1,11 @@
 package cache
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
-	"md5"
 	"sync"
 )
 
@@ -18,14 +18,15 @@ func toKey(operations []ops.Operation) cacheKey {
 	if err != nil {
 		panic(err)
 	}
-	return cacheKey(string(md5.Sum(bytes)))
+	checksum := md5.Sum(bytes)
+	return cacheKey(string(checksum[:]))
 }
 
 type Cache struct {
 	sync.RWMutex
 
 	policy Policy
-	storer LoadStorer
+	storer Storer
 
 	maxMemory, currentMemory uint64
 }
@@ -42,7 +43,7 @@ type Policy interface {
 type Storer interface {
 	Load(cacheKey) (images.ImageBlob, bool)
 	Store(cacheKey, images.ImageBlob)
-	Delete(cacheKey)
+	Delete(cacheKey) uint64
 }
 
 // Gets an image blob of requested dimensions
@@ -93,6 +94,5 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 func (c *Cache) deleteOne() {
 	to_delete := c.policy.Pop()
 	logging.Debugf("Cache delete: %v", to_delete)
-	c.currentMemory -= uint64(len(c.blobs[to_delete]))
-	c.storer.Delete(to_delete)
+	c.currentMemory -= c.storer.Delete(to_delete)
 }
