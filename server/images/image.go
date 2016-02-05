@@ -67,40 +67,7 @@ func (img Image) ToBlob() (blob ImageBlob) {
 }
 
 // Watermark watermarks image.
-func (img Image) Watermark() (err error) {
-	logging.Debug("Watermarking")
-  logging.Debug(*config.Config())
-	minHeight, err := config.GetInt("watermark", "minheight")
-	minWidth, err := config.GetInt("watermark", "minwidth")
-	maxHeight, err := config.GetInt("watermark", "maxheight")
-	maxWidth, err := config.GetInt("watermark", "maxwidth")
-	addMark, err := config.GetBool("watermark", "mark")
-
-	if err != nil {
-		logging.Debug("Error reading config size restrictions." + err.Error())
-		return
-	}
-
-	heightOK := img.GetHeight() > uint(minHeight) && img.GetHeight() < uint(maxHeight)
-	widthOK := img.GetWidth() > uint(minWidth) && img.GetWidth() < uint(maxWidth)
-	if (!heightOK && !widthOK && !addMark) {
-		return
-	}
-
-	watermark, err := LoadImage(config.GetString("watermark", "path"))
-	if err != nil {
-		logging.Debug("Error loading watermark image." + err.Error())
-		return
-	}
-
-	horizontal, err := config.GetFloat64("watermark", "horizontal")
-	vertical, err := config.GetFloat64("watermark", "vertical")
-
-	if err != nil {
-		logging.Debug("Error loading config alignment." + err.Error())
-		return
-	}
-
+func (img Image) Watermark(watermark Image, horizontal, vertical) (err error) {
 	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
 	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
 	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)

@@ -103,3 +103,51 @@ func TestImageResize(t *testing.T) {
 		}
 	}
 }
+
+func TestImageWatermark(t *testing.T) {
+
+	testfolder := "../testimages/watermark/"
+	testimage := testfolder + "towatermark.jpg"
+	resfolder := "../testresults/images/"
+	tolerance := 0.002
+
+	wmimage := NewImage()
+	defer wmimg.destroy
+	err := img.FromFile(c.Testfn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	horizontal := 0.0
+	vertical := 0.0
+
+	cases := []TestCase{
+		{testimage, testfolder + "marked1.jpg", resfolder + "marked1.jpg"},
+		{testimage, testfolder + "marked2.jpg", resfolder + "marked2.jpg"},
+		{testimage, testfolder + "marked3.jpg", resfolder + "marked3.jpg"},
+	}
+
+	for _, c := range cases {
+
+		logging.Debug(fmt.Sprintf("Testing watermark: %v, %v, %v", c.Testfn, c.Reffn, c.Resfn))
+
+		img := NewImage()
+		defer img.Destroy()
+		err := img.FromFile(c.Testfn)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = img.Watermark(wmimg, horizontal, vertical)
+		if err != nil {
+			t.Fatal(err)
+		}
+		blob := img.Blob()
+		horizontal = horizontal + 0.5
+		vertical = vertical + 0.5
+		err = FormatTest(c, blob, tolerance)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
