@@ -6,6 +6,8 @@ import (
   "errors"
 )
 
+
+
 var conf, err = ini.LoadFile("config.ini")
 
 func GetString(section, key string) (value string) {
@@ -43,6 +45,7 @@ func GetBool(section, key string) (bool, error) {
     return false, errors.New("Value for " + key + " not found.")
   }
 }
+
 
 func Config() (*ini.Config) {
   return &conf
