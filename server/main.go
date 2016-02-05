@@ -95,7 +95,7 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
 	logging.Debug("Creating server")
 	imageSource := ops.MakeImageSource()
-
+  watermarker := ops.MakeWatermaker()
 	// Add roots
 	// TODO: This must be externalized outside the source code.
 	logging.Debug("Adding roots")

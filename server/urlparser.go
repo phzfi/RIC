@@ -15,7 +15,7 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Operation, err error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, watermarker ops.Watermarker) (operations []ops.Operation, err error) {
 	args := uri.QueryArgs()
 	filename := string(uri.Path())
 	w, werr := args.GetUint("width")
@@ -83,6 +83,12 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 		}
 	}
 
+	watermark := func() {
+		if config.GetBool("watermark", "addmark") {
+			operations = append(operations, ops.Watermark)
+		}
+	}
+
 	switch mode {
 	case "resize":
 		resize()
@@ -93,7 +99,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	default:
 		resize()
 	}
-
+	watermark()
 	ext := filepath.Ext(filename)
 	if ext != "" {
 		operations = append(operations, ops.Convert{ExtToFormat(ext)})

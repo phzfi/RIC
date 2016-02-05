@@ -25,7 +25,7 @@ func NewImage() Image {
 	return Image{imagick.NewMagickWand()}
 }
 
-// Clone an image. Remember images and made clones need to be destroyed using Destroy().
+// Clone an image. Remember images and made clones need to be destroyed using Destroy(), ToBlob() or Resize().
 func (img Image) Clone() Image {
 	return Image{img.MagickWand.Clone()}
 }
@@ -40,13 +40,13 @@ func (img Image) Convert(ext string) (err error) {
 }
 
 // Returns image width
-func (img Image) GetWidth() (width int) {
-	return int(img.GetImageWidth())
+func (img Image) GetWidth() (width uint) {
+	return img.GetImageWidth()
 }
 
 // Returns image height
-func (img Image) GetHeight() (height int) {
-	return int(img.GetImageHeight())
+func (img Image) GetHeight() (height uint) {
+	return img.GetImageHeight()
 }
 
 // Returns filename extension of the image e.g. jpg, gif, webp
@@ -59,19 +59,22 @@ func (img Image) GetExtension() (ext string) {
 	return
 }
 
-// Method for converting Image to ImageBlob.
-func (img Image) Blob() ImageBlob {
-	return img.GetImageBlob()
+// Method for converting Image to ImageBlob. Note: Method Destroys the used Image and frees the memory used.
+func (img Image) ToBlob() (blob ImageBlob) {
+	blob = img.GetImageBlob()
+	img.Destroy()
+	return
 }
 
 // Watermark watermarks image.
 func (img Image) Watermark() (err error) {
 	logging.Debug("Watermarking")
   logging.Debug(*config.Config())
-	minHeight, err := config.WatermarkInt("minheight")
-	minWidth, err := config.WatermarkInt("minwidth")
-	maxHeight, err := config.WatermarkInt("maxheight")
-	maxWidth, err := config.WatermarkInt("maxwidth")
+	minHeight, err := config.GetInt("watermark", "minheight")
+	minWidth, err := config.GetInt("watermark", "minwidth")
+	maxHeight, err := config.GetInt("watermark", "maxheight")
+	maxWidth, err := config.GetInt("watermark", "maxwidth")
+	addMark, err := config.GetBool("watermark", "mark")
 
 	if err != nil {
 		logging.Debug("Error reading config size restrictions." + err.Error())
@@ -80,18 +83,18 @@ func (img Image) Watermark() (err error) {
 
 	heightOK := img.GetHeight() > uint(minHeight) && img.GetHeight() < uint(maxHeight)
 	widthOK := img.GetWidth() > uint(minWidth) && img.GetWidth() < uint(maxWidth)
-	if (!heightOK && !widthOK) {
+	if (!heightOK && !widthOK && !addMark) {
 		return
 	}
 
-	watermark, err := LoadImage(config.Watermark("path"))
+	watermark, err := LoadImage(config.GetString("watermark", "path"))
 	if err != nil {
 		logging.Debug("Error loading watermark image." + err.Error())
 		return
 	}
 
-	horizontal, err := config.WatermarkFloat64("horizontal")
-	vertical, err := config.WatermarkFloat64("vertical")
+	horizontal, err := config.GetFloat64("watermark", "horizontal")
+	vertical, err := config.GetFloat64("watermark", "vertical")
 
 	if err != nil {
 		logging.Debug("Error loading config alignment." + err.Error())
