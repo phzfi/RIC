@@ -101,7 +101,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 	testimage := testfolder + "toresize"
 	testimage2 := testfolder + "toresize2"
 	resfolder := "testresults/common/"
-	tolerance := 0.002
+	tolerance := 0.05
 
 	cases := []images.SizeTestCase{
 		{images.TestCase{testimage, testfolder + "liquid1_100x100.jpg", resfolder + "liquid1_100x100.jpg"}, 100, 100},

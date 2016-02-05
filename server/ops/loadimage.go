@@ -7,10 +7,10 @@ import (
 
 type loadImageOp struct {
 	is ImageSource
-	id string
+	Id string
 }
 
 func (i loadImageOp) Apply(img images.Image) error {
-	logging.Debug("Loading: %v", i.id)
-	return i.is.searchRoots(i.id, img)
+	logging.Debug("Loading: %v", i.Id)
+	return i.is.searchRoots(i.Id, img)
 }

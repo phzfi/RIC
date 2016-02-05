@@ -1,10 +1,11 @@
 package cache
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
+	"md5"
 	"sync"
 )
 
@@ -12,16 +13,20 @@ type cacheKey string
 
 // Returns a unique representation of an ops chain. This unique representation can be used as a map key unlike the original ops chain (slice cannot be a key).
 func toKey(operations []ops.Operation) cacheKey {
-	//TODO: Currently returns go source code representation of operations which is a very long string. Possibly find a way to shorten the key.
-	return cacheKey(fmt.Sprintf("%#v", operations))
+	// Todo: Instead of JSON, use compact binary encoding
+	bytes, err := json.Marshal(operations)
+	if err != nil {
+		panic(err)
+	}
+	return cacheKey(string(md5.Sum(bytes)))
 }
 
 type Cache struct {
 	sync.RWMutex
 
-	blobs map[cacheKey]images.ImageBlob
+	policy Policy
+	storer LoadStorer
 
-	policy                   Policy
 	maxMemory, currentMemory uint64
 }
 
@@ -34,27 +39,23 @@ type Policy interface {
 	Visit(cacheKey)
 }
 
-// Takes the caching policy and the maximum size of the cache in bytes.
-func NewCache(policy Policy, mm uint64) *Cache {
-	logging.Debugf("Cache create: mem:%v", mm)
-	return &Cache{
-		maxMemory: mm,
-		policy:    policy,
-		blobs:     make(map[cacheKey]images.ImageBlob),
-	}
+type Storer interface {
+	Load(cacheKey) (images.ImageBlob, bool)
+	Store(cacheKey, images.ImageBlob)
+	Delete(cacheKey)
 }
 
 // Gets an image blob of requested dimensions
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
 	logging.Debugf("Cache get with key: %v", key)
-	
+
 	// TODO: GetBlob calls policy.Visit(), AddBlob calls policy.Push().
 	// Figure out how thread safety should be handled. Is this current
 	// solution ok?
 	c.RLock()
-	blob, found = c.blobs[key]
 	defer c.RUnlock()
+	blob, found = c.storer.Load(key)
 
 	if found {
 		logging.Debugf("Cache found: %v", key)
@@ -86,12 +87,12 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 	}
 	c.policy.Push(key)
 	c.currentMemory += uint64(len(blob))
-	c.blobs[key] = blob
+	c.storer.Store(key, blob)
 }
 
 func (c *Cache) deleteOne() {
 	to_delete := c.policy.Pop()
 	logging.Debugf("Cache delete: %v", to_delete)
 	c.currentMemory -= uint64(len(c.blobs[to_delete]))
-	delete(c.blobs, to_delete)
+	c.storer.Delete(to_delete)
 }
