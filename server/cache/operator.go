@@ -58,11 +58,12 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 }
 
 func (o Operator) applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
-	for _, op := range operations {
+	for i, op := range operations {
 		err = op.Apply(img)
 		if err != nil {
 			return
 		}
+		o.cache.AddBlob(operations[:i], img.Blob())
 	}
 	return
 }

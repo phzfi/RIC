@@ -7,7 +7,97 @@ import (
 	"strings"
 )
 
-func ExtToFormat(ext string) string {
+// Struct containing variable and methods needed when parsing url
+type parseJob struct {
+	args             *fasthttp.Args
+	w, h             int
+	ow, oh           int
+	filename         string
+	mode             string
+	werr, herr, oerr error
+	operations       []ops.Operation
+}
+
+// Adjust w according to the original aspect
+func (p *parseJob) adjustWidth() {
+	p.w = int(float32(p.h*p.ow)/float32(p.oh) + 0.5)
+}
+
+//Adjust h according to the original aspect
+func (p *parseJob) adjustHeight() {
+	p.h = int(float32(p.w*p.oh)/float32(p.ow) + 0.5)
+}
+
+// Adjust w, h so that the image will be correct aspect
+func (p *parseJob) adjustSize() {
+	if p.herr != nil && p.werr == nil {
+		p.adjustHeight()
+	} else if p.herr == nil && p.werr != nil {
+		p.adjustWidth()
+	} else if p.werr != nil && p.herr != nil {
+		p.w, p.h = p.ow, p.oh
+	}
+}
+
+// Adjust w, h so the image won't be upsaceld
+func (p *parseJob) denyUpscale() {
+	if p.w > p.ow {
+		p.w = p.ow
+		p.adjustHeight()
+	}
+	if p.h > p.oh {
+		p.h = p.oh
+		p.adjustWidth()
+	}
+}
+
+// Generate resizes stack that halves the w, h until we are close to the requested
+// size. The sub resized images will get cached and fasten future resizes.
+func (p *parseJob) subResize() {
+	hw := p.ow / 2
+	hh := p.oh / 2
+	for p.w < hw && p.h < hh {
+		p.operations = append(p.operations, ops.Resize{hw, hh})
+		hw /= 2
+		hh /= 2
+	}
+}
+
+// Generate resize operation stack (without loadImageOp)
+func (p *parseJob) resize() {
+	// Adjust w, h
+	p.denyUpscale()
+	p.adjustSize()
+	// Generate sub-resizes
+	p.subResize()
+	// Add resize to the final size
+	p.operations = append(p.operations, ops.Resize{p.w, p.h})
+}
+
+// Generate liquid resize stack (without loadImageOp)
+func (p *parseJob) liquid() {
+	p.denyUpscale()
+	p.adjustSize()
+	p.operations = append(p.operations, ops.LiquidRescale{p.w, p.h})
+}
+
+// Generate fit resize stack (without loadImageOp)
+func (p *parseJob) fit() {
+	if p.werr == nil && p.herr == nil {
+		p.denyUpscale()
+		if p.ow*p.h > p.w*p.oh {
+			p.adjustHeight()
+		} else {
+			p.adjustWidth()
+		}
+		p.operations = append(p.operations, ops.Resize{p.w, p.h})
+	} else {
+		p.resize()
+	}
+}
+
+// Convert file extension to format string
+func extToFormat(ext string) string {
 	ext = strings.ToUpper(strings.TrimLeft(ext, "."))
 	if ext == "JPG" {
 		return "JPEG"
@@ -15,89 +105,39 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
+// Generate []Operation thet the given URI represents
 func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Operation, err error) {
-	args := uri.QueryArgs()
-	filename := string(uri.Path())
-	w, werr := args.GetUint("width")
-	h, herr := args.GetUint("height")
-	ow, oh, err := source.ImageSize(filename)
-	if err != nil {
+	p := parseJob{}
+	p.args = uri.QueryArgs()
+	p.w, p.werr = p.args.GetUint("width")
+	p.h, p.herr = p.args.GetUint("height")
+	p.filename = string(uri.Path())
+	p.ow, p.oh, p.oerr = source.ImageSize(p.filename)
+	p.mode = string(p.args.Peek("mode"))
+	p.operations = []ops.Operation{source.LoadImageOp(p.filename)}
+
+	if p.oerr != nil {
+		err = p.oerr
 		return
 	}
-	mode := string(args.Peek("mode"))
 
-	operations = []ops.Operation{source.LoadImageOp(filename)}
-
-	adjustWidth := func() {
-		w = int(float32(h*ow)/float32(oh) + 0.5)
-	}
-
-	adjustHeight := func() {
-		h = int(float32(w*oh)/float32(ow) + 0.5)
-	}
-
-	adjustSize := func() {
-		if herr != nil && werr == nil {
-			adjustHeight()
-		} else if herr == nil && werr != nil {
-			adjustWidth()
-		} else if werr != nil && herr != nil {
-			w, h = ow, oh
-		}
-	}
-
-	denyUpscale := func() {
-		if w > ow {
-			w = ow
-			adjustHeight()
-		}
-		if h > oh {
-			h = oh
-			adjustWidth()
-		}
-	}
-
-	resize := func() {
-		denyUpscale()
-		adjustSize()
-		operations = append(operations, ops.Resize{w, h})
-	}
-
-	liquid := func() {
-		denyUpscale()
-		adjustSize()
-		operations = append(operations, ops.LiquidRescale{w, h})
-	}
-
-	fit := func() {
-		if werr == nil && herr == nil {
-			denyUpscale()
-			if ow*h > w*oh {
-				adjustHeight()
-			} else {
-				adjustWidth()
-			}
-			operations = append(operations, ops.Resize{w, h})
-		} else {
-			resize()
-		}
-	}
-
-	switch mode {
+	switch p.mode {
 	case "resize":
-		resize()
+		p.resize()
 	case "fit":
-		fit()
+		p.fit()
 	case "liquid":
-		liquid()
+		p.liquid()
 	default:
-		resize()
+		p.resize()
 	}
 
-	ext := filepath.Ext(filename)
+	ext := filepath.Ext(p.filename)
 	if ext != "" {
-		operations = append(operations, ops.Convert{ExtToFormat(ext)})
+		p.operations = append(p.operations, ops.Convert{extToFormat(ext)})
 	}
+
+	operations = p.operations
 
 	return
 }

@@ -10,7 +10,12 @@ type loadImageOp struct {
 	id string
 }
 
-func (i loadImageOp) Apply(img images.Image) error {
+func (i loadImageOp) Apply(img images.Image) (err error) {
 	logging.Debug("Loading: %v", i.id)
-	return i.is.searchRoots(i.id, img)
+	err = i.is.searchRoots(i.id, img)
+	if err != nil {
+		return
+	}
+	err = img.Convert("PNG")
+	return
 }
