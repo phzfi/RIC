@@ -83,6 +83,26 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 		}
 	}
 
+	watermark := func() {
+		minHeight, err := config.GetInt("watermark", "minheight")
+		minWidth, err := config.GetInt("watermark", "minwidth")
+		maxHeight, err := config.GetInt("watermark", "maxheight")
+		maxWidth, err := config.GetInt("watermark", "maxwidth")
+		addMark, err := config.GetBool("watermark", "addmark")
+
+		if err != nil {
+			logging.Debug("Error reading config size restrictions." + err.Error())
+			return
+		}
+
+		heightOK := img.GetHeight() > uint(minHeight) && img.GetHeight() < uint(maxHeight)
+		widthOK := img.GetWidth() > uint(minWidth) && img.GetWidth() < uint(maxWidth)
+
+		if config.GetBool("watermark", "addmark") && !heightOK && !widthOK && !addMark {
+			operations = append(operations, ops.Watermark)
+		}
+	}
+
 	switch mode {
 	case "resize":
 		resize()

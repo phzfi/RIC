@@ -65,39 +65,7 @@ func (img Image) Blob() ImageBlob {
 }
 
 // Watermark watermarks image.
-func (img Image) Watermark() (err error) {
-	logging.Debug("Watermarking")
-  logging.Debug(*config.Config())
-	minHeight, err := config.WatermarkInt("minheight")
-	minWidth, err := config.WatermarkInt("minwidth")
-	maxHeight, err := config.WatermarkInt("maxheight")
-	maxWidth, err := config.WatermarkInt("maxwidth")
-
-	if err != nil {
-		logging.Debug("Error reading config size restrictions." + err.Error())
-		return
-	}
-
-	heightOK := img.GetHeight() > uint(minHeight) && img.GetHeight() < uint(maxHeight)
-	widthOK := img.GetWidth() > uint(minWidth) && img.GetWidth() < uint(maxWidth)
-	if (!heightOK && !widthOK) {
-		return
-	}
-
-	watermark, err := LoadImage(config.Watermark("path"))
-	if err != nil {
-		logging.Debug("Error loading watermark image." + err.Error())
-		return
-	}
-
-	horizontal, err := config.WatermarkFloat64("horizontal")
-	vertical, err := config.WatermarkFloat64("vertical")
-
-	if err != nil {
-		logging.Debug("Error loading config alignment." + err.Error())
-		return
-	}
-
+func (img Image) Watermark(watermark Image, horizontal, vertical) (err error) {
 	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
 	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
 	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)

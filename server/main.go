@@ -132,7 +132,7 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 func main() {
 
 	// CLI arguments
-	mem := flag.Uint64("m", 500*1024*1024, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
+	mem := flag.Uint64("m", config.GetInt("server", mem), "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
 
 	imagick.Initialize()
