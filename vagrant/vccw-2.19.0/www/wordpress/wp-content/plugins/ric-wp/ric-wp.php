@@ -79,5 +79,32 @@ function load_js_file()
 }
 
 
+// SETTING UP THE SETTING MENUS 
+/** Step 2 (from text above). */
+add_action( 'admin_menu', 'ric_plugin_menu' );
+
+/** Step 1. */
+function ric_plugin_menu() {
+	add_options_page( 'RIC Wordpress Plugin Options', 'RIC Wordpress Plugin', 'manage_options', 'ric-unique-identifier', 'ric_plugin_options' );
+}
+
+/** Step 3. */
+function ric_plugin_options() {
+	if ( !current_user_can( 'manage_options' ) )  {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	}
+	echo '<div class="wrap">';
+	echo '<p>Here is where the form would go if I actually had options.</p>';
+	echo '<form method="post" action="options.php">';
+	settings_fields( 'ricoption-group' );
+	register_setting( 'ricoption-group', 'url-option');
+	do_settings_sections( 'ricoption-group' );
+	submit_button();
+	echo '</form>';
+	echo '</div>';
+}
+
+
+
 run_ric_wp();
 add_action('wp_head', 'load_js_file');
