@@ -83,13 +83,14 @@ function run_ric_wp() {
 
 
 
+
 class MySettingsPage
 {
     /**
      * Holds the values to be used in the fields callbacks
      */
     private $options;
-    public $ricuri = array('');
+    public $ricuri = array( 'urli' => 'dummy url...');
 
 
     /**
@@ -222,28 +223,26 @@ class MySettingsPage
      */
     public function title_callback()
     {
+    	$this->ricuri = array( 'urli' => '$this->options["title"]');
         printf(
             '<input type="text" id="title" name="my_option_name[title]" value="%s" />',
             isset( $this->options['title'] ) ? esc_attr( $this->options['title']) : ''
         );
         
-        $this->ricuri[0] = esc_attr( $this->options['title']);    
     }
 
 }
 
 
-if( is_admin() )
-    $my_settings_page = new MySettingsPage();
+$my_settings_page = new MySettingsPage();
 
 
 
 function load_js_file()
 {   
-    global $my_settings_page;
-    wp_register_script( 'client_js', plugins_url('/client.js',__FILE__));
+	global $my_settings_page;
+    wp_enqueue_script('client_js', plugins_url('/client.js',__FILE__));
     wp_localize_script('client_js', 'URLI' , $my_settings_page->ricuri);
-    wp_enqueue_script('client_js');
 }
 
 

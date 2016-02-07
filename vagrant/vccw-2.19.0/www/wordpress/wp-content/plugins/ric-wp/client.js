@@ -2,7 +2,7 @@
 window.onload = function() {
   
   /******** replace with your RIC server URI *********/
-  URI = URLI[0];
+  URI = URLI['urli'];
   /***************************************************/
   
 
