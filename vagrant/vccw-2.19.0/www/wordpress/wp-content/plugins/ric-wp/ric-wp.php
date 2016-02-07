@@ -30,6 +30,8 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
+
+
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-ric-wp-activator.php
@@ -73,19 +75,22 @@ function run_ric_wp() {
 
 }
 
-function load_js_file()
-{
-	wp_enqueue_script('client_js', plugins_url('/client.js',__FILE__));
-}
+/**
+ * Main functionality of the plugin, i.e. to load client.js script that does
+ * the actual work
+ */
 
 
 
-class RicSettingsPage
+
+class MySettingsPage
 {
     /**
      * Holds the values to be used in the fields callbacks
      */
     private $options;
+    public $ricuri = array('');
+
 
     /**
      * Start up
@@ -104,9 +109,9 @@ class RicSettingsPage
         // This page will be under "Settings"
         add_options_page(
             'Settings Admin', 
-            'RIC Settings', 
+            'My Settings', 
             'manage_options', 
-            'ric-setting-admin', 
+            'my-setting-admin', 
             array( $this, 'create_admin_page' )
         );
     }
@@ -117,15 +122,15 @@ class RicSettingsPage
     public function create_admin_page()
     {
         // Set class property
-        $this->options = get_option( 'ric_option' );
+        $this->options = get_option( 'my_option_name' );
         ?>
         <div class="wrap">
-            <h2>RIC Wordpress Plugin Settings</h2>           
+            <h2>My Settings</h2>           
             <form method="post" action="options.php">
             <?php
                 // This prints out all hidden setting fields
-                settings_fields( 'ric_option_group' );   
-                do_settings_sections( 'ric-setting-admin' );
+                settings_fields( 'my_option_group' );   
+                do_settings_sections( 'my-setting-admin' );
                 submit_button(); 
             ?>
             </form>
@@ -139,34 +144,34 @@ class RicSettingsPage
     public function page_init()
     {        
         register_setting(
-            'ric_option_group', // Option group
-            'ric_option', // Option name
+            'my_option_group', // Option group
+            'my_option_name', // Option name
             array( $this, 'sanitize' ) // Sanitize
         );
 
         add_settings_section(
             'setting_section_id', // ID
-            'RIC Server Settings', // Title
+            'My Custom Settings', // Title
             array( $this, 'print_section_info' ), // Callback
-            'ric-setting-admin' // Page
+            'my-setting-admin' // Page
         );  
 
-        add_settings_field(
-            'ric_url', // ID
-            'RIC Server URL', // Title 
+     /*   add_settings_field(
+            'id_number', // ID
+            'ID Number', // Title 
             array( $this, 'id_number_callback' ), // Callback
-            'ric-setting-admin', // Page
+            'my-setting-admin', // Page
             'setting_section_id' // Section           
-        );      
+        );   
+    */   
 
-        /* add_settings_field(
+        add_settings_field(
             'title', 
-            'Title', 
-            array( $this, 'title_callback' ), 
-            'ric-setting-admin', 
+            'RIC Server URL', 
+            array(  $this, 'title_callback' ), 
+            'my-setting-admin', 
             'setting_section_id'
-        ); 
-        */    
+        );      
     }
 
     /**
@@ -177,13 +182,16 @@ class RicSettingsPage
     public function sanitize( $input )
     {
         $new_input = array();
+        /*
         if( isset( $input['id_number'] ) )
             $new_input['id_number'] = absint( $input['id_number'] );
+        */
 
         if( isset( $input['title'] ) )
             $new_input['title'] = sanitize_text_field( $input['title'] );
 
-        return $new_input;
+        //return $new_input;
+        return $input;
     }
 
     /** 
@@ -191,73 +199,55 @@ class RicSettingsPage
      */
     public function print_section_info()
     {
-        print 'Enter your RIC Image Server URL below:';
+        print 'Enter your URL below:';
     }
 
     /** 
      * Get the settings option array and print one of its values
      */
+
+    /*
     public function id_number_callback()
     {
         printf(
-            '<input type="text" id="id_number" name="ric_option[id_number]" value="%s" />',
+            '<input type="text" id="id_number" name="my_option_name[id_number]" value="%s" />',
             isset( $this->options['id_number'] ) ? esc_attr( $this->options['id_number']) : ''
         );
     }
 
+    */
+
     /** 
      * Get the settings option array and print one of its values
      */
-   /* public function title_callback()
+    public function title_callback()
     {
         printf(
-            '<input type="text" id="title" name="ric_option[title]" value="%s" />',
+            '<input type="text" id="title" name="my_option_name[title]" value="%s" />',
             isset( $this->options['title'] ) ? esc_attr( $this->options['title']) : ''
         );
-    } */
+        
+        $this->ricuri[0] = esc_attr( $this->options['title']);    
+    }
+
 }
+
 
 if( is_admin() )
-    $ric_settings_page = new RicSettingsPage();
+    $my_settings_page = new MySettingsPage();
 
 
-/*
 
-// SETTING UP THE SETTING MENUS 
-/** Step 2 (from text above). 
-add_action( 'admin_menu', 'ric_plugin_menu' );
-
-/** Step 1. 
-function ric_plugin_menu() {
-	add_options_page( 'RIC Wordpress Plugin Options', 'RIC Wordpress Plugin', 'manage_options', 'ric-unique-identifier', 'ric_plugin_options' );
+function load_js_file()
+{   
+    global $my_settings_page;
+    wp_register_script( 'client_js', plugins_url('/client.js',__FILE__));
+    wp_localize_script('client_js', 'URLI' , $my_settings_page->ricuri);
+    wp_enqueue_script('client_js');
 }
 
-/** Step 3. 
-function ric_plugin_options() {
-	if ( !current_user_can( 'manage_options' ) )  {
-		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
-	}
-	settings_fields( 'ricoption-group' );
-	register_setting( 'ricoption-group', 'url-option');
-	do_settings_sections( 'ricoption-group' );
-	submit_button();
-	<div class="wrap">
-	<p>Here is where the form would gos if I actually had options.</p>';
-	<form method="post" action="options.php">';
-	do_settings_sections( 'ricoption-group' ); 
-  <table class="form-table">';
-  <tr valign="top">';
-  <th scope="row">RIC Server URL</th>';
-  <td><input type="text" name="url-option" value="  echo esc_attr( get_option('url-option') );
-  echo '" /></td>';
-  echo '</tr>';
-	echo '</form>';
-	echo '</div>';
-}
-*/
 
-
-run_ric_wp();
 add_action('wp_head', 'load_js_file');
+run_ric_wp();
 
 ?>

@@ -2,7 +2,7 @@
 window.onload = function() {
   
   /******** replace with your RIC server URI *********/
-  URI = 'http://ric.phz.fi:8005/';
+  URI = URLI[0];
   /***************************************************/
   
 
