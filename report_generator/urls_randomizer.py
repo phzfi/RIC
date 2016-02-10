@@ -49,6 +49,7 @@ def save_random_urls(data, to_file, seed):
             output.write(data[0])
             data = data[1:]
             random.seed(seed)
+            random.shuffle(data)
             for line in data:
                 output.write(line)
             return

@@ -30,7 +30,7 @@ $(SITE)/filters:no_upscale()/28.jpg
 $(SITE)/filters:no_upscale()/29.jpg
 $(SITE)/filters:no_upscale()/30.jpg
 $(SITE)/filters:no_upscale()/31.webp
-$(SITE)/filters:no_upscale()/1x1/01.jpg
+$(SITE)/1x1/filters:no_upscale()/01.jpg
 $(SITE)/1x1/filters:no_upscale()/02.jpg
 $(SITE)/1x1/filters:no_upscale()/03.jpg
 $(SITE)/1x1/filters:no_upscale()/04.jpg
