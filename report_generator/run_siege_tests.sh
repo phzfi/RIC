@@ -11,7 +11,7 @@ TURLS_FILE=./turls.txt_temp.txt
 
 # Siege settings
 DELAY=2
-TIME="480s"
+TIME="120s"
 SIEGE_CONF=./.siegerc
 
 #RIC SIEGE
