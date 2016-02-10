@@ -1,14 +1,15 @@
 #!/bin/bash
 
-SEED = $2
-python urls_randomizer.py ./urls.txt $SEED
-python urls_randomizer.py ./turls.txt $SEED
+SEED=$1
+CONCURRENT=$2
+python urls_randomizer.py urls.txt $SEED
+python urls_randomizer.py turls.txt $SEED
 
 
 URLS_FILE=./urls.txt_temp.txt
 TURLS_FILE=./turls.txt_temp.txt
 
-CONCURRENT=10
+
 DELAY=2
 TIME="480s"
 SIEGE_CONF=./.siegerc
@@ -20,7 +21,7 @@ TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 
 # Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --internet --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$URLS_FILE |
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$URLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
 rm $TMP
@@ -35,7 +36,7 @@ TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 
 # Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --internet --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$TURLS_FILE |
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$TURLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
 rm $TMP
