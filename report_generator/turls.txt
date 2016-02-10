@@ -1,4 +1,4 @@
-SITE=http://ric.phz.fi:8888/filters:no_upscale()/unsafe
+SITE=http://ric.phz.fi:8888/unsafe
 $(SITE)/filters:no_upscale()/01.jpg
 $(SITE)/filters:no_upscale()/02.jpg
 $(SITE)/filters:no_upscale()/03.jpg
