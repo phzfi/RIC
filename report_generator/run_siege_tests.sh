@@ -1,8 +1,8 @@
 #!/bin/bash
 
-SEED = $1
-python urls_randomizer ./urls.txt SEED
-python urls_randomizer ./turls.txt SEED
+SEED = $2
+python urls_randomizer.py ./urls.txt $SEED
+python urls_randomizer.py ./turls.txt $SEED
 
 
 URLS_FILE=./urls.txt_temp.txt
