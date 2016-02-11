@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/joonazan/imagick/imagick"
+	"github.com/gographics/imagick/imagick"
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"

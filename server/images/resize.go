@@ -1,7 +1,7 @@
 package images
 
 import (
-	"github.com/joonazan/imagick/imagick"
+	"github.com/gographics/imagick/imagick"
 )
 
 func (img Image) Resize(w, h int) error {

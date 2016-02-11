@@ -2,7 +2,7 @@ package images
 
 import (
 	"errors"
-	"github.com/joonazan/imagick/imagick"
+	"github.com/gographics/imagick/imagick"
 	"strings"
 )
 
