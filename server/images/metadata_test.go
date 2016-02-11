@@ -2,51 +2,56 @@ package images
 
 import (
   "testing"
+  "errors"
+  "fmt"
 )
 
-func TestPreserveMetaData(t *testing.T) {
+func readImageProperties(img Image, prefix string) (properties []string) {
+  for _, p := range img.GetImageProperties(prefix) {
+    properties = append(properties, img.GetImageProperty(p))
+  }
+  return
+}
+
+func readImageProfiles(img Image, prefix string) (profiles []string) {
+  for _, p := range img.GetImageProfiles(prefix) {
+    profiles = append(profiles, img.GetImageProfile(p))
+  }
+  return
+}
+
+func compare(before []string, after []string) (err error) {
+  if len(before) == len(after) {
+    for i, _ := range before {
+      if before[i] != before[i] {
+        err = errors.New("Image metadata does not match! Different values.")
+        return
+      }
+    }
+  } else {
+    err = errors.New("Image metadata does not match! Different length.")
+  }
+  return
+}
+
+func TestPreserveEXIFJpgToTif(t *testing.T) {
   imgBefore := NewImage()
   imgAfter := NewImage()
   defer imgBefore.Destroy()
   defer imgAfter.Destroy()
 
-  err := imgBefore.FromFile("../testimages/resize/toresize.jpg")
+  imgBefore.FromFile("../testimages/resize/toresize.jpg")
+  EXIFbefore := readImageProperties(imgBefore, "exif:*")
+  fmt.Println(EXIFbefore)
+
+  imgBefore.SetImageFormat("TIFF")
+  imgAfter.FromBlob(imgBefore.Blob())
+
+  EXIFafter := readImageProperties(imgAfter, "exif:*")
+  fmt.Println(EXIFafter)
+
+  err := compare(EXIFbefore, EXIFafter)
   if err != nil {
     t.Fatal(err)
   }
-
-  var propertiesBefore []string
-  var profilesBefore []string
-  for _, p := range imgBefore.GetImageProperties("*") {
-    propertiesBefore = append(propertiesBefore, imgBefore.GetImageProperty(p))
-  }
-  for _, p := range imgBefore.GetImageProfiles("*") {
-    profilesBefore = append(profilesBefore, imgBefore.GetImageProfile(p))
-  }
-
-  imgBefore.Resize(100, 100)
-  imgBefore.Convert("webp")
-  imgAfter.FromBlob(imgBefore.Blob())
-
-  var propertiesAfter []string
-  for _, p := range imgBefore.GetImageProperties("*") {
-    propertiesAfter = append(propertiesAfter, imgBefore.GetImageProperty(p))
-  }
-  var profilesAfter []string
-  for _, p := range imgAfter.GetImageProfiles("*") {
-    profilesAfter = append(profilesAfter, imgAfter.GetImageProfile(p))
-  }
-
-  for i, _ := range propertiesBefore {
-    if propertiesBefore[i] != propertiesAfter[i] {
-      t.Fatal("Image properties do not match!")
-    }
-  }
-  /*
-  for i, _ := range profilesBefore {
-    if profilesBefore[i] != profilesAfter[i] {
-      t.Fatal("Image profiles do not match!")
-    }
-  }
-  */
 }
