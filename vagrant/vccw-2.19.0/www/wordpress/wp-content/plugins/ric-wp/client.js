@@ -1,10 +1,6 @@
 
 window.onload = function() {
-  
-  /******** replace with your RIC server URI *********/
-  URI = URLI['urli'];
-  /***************************************************/
-  
+  URI = php_vars.URI.url;
 
   var formats = [
     ['webp', 'webp'],
@@ -20,7 +16,7 @@ window.onload = function() {
     }
   }
   var elements = document.getElementsByClassName('ricimg');
-  
+
   //loop over all elements of page and inject to image divs RIC URL's
   for (var i = 0; i < elements.length; i++){
     var id = elements[i].id;
@@ -28,7 +24,7 @@ window.onload = function() {
     if(id.indexOf('.') === -1){
       id += fmt;
     }
-    
+
     //get image dimensions from DOM
     var h = elements[i].parentElement.clientHeight;
     var w = elements[i].parentElement.clientWidth;
@@ -45,5 +41,3 @@ function supportsIMG(format) {
 
   return uri.match('image/' + format) !== null;
 }
-
-
