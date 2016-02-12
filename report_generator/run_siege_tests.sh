@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ $# -lt 2 ]; then
+echo "Script usage: sh run_siege_tests.sh RANDOM_SEED CONCURRENT_USERS "
+exit 1
+fi
+
+
 SEED=$1
 CONCURRENT=$2
 python urls_randomizer.py urls.txt $SEED
