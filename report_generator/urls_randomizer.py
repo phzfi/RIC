@@ -25,21 +25,18 @@ def main():
     seed = sys.argv[2]
     try:
         seed = int(seed)
-        urls = read_urls(urls_file)
-        save_random_urls(urls, urls_file+'_temp.txt', seed)
     except ValueError:
         logging.critical('Seed was not an integer')
+    urls = read_urls(urls_file)
+    save_random_urls(urls, urls_file+'_temp.txt', seed)
 
 
 def read_urls(urls_file):
-    data = []
     try:
         with codecs.open(urls_file, 'r', 'utf-8') as inp:
-            for line in inp:
-                data.append(line)
-        return data
-    except OSError as o:
-        logging.critical(str(o) + ' while reading urls file from: '+urls_file)
+            return inp.readlines()
+    except OSError as err:
+        logging.critical(str(err) + ' while reading urls file from: ' + urls_file)
         sys.exit(1)
 
 
@@ -50,14 +47,14 @@ def save_random_urls(data, to_file, seed):
             data = data[1:]
             random.seed(seed)
             random.shuffle(data)
-            for line in data:
-                output.write(line)
+            output.writelines(data)
             return
-    except OSError as o:
-        logging.critical(str(o) + ' while saving urls file to: '+to_file)
+    except OSError as err:
+        logging.critical(str(err) + ' while saving urls file to: '+to_file)
     except Exception:
         logging.critical(traceback.format_exc() +
                          ' exception while saving urls file to: '+to_file)
     sys.exit(1)
 
-main()
+if __name__ == '__main__':
+    main()
