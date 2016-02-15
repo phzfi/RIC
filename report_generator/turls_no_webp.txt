@@ -29,7 +29,6 @@ $(SITE)/filters:no_upscale()/27.jpg
 $(SITE)/filters:no_upscale()/28.jpg
 $(SITE)/filters:no_upscale()/29.jpg
 $(SITE)/filters:no_upscale()/30.jpg
-$(SITE)/filters:no_upscale()/31.webp
 $(SITE)/1x1/filters:no_upscale()/01.jpg
 $(SITE)/1x1/filters:no_upscale()/02.jpg
 $(SITE)/1x1/filters:no_upscale()/03.jpg
@@ -60,7 +59,6 @@ $(SITE)/1x1/filters:no_upscale()/27.jpg
 $(SITE)/1x1/filters:no_upscale()/28.jpg
 $(SITE)/1x1/filters:no_upscale()/29.jpg
 $(SITE)/1x1/filters:no_upscale()/30.jpg
-$(SITE)/1x1/filters:no_upscale()/31.webp
 $(SITE)/2x2/filters:no_upscale()/01.jpg
 $(SITE)/2x2/filters:no_upscale()/02.jpg
 $(SITE)/2x2/filters:no_upscale()/03.jpg
@@ -91,7 +89,6 @@ $(SITE)/2x2/filters:no_upscale()/27.jpg
 $(SITE)/2x2/filters:no_upscale()/28.jpg
 $(SITE)/2x2/filters:no_upscale()/29.jpg
 $(SITE)/2x2/filters:no_upscale()/30.jpg
-$(SITE)/2x2/filters:no_upscale()/31.webp
 $(SITE)/4x4/filters:no_upscale()/01.jpg
 $(SITE)/4x4/filters:no_upscale()/02.jpg
 $(SITE)/4x4/filters:no_upscale()/03.jpg
@@ -122,7 +119,6 @@ $(SITE)/4x4/filters:no_upscale()/27.jpg
 $(SITE)/4x4/filters:no_upscale()/28.jpg
 $(SITE)/4x4/filters:no_upscale()/29.jpg
 $(SITE)/4x4/filters:no_upscale()/30.jpg
-$(SITE)/4x4/filters:no_upscale()/31.webp
 $(SITE)/8x8/filters:no_upscale()/01.jpg
 $(SITE)/8x8/filters:no_upscale()/02.jpg
 $(SITE)/8x8/filters:no_upscale()/03.jpg
@@ -153,7 +149,6 @@ $(SITE)/8x8/filters:no_upscale()/27.jpg
 $(SITE)/8x8/filters:no_upscale()/28.jpg
 $(SITE)/8x8/filters:no_upscale()/29.jpg
 $(SITE)/8x8/filters:no_upscale()/30.jpg
-$(SITE)/8x8/filters:no_upscale()/31.webp
 $(SITE)/16x16/filters:no_upscale()/01.jpg
 $(SITE)/16x16/filters:no_upscale()/02.jpg
 $(SITE)/16x16/filters:no_upscale()/03.jpg
@@ -184,7 +179,6 @@ $(SITE)/16x16/filters:no_upscale()/27.jpg
 $(SITE)/16x16/filters:no_upscale()/28.jpg
 $(SITE)/16x16/filters:no_upscale()/29.jpg
 $(SITE)/16x16/filters:no_upscale()/30.jpg
-$(SITE)/16x16/filters:no_upscale()/31.webp
 $(SITE)/32x32/filters:no_upscale()/01.jpg
 $(SITE)/32x32/filters:no_upscale()/02.jpg
 $(SITE)/32x32/filters:no_upscale()/03.jpg
@@ -215,7 +209,6 @@ $(SITE)/32x32/filters:no_upscale()/27.jpg
 $(SITE)/32x32/filters:no_upscale()/28.jpg
 $(SITE)/32x32/filters:no_upscale()/29.jpg
 $(SITE)/32x32/filters:no_upscale()/30.jpg
-$(SITE)/32x32/filters:no_upscale()/31.webp
 $(SITE)/64x64/filters:no_upscale()/01.jpg
 $(SITE)/64x64/filters:no_upscale()/02.jpg
 $(SITE)/64x64/filters:no_upscale()/03.jpg
@@ -246,7 +239,6 @@ $(SITE)/64x64/filters:no_upscale()/27.jpg
 $(SITE)/64x64/filters:no_upscale()/28.jpg
 $(SITE)/64x64/filters:no_upscale()/29.jpg
 $(SITE)/64x64/filters:no_upscale()/30.jpg
-$(SITE)/64x64/filters:no_upscale()/31.webp
 $(SITE)/128x128/filters:no_upscale()/01.jpg
 $(SITE)/128x128/filters:no_upscale()/02.jpg
 $(SITE)/128x128/filters:no_upscale()/03.jpg
@@ -277,7 +269,6 @@ $(SITE)/128x128/filters:no_upscale()/27.jpg
 $(SITE)/128x128/filters:no_upscale()/28.jpg
 $(SITE)/128x128/filters:no_upscale()/29.jpg
 $(SITE)/128x128/filters:no_upscale()/30.jpg
-$(SITE)/128x128/filters:no_upscale()/31.webp
 $(SITE)/256x256/filters:no_upscale()/01.jpg
 $(SITE)/256x256/filters:no_upscale()/02.jpg
 $(SITE)/256x256/filters:no_upscale()/03.jpg
@@ -308,7 +299,6 @@ $(SITE)/256x256/filters:no_upscale()/27.jpg
 $(SITE)/256x256/filters:no_upscale()/28.jpg
 $(SITE)/256x256/filters:no_upscale()/29.jpg
 $(SITE)/256x256/filters:no_upscale()/30.jpg
-$(SITE)/256x256/filters:no_upscale()/31.webp
 $(SITE)/512x512/filters:no_upscale()/01.jpg
 $(SITE)/512x512/filters:no_upscale()/02.jpg
 $(SITE)/512x512/filters:no_upscale()/03.jpg
@@ -339,7 +329,6 @@ $(SITE)/512x512/filters:no_upscale()/27.jpg
 $(SITE)/512x512/filters:no_upscale()/28.jpg
 $(SITE)/512x512/filters:no_upscale()/29.jpg
 $(SITE)/512x512/filters:no_upscale()/30.jpg
-$(SITE)/512x512/filters:no_upscale()/31.webp
 $(SITE)/4096x4096/filters:no_upscale()/01.jpg
 $(SITE)/4096x4096/filters:no_upscale()/02.jpg
 $(SITE)/4096x4096/filters:no_upscale()/03.jpg
@@ -370,7 +359,6 @@ $(SITE)/4096x4096/filters:no_upscale()/27.jpg
 $(SITE)/4096x4096/filters:no_upscale()/28.jpg
 $(SITE)/4096x4096/filters:no_upscale()/29.jpg
 $(SITE)/4096x4096/filters:no_upscale()/30.jpg
-$(SITE)/4096x4096/filters:no_upscale()/31.webp
 $(SITE)/2048x2048/filters:no_upscale()/01.jpg
 $(SITE)/2048x2048/filters:no_upscale()/02.jpg
 $(SITE)/2048x2048/filters:no_upscale()/03.jpg
@@ -401,7 +389,6 @@ $(SITE)/2048x2048/filters:no_upscale()/27.jpg
 $(SITE)/2048x2048/filters:no_upscale()/28.jpg
 $(SITE)/2048x2048/filters:no_upscale()/29.jpg
 $(SITE)/2048x2048/filters:no_upscale()/30.jpg
-$(SITE)/2048x2048/filters:no_upscale()/31.webp
 $(SITE)/4096x4096/filters:no_upscale()/01.jpg
 $(SITE)/4096x4096/filters:no_upscale()/02.jpg
 $(SITE)/4096x4096/filters:no_upscale()/03.jpg
@@ -432,4 +419,3 @@ $(SITE)/4096x4096/filters:no_upscale()/27.jpg
 $(SITE)/4096x4096/filters:no_upscale()/28.jpg
 $(SITE)/4096x4096/filters:no_upscale()/29.jpg
 $(SITE)/4096x4096/filters:no_upscale()/30.jpg
-$(SITE)/4096x4096/filters:no_upscale()/31.webp
