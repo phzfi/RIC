@@ -7,6 +7,7 @@ import (
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/configuration"
 	"github.com/valyala/fasthttp"
 	"log"
 	"net"
@@ -132,7 +133,11 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 func main() {
 
 	// CLI arguments
-	mem := flag.Uint64("m", config.GetInt("server", mem), "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
+	def, err := config.GetUint64("server", "memory")
+	if err != nil {
+		def = 512*1024*1024
+	}
+	mem := flag.Uint64("m", def, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
 
 	imagick.Initialize()
@@ -143,7 +148,7 @@ func main() {
 
 	server, handler, ln := NewServer(8005, *mem)
 	handler.started = time.Now()
-	err := server.Serve(ln)
+	err = server.Serve(ln)
 	end := time.Now()
 
 	// Get number of requests

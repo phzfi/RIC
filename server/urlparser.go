@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/configuration"
+	"github.com/phzfi/RIC/server/logging"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
@@ -95,11 +97,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 			return
 		}
 
-		heightOK := img.GetHeight() > uint(minHeight) && img.GetHeight() < uint(maxHeight)
-		widthOK := img.GetWidth() > uint(minWidth) && img.GetWidth() < uint(maxWidth)
+		heightOK := h > minHeight && h < maxHeight
+		widthOK := w > minWidth && w < maxWidth
 
-		if config.GetBool("watermark", "addmark") && !heightOK && !widthOK && !addMark {
-			operations = append(operations, ops.Watermark)
+		if addMark && !heightOK && !widthOK && !addMark {
+			operations = append(operations, ops.WatermarkOp())
 		}
 	}
 

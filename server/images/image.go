@@ -3,8 +3,6 @@ package images
 import (
 	"errors"
 	"github.com/joonazan/imagick/imagick"
-	"github.com/phzfi/RIC/server/logging"
-	"github.com/phzfi/RIC/server/config"
 	"strings"
 )
 
@@ -65,7 +63,7 @@ func (img Image) Blob() ImageBlob {
 }
 
 // Watermark watermarks image.
-func (img Image) Watermark(watermark Image, horizontal, vertical) (err error) {
+func (img Image) Watermark(watermark Image, horizontal, vertical float64) (err error) {
 	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
 	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
 	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)

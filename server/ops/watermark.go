@@ -1,16 +1,16 @@
 package ops
 
 import (
-	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/configuration"
 )
 
 type watermark struct {
-	img Image
+	img images.Image
 }
 
-func (w Watermark) Apply(img images.Image) error {
+func (w watermark) Apply(img images.Image) (err error) {
 	logging.Debug("Adding watermark")
 	horizontal, err := config.GetFloat64("watermark", "horizontal")
 	vertical, err := config.GetFloat64("watermark", "vertical")
