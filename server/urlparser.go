@@ -86,11 +86,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	}
 
 	watermark := func() {
-		minHeight, err := config.GetInt("watermark", "minheight")
-		minWidth, err := config.GetInt("watermark", "minwidth")
-		maxHeight, err := config.GetInt("watermark", "maxheight")
-		maxWidth, err := config.GetInt("watermark", "maxwidth")
-		addMark, err := config.GetBool("watermark", "addmark")
+		minHeight, err := configuration.GetInt("watermark", "minheight")
+		minWidth, err := configuration.GetInt("watermark", "minwidth")
+		maxHeight, err := configuration.GetInt("watermark", "maxheight")
+		maxWidth, err := configuration.GetInt("watermark", "maxwidth")
+		addMark, err := configuration.GetBool("watermark", "addmark")
 
 		if err != nil {
 			logging.Debug("Error reading config size restrictions." + err.Error())
@@ -115,6 +115,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	default:
 		resize()
 	}
+	watermark()
 
 	ext := filepath.Ext(filename)
 	if ext != "" {

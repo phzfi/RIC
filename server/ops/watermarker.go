@@ -16,7 +16,7 @@ func WatermarkOp() Operation {
 
 func MakeWatermarker() Watermarker {
   image := images.NewImage()
-  err := image.FromFile(config.GetString("watermark", "path"))
+  err := image.FromFile(configuration.GetString("watermark", "path"))
   if err != nil {
     logging.Debug("Error loading watermark image." + err.Error())
   }

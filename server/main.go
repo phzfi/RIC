@@ -133,7 +133,7 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 func main() {
 
 	// CLI arguments
-	def, err := config.GetUint64("server", "memory")
+	def, err := configuration.GetUint64("server", "memory")
 	if err != nil {
 		def = 512*1024*1024
 	}
