@@ -61,6 +61,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			img := images.NewImage()
 			img.PingImageBlob(blob)
 			ctx.SetContentType("image/" + img.GetImageFormat())
+			img.Destroy()
 
 			ctx.Write(blob)
 			logging.Debug("Blob returned")
