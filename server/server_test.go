@@ -135,3 +135,32 @@ func TestGetLiquid(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// Test for right content-type request header
+func TestMIMEtype(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+	response := fasthttp.AcquireResponse()
+	request := fasthttp.AcquireRequest()
+	cases := []string{"01.jpg", "01.png",	"01.webp", "01.tiff", "01.bmp",	"01.gif"}
+	folder := "testimages/server/"
+
+	for _, c := range cases {
+		request.SetRequestURI(fmt.Sprintf("http://localhost:%d/", port) + folder + c)
+		fasthttp.Do(request, response)
+		MIME := string(response.Header.ContentType())
+
+		img := images.NewImage()
+		img.FromBlob(response.Body())
+		expected := "image/" + img.GetImageFormat()
+
+		if MIME != expected {
+			t.Fatal("Server returned: " + MIME)
+		}
+		request.Reset()
+		response.Reset()
+		img.Destroy()
+	}
+	fasthttp.ReleaseRequest(request)
+	fasthttp.ReleaseResponse(response)
+}
