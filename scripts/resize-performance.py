@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Single image resize perf-test.
@@ -116,15 +116,18 @@ def paint(raw, plotdata, xkcd=False):
     #PLT.axes(rect, axisbg='w', frameon=True)
     PLT.xlabel('pixels')
     PLT.ylabel('seconds')
+    PLT.grid(True, which='major', axis='both', linestyle='--')
 
     # Errors
     yerr = NP.zeros((2, N))
     for i in range(N):
         x, y = xdata[i, 0], ydata[i, 0]
         ys = plotdata[x]
-        yerr[0, i] = y - min(ys)
-        yerr[1, i] = max(ys) - y
+        devi = abs(statistics.stdev(ys) - y) if len(ys) > 1 else 0.0
+        yerr[0, i] = devi
+        yerr[1, i] = devi
     PLT.errorbar(xdata, ydata, yerr)
+    PLT.plot(xdata, ydata, 'r-')
     PLT.axis('auto')
     PLT.show()
 
