@@ -109,6 +109,7 @@ def paint(raw, plotdata, xkcd=False):
     rect = [min_pixels, min_time, max_pixels - min_time, max_time - min_time]
 
     # Clear
+    PLT.figure('raw data')
     PLT.cla()
     PLT.clf()
     if xkcd:
@@ -129,6 +130,37 @@ def paint(raw, plotdata, xkcd=False):
     PLT.errorbar(xdata, ydata, yerr)
     PLT.plot(xdata, ydata, 'r-')
     PLT.axis('auto')
+
+    # Second plot
+    PLT.figure('grouped data')
+    if xkcd:
+        PLT.xkcd()
+    M = N // 4
+    gxdata = NP.zeros((M, 1))
+    gydata = NP.zeros((M, 1))
+    for i in range(M):
+        imax = min(N, (i+1) * 4)
+        xkeys = xsrc[i*4:imax]
+        gxdata[i, 0] = statistics.mean(xkeys)
+        ykeys = [statistics.mean(plotdata[x]) for x in xkeys]
+        gydata[i, 0] = statistics.mean(ykeys)
+
+    # Apply Laplacian smoothing
+    LWIDTH = 2
+    LCOUNT = 2
+    for _ in range(LCOUNT):
+        nydata = NP.zeros((M, 1))
+        for i in range(1, M - 1):
+            imin = max(0, i - LWIDTH)
+            imax = min(M - 1, i + LWIDTH)
+            nydata[i, 0] = statistics.mean(gydata[imin:imax, 0])
+        gydata[1:M-1,0] = nydata[1:M-1,0]
+        
+    PLT.xlabel('pixels')
+    PLT.ylabel('seconds')
+    PLT.grid(True, which='major', axis='both', linestyle='--')
+    PLT.plot(gxdata, gydata, 'g-')
+
     PLT.show()
 
 def main(options):
