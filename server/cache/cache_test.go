@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"bytes"
 	"github.com/phzfi/RIC/server/ops"
 	"testing"
 )
@@ -13,9 +14,28 @@ func TestDiskCache(t *testing.T) {
 	allTests(t, setupDiskCache)
 }
 
+func TestDiskCachePersistence(t *testing.T) {
+	id := []ops.Operation{&DummyOperation{}, &DummyOperation{}}
+	data := []byte{1, 2, 3, 4, 7}
+
+	_, cache := setupDiskCache()
+	cache.AddBlob(id, data)
+
+	_, cache = setupDiskCache()
+	recovered, ok := cache.GetBlob(id)
+
+	if !ok {
+		t.Fatal("The new cache instance did not find the image previously saved on disk.")
+	}
+
+	if !bytes.Equal(data, recovered) {
+		t.Fatal("The cache returned different data than what was cached.")
+	}
+}
+
 func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
-	cache = NewDiskCache(dp, 100)
+	cache = NewDiskCache(dp, 100, "/tmp/cachentestaus")
 	return
 }
 

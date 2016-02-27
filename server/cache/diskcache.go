@@ -9,22 +9,44 @@ import (
 	"path/filepath"
 )
 
+var encoder = base64.RawURLEncoding
+
 type DiskStorer struct {
 	keyToPath map[cacheKey]string
 
 	folder string
 }
 
-func NewDiskCache(policy Policy, mm uint64) *Cache {
+func NewDiskCache(policy Policy, mm uint64, folder string) *Cache {
+
+	d := DiskStorer{
+		keyToPath: make(map[cacheKey]string),
+		folder:    folder,
+	}
+
+	err := os.MkdirAll(folder, os.ModePerm)
+	if err != nil {
+		log.Println("Unable to create folder for disk-caching:", err)
+	}
+
+	files, err := filepath.Glob(d.folder + "/*")
+	if err != nil {
+		log.Println("Error reading previously cached files from disk:", err)
+	}
+	for _, fn := range files {
+		bytes, err := encoder.DecodeString(filepath.Base(fn))
+		if err != nil {
+			log.Println("Malformed filename", fn, "in previously cached files:", err)
+			continue
+		}
+		d.keyToPath[cacheKey(bytes)] = fn
+	}
+
 	return &Cache{
 		maxMemory: mm,
 		policy:    policy,
-		storer: &DiskStorer{
-			keyToPath: make(map[cacheKey]string),
-			folder:    "/tmp/kuvia",
-		},
+		storer:    &d,
 	}
-	// TODO: load keyToPath by doing a directory listing
 }
 
 func (d *DiskStorer) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
@@ -41,7 +63,7 @@ func (d *DiskStorer) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
 }
 
 func (d *DiskStorer) Store(key cacheKey, blob images.ImageBlob) {
-	filename := base64.StdEncoding.WithPadding(base64.NoPadding).EncodeToString([]byte(key))
+	filename := encoder.EncodeToString([]byte(key))
 	path := filepath.Join(filepath.FromSlash(d.folder), filename)
 	d.keyToPath[key] = path
 	err := ioutil.WriteFile(path, blob, os.ModePerm)
@@ -68,10 +90,12 @@ func fileSize(path string) uint64 {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Println("Unable to open file to get its size:", err)
+		return 0
 	}
 	stat, err := f.Stat()
 	if err != nil {
 		log.Println("Unable to get file stats:", err)
+		return 0
 	}
 	return uint64(stat.Size())
 }
