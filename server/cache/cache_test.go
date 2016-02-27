@@ -5,6 +5,25 @@ import (
 	"testing"
 )
 
+func TestMemCache(t *testing.T) {
+	allTests(t, setupMemcache)
+}
+
+func TestDiskCache(t *testing.T) {
+	allTests(t, setupDiskCache)
+}
+
+func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
+	dp = NewDummyPolicy(make(Log))
+	cache = NewDiskCache(dp, 100)
+	return
+}
+
+func allTests(t *testing.T, f setupFunc) {
+	testCache(t, f)
+	testCacheExit(t, f)
+}
+
 const (
 	Visit = iota
 	Push
@@ -43,13 +62,15 @@ func NewDummyPolicy(log Log) *DummyPolicy {
 	return &DummyPolicy{fifo: &FIFO{}, loki: log}
 }
 
-func setup() (dp *DummyPolicy, cache *Cache) {
+func setupMemcache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
 	cache = NewCache(dp, 100)
 	return
 }
 
-func TestCache(t *testing.T) {
+type setupFunc func() (dp *DummyPolicy, cache *Cache)
+
+func testCache(t *testing.T, setup setupFunc) {
 	id := []ops.Operation{&DummyOperation{}}
 	dp, cache := setup()
 
@@ -77,7 +98,7 @@ func TestCache(t *testing.T) {
 	}
 }
 
-func TestCacheExit(t *testing.T) {
+func testCacheExit(t *testing.T, setup setupFunc) {
 	var (
 		do  = &DummyOperation{}
 		id1 = []ops.Operation{do}
