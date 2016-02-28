@@ -38,7 +38,7 @@ def main():
         csv_name = os.path.basename(csv)
         software.append(csv_name.split("_")[0])
         data.append(read_csv_row(csv, 1))
-    titles = read_csv_row(args[1], 0)
+    titles = read_csv_row(args[2], 0)
     html = buildHTML(software, data, titles)
     save_to_html(html, html_file)
 
