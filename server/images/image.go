@@ -3,6 +3,8 @@ package images
 import (
 	"errors"
 	"github.com/joonazan/imagick/imagick"
+	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/config"
 	"strings"
 )
 
@@ -23,7 +25,7 @@ func NewImage() Image {
 	return Image{imagick.NewMagickWand()}
 }
 
-// Clone an image. Remember images and made clones need to be destroyed using Destroy().
+// Clone an image. Remember images and made clones need to be destroyed using Destroy(), ToBlob() or Resize().
 func (img Image) Clone() Image {
 	return Image{img.MagickWand.Clone()}
 }
@@ -38,13 +40,13 @@ func (img Image) Convert(ext string) (err error) {
 }
 
 // Returns image width
-func (img Image) GetWidth() (width int) {
-	return int(img.GetImageWidth())
+func (img Image) GetWidth() (width uint) {
+	return img.GetImageWidth()
 }
 
 // Returns image height
-func (img Image) GetHeight() (height int) {
-	return int(img.GetImageHeight())
+func (img Image) GetHeight() (height uint) {
+	return img.GetImageHeight()
 }
 
 // Returns filename extension of the image e.g. jpg, gif, webp
@@ -57,9 +59,18 @@ func (img Image) GetExtension() (ext string) {
 	return
 }
 
-// Method for converting Image to ImageBlob.
-func (img Image) Blob() ImageBlob {
-	return img.GetImageBlob()
+// Method for converting Image to ImageBlob. Note: Method Destroys the used Image and frees the memory used.
+func (img Image) ToBlob() (blob ImageBlob) {
+	blob = img.GetImageBlob()
+	img.Destroy()
+	return
+}
+
+// Watermark watermarks image.
+func (img Image) Watermark(watermark Image, horizontal, vertical) (err error) {
+	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
+	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
+	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)
 }
 
 // Watermark watermarks image.
