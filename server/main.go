@@ -29,6 +29,7 @@ type MyHandler struct {
 
 	operator    cache.Operator
 	imageSource ops.ImageSource
+	watermarker ops.Watermarker
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -45,7 +46,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
-		operations, err := ParseURI(url, h.imageSource)
+		operations, err := ParseURI(url, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -96,7 +97,7 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
 	logging.Debug("Creating server")
 	imageSource := ops.MakeImageSource()
-
+	watermarker := ops.MakeWatermarker()
 	// Add roots
 	// TODO: This must be externalized outside the source code.
 	logging.Debug("Adding roots")
@@ -113,6 +114,7 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 	handler := &MyHandler{
 		requests:    0,
 		imageSource: imageSource,
+		watermarker: watermarker,
 		operator:    cache.MakeOperator(maxMemory),
 	}
 

@@ -17,7 +17,7 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Operation, err error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, err error) {
 	args := uri.QueryArgs()
 	filename := string(uri.Path())
 	w, werr := args.GetUint("width")
@@ -86,6 +86,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	}
 
 	watermark := func() {
+		logging.Debug("Reading size restrictions")
 		minHeight, err := configuration.GetInt("watermark", "minheight")
 		minWidth, err := configuration.GetInt("watermark", "minwidth")
 		maxHeight, err := configuration.GetInt("watermark", "maxheight")
@@ -99,9 +100,9 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 
 		heightOK := h > minHeight && h < maxHeight
 		widthOK := w > minWidth && w < maxWidth
-
-		if addMark && !heightOK && !widthOK && !addMark {
-			operations = append(operations, ops.WatermarkOp())
+		if addMark && heightOK && widthOK {
+			logging.Debug("Adding watermarkOp")
+			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage))
 		}
 	}
 

@@ -7,7 +7,7 @@ import (
 )
 
 type watermark struct {
-	img images.Image
+	stamp images.Image
 }
 
 func (w watermark) Apply(img images.Image) (err error) {
@@ -19,5 +19,5 @@ func (w watermark) Apply(img images.Image) (err error) {
 		logging.Debug("Error loading config alignment." + err.Error())
 		return
 	}
-	return img.Watermark(img, horizontal, vertical)
+	return img.Watermark(w.stamp, horizontal, vertical)
 }

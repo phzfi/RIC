@@ -7,11 +7,13 @@ import (
 )
 
 type Watermarker struct {
-  watermarkImage images.Image
+  WatermarkImage images.Image
 }
 
-func WatermarkOp() Operation {
-  return watermark{}
+func WatermarkOp(stamp images.Image) Operation {
+  return watermark{
+    stamp: stamp,
+  }
 }
 
 func MakeWatermarker() Watermarker {
@@ -21,6 +23,6 @@ func MakeWatermarker() Watermarker {
     logging.Debug("Error loading watermark image." + err.Error())
   }
   return Watermarker {
-    watermarkImage: image,
+    WatermarkImage: image,
   }
 }
