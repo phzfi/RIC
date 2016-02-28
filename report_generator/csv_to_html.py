@@ -27,19 +27,20 @@ logging.basicConfig(filename='log/error.log',
 
 def main():
     args = sys.argv
-    if len(args) < 2:
+    if len(args) < 3:
         logging.critical('Wrong number of arguments.' +
-                         'Usage: "python csv_to_html.py testData*"')
+                         'Usage: "python csv_to_html.py htmlTable testData*"')
         sys.exit()
     data = []
     software = []
-    for csv in args[1:]:
+    html_file = args[1]
+    for csv in args[2:]:
         csv_name = os.path.basename(csv)
         software.append(csv_name.split("_")[0])
         data.append(read_csv_row(csv, 1))
     titles = read_csv_row(args[1], 0)
     html = buildHTML(software, data, titles)
-    save_to_html(html, 'siegeresults.html')
+    save_to_html(html, html_file)
 
 
 def is_neutral(i):
