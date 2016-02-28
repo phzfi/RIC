@@ -16,7 +16,7 @@ URLS_FILE=./urls.txt_temp.txt
 TURLS_FILE=./turls.txt_temp.txt
 
 # Siege settings
-DELAY=2
+DELAY=1
 TIME="120s"
 SIEGE_CONF=./.siegerc
 
@@ -46,8 +46,12 @@ siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$T
 cat $TMP >> $RAW_FILE
 rm $TMP
 
+
+
+
+
 # Formatter
 rm $URLS_FILE
 rm $TURLS_FILE
 python csv_formatter.py $RAW_FILE $TUMBOR_OUT_FILE
-python csv_to_html.py $RIC_OUT_FILE $TUMBOR_OUT_FILE
+python csv_to_html.py constantTimeResults.html $RIC_OUT_FILE $TUMBOR_OUT_FILE

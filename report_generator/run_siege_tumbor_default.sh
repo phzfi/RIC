@@ -1,5 +1,4 @@
 #!/bin/bash
-
 URLS_FILE=./turls.txt
 RAW_FILE=./raw/tumbor_$(date +%Y-%m-%d_%H-%M-%S).txt
 OUT_FILE=./results/tumbor_$(date +%Y-%m-%d_%H-%M-%S).csv
