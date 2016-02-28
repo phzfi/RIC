@@ -12,7 +12,7 @@ type Conf struct{
 }
 
 func ReadConfig(path string) (config Conf, err error) {
-  conf, err := ini.LoadFile("config.ini")
+  conf, err := ini.LoadFile(path)
   if err != nil {
     logging.Debug("Error reading config " + err.Error())
     return
