@@ -173,7 +173,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 			return
 		}
 
-		var rt = images.SizeTestCase{images.TestCase{ vt.Testfn, vt.Reffn, vt.Resfn }, vt.W, vt.H}
+		var rt = images.SizeTestCase{images.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.W, vt.H}
 		err = images.SizeTest(rt, blob, tolerance)
 		return
 	}
