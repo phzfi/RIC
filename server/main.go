@@ -27,6 +27,7 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
+	config			configuration.Conf
 	operator    cache.Operator
 	imageSource ops.ImageSource
 	watermarker ops.Watermarker
@@ -46,7 +47,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
-		operations, err := ParseURI(url, h.imageSource, h.watermarker)
+		operations, err := ParseURI(url, h.imageSource, h.watermarker, h.config)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -94,10 +95,9 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
-func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
+func NewServer(port int, maxMemory uint64, conf configuration.Conf) (*fasthttp.Server, *MyHandler, net.Listener) {
 	logging.Debug("Creating server")
 	imageSource := ops.MakeImageSource()
-	watermarker := ops.MakeWatermarker()
 	// Add roots
 	// TODO: This must be externalized outside the source code.
 	logging.Debug("Adding roots")
@@ -109,10 +109,13 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 		log.Println("Root not added .")
 	}
 
+	watermarker := ops.MakeWatermarker(conf.GetString("watermark", "path"))
+
 	// Configure handler
 	logging.Debug("Configuring handler")
 	handler := &MyHandler{
 		requests:    0,
+		config: conf,
 		imageSource: imageSource,
 		watermarker: watermarker,
 		operator:    cache.MakeOperator(maxMemory),
@@ -134,8 +137,16 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 
 func main() {
 
+	cpath := flag.String("c", "config.ini", "Sets the configuration .ini file used.")
+	flag.Parse()
 	// CLI arguments
-	def, err := configuration.GetUint64("server", "memory")
+
+	conf, err := configuration.ReadConfig(*cpath)
+	if err != nil {
+		log.Fatal("Error while reading config at " + *cpath + ": " + err.Error())
+	}
+
+	def, err := conf.GetUint64("server", "memory")
 	if err != nil {
 		def = 512*1024*1024
 	}
@@ -148,7 +159,7 @@ func main() {
 	log.Println("Server starting...")
 	logging.Debug("Debug enabled")
 
-	server, handler, ln := NewServer(8005, *mem)
+	server, handler, ln := NewServer(8005, *mem, conf)
 	handler.started = time.Now()
 	err = server.Serve(ln)
 	end := time.Now()

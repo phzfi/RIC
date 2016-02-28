@@ -112,8 +112,8 @@ func TestImageWatermark(t *testing.T) {
 	tolerance := 0.002
 
 	wmimage := NewImage()
-	defer wmimg.destroy
-	err := img.FromFile(c.Testfn)
+	defer wmimage.Destroy()
+	err := wmimage.FromFile("../watermark.png")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,14 +138,14 @@ func TestImageWatermark(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err = img.Watermark(wmimg, horizontal, vertical)
+		err = img.Watermark(wmimage, horizontal, vertical)
 		if err != nil {
 			t.Fatal(err)
 		}
 		blob := img.Blob()
 		horizontal = horizontal + 0.5
 		vertical = vertical + 0.5
-		err = FormatTest(c, blob, tolerance)
+		err = CheckDistortion(blob, c.Reffn, tolerance, c.Resfn)
 		if err != nil {
 			t.Fatal(err)
 		}

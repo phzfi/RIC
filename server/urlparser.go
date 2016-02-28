@@ -17,7 +17,7 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, err error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf configuration.Conf) (operations []ops.Operation, err error) {
 	args := uri.QueryArgs()
 	filename := string(uri.Path())
 	w, werr := args.GetUint("width")
@@ -87,14 +87,22 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 
 	watermark := func() {
 		logging.Debug("Reading size restrictions")
-		minHeight, err := configuration.GetInt("watermark", "minheight")
-		minWidth, err := configuration.GetInt("watermark", "minwidth")
-		maxHeight, err := configuration.GetInt("watermark", "maxheight")
-		maxWidth, err := configuration.GetInt("watermark", "maxwidth")
-		addMark, err := configuration.GetBool("watermark", "addmark")
+		minHeight, err := conf.GetInt("watermark", "minheight")
+		minWidth, err := conf.GetInt("watermark", "minwidth")
+		maxHeight, err := conf.GetInt("watermark", "maxheight")
+		maxWidth, err := conf.GetInt("watermark", "maxwidth")
+		addMark, err := conf.GetBool("watermark", "addmark")
 
 		if err != nil {
 			logging.Debug("Error reading config size restrictions." + err.Error())
+			return
+		}
+
+		ver, err := conf.GetFloat64("watermark", "vertical")
+		hor, err := conf.GetFloat64("watermark", "horizontal")
+
+		if err != nil {
+			logging.Debug("Error loading config alignment." + err.Error())
 			return
 		}
 
@@ -102,7 +110,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 		widthOK := w > minWidth && w < maxWidth
 		if addMark && heightOK && widthOK {
 			logging.Debug("Adding watermarkOp")
-			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage))
+			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, hor, ver))
 		}
 	}
 

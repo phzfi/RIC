@@ -2,14 +2,30 @@ package configuration
 
 import (
   "bitbucket.org/classroomsystems/ini"
+  "github.com/phzfi/RIC/server/logging"
   "strconv"
   "errors"
 )
 
-var conf, err = ini.LoadFile("config.ini")
+type Conf struct{
+  conf ini.Config
+}
 
-func GetString(section, key string) (string) {
-  value, success := conf.Get(section, key)
+func ReadConfig(path string) (config Conf, err error) {
+  conf, err := ini.LoadFile("config.ini")
+  if err != nil {
+    logging.Debug("Error reading config " + err.Error())
+    return
+  }
+  config = Conf {
+    conf: conf,
+  }
+  return
+}
+
+
+func (conf Conf) GetString(section, key string) (string) {
+  value, success := conf.conf.Get(section, key)
   if (success) {
     return value
   } else {
@@ -17,8 +33,8 @@ func GetString(section, key string) (string) {
   }
 }
 
-func GetInt(section, key string) (value int, err error) {
-  str, success := conf.Get(section, key)
+func (conf Conf) GetInt(section, key string) (value int, err error) {
+  str, success := conf.conf.Get(section, key)
   if success {
     return strconv.Atoi(str)
   } else {
@@ -26,8 +42,8 @@ func GetInt(section, key string) (value int, err error) {
   }
 }
 
-func GetUint64(section, key string) (value uint64, err error) {
-  str, success := conf.Get(section, key)
+func (conf Conf) GetUint64(section, key string) (value uint64, err error) {
+  str, success := conf.conf.Get(section, key)
   if success {
     return strconv.ParseUint(str, 10, 64)
   } else {
@@ -35,8 +51,8 @@ func GetUint64(section, key string) (value uint64, err error) {
   }
 }
 
-func GetFloat64(section, key string) (value float64, err error) {
-  str, success := conf.Get(section, key)
+func (conf Conf) GetFloat64(section, key string) (value float64, err error) {
+  str, success := conf.conf.Get(section, key)
   if (success) {
     return strconv.ParseFloat(str, 64)
   } else {
@@ -44,8 +60,8 @@ func GetFloat64(section, key string) (value float64, err error) {
   }
 }
 
-func GetBool(section, key string) (value bool, err error) {
-  str, success := conf.Get(section, key)
+func (conf Conf) GetBool(section, key string) (value bool, err error) {
+  str, success := conf.conf.Get(section, key)
   if (success) {
     return strconv.ParseBool(str)
   } else {

@@ -6,6 +6,7 @@ import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/configuration"
 	"github.com/valyala/fasthttp"
 	"net"
 	"time"
@@ -17,8 +18,15 @@ var port = 8022
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
 	// Start the server
+	conf, err := configuration.ReadConfig("testconfig.ini")
+
+	if err != nil {
+		logging.Debug("Error while reading config" + err.Error())
+		return
+	}
+
 	port++
-	server, _, ln = NewServer(port, 500000)
+	server, _, ln = NewServer(port, 500000, conf)
 	srverr = make(chan error)
 	go func() {
 		srverr <- server.Serve(ln)
@@ -48,7 +56,7 @@ func SetupOperatorSource() (operator cache.Operator, src ops.ImageSource) {
 	return
 }
 
-// Gets blob from server. package variable port is used as port and lovalhost as address
+// Gets blob from server. package variable port is used as port and localhost as address
 func getBlobFromServer(getname string) (blob images.ImageBlob, err error) {
 	_, blob, err = fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
 	if err != nil {

@@ -3,21 +3,15 @@ package ops
 import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"github.com/phzfi/RIC/server/configuration"
 )
 
 type watermark struct {
 	stamp images.Image
+	horizontal float64
+	vertical float64
 }
 
 func (w watermark) Apply(img images.Image) (err error) {
 	logging.Debug("Adding watermark")
-	horizontal, err := configuration.GetFloat64("watermark", "horizontal")
-	vertical, err := configuration.GetFloat64("watermark", "vertical")
-
-	if err != nil {
-		logging.Debug("Error loading config alignment." + err.Error())
-		return
-	}
-	return img.Watermark(w.stamp, horizontal, vertical)
+	return img.Watermark(w.stamp, w.horizontal, w.vertical)
 }
