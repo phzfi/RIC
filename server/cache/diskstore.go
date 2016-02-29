@@ -11,15 +11,14 @@ import (
 
 var encoder = base64.RawURLEncoding
 
-type DiskStorer struct {
+type DiskStore struct {
 	keyToPath map[cacheKey]string
 
 	folder string
 }
 
-func NewDiskCache(policy Policy, mm uint64, folder string) *Cache {
-
-	d := DiskStorer{
+func NewDiskStore(folder string) *DiskStore {
+	d := DiskStore{
 		keyToPath: make(map[cacheKey]string),
 		folder:    folder,
 	}
@@ -41,15 +40,10 @@ func NewDiskCache(policy Policy, mm uint64, folder string) *Cache {
 		}
 		d.keyToPath[cacheKey(bytes)] = fn
 	}
-
-	return &Cache{
-		maxMemory: mm,
-		policy:    policy,
-		storer:    &d,
-	}
+	return &d
 }
 
-func (d *DiskStorer) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
+func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
 	path, ok := d.keyToPath[key]
 	if ok {
 		var err error
@@ -62,7 +56,7 @@ func (d *DiskStorer) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
 	return
 }
 
-func (d *DiskStorer) Store(key cacheKey, blob images.ImageBlob) {
+func (d *DiskStore) Store(key cacheKey, blob images.ImageBlob) {
 	filename := encoder.EncodeToString([]byte(key))
 	path := filepath.Join(filepath.FromSlash(d.folder), filename)
 	d.keyToPath[key] = path
@@ -72,7 +66,7 @@ func (d *DiskStorer) Store(key cacheKey, blob images.ImageBlob) {
 	}
 }
 
-func (d *DiskStorer) Delete(key cacheKey) (size uint64) {
+func (d *DiskStore) Delete(key cacheKey) (size uint64) {
 	path := d.keyToPath[key]
 
 	size = fileSize(path)

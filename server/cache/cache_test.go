@@ -35,7 +35,11 @@ func TestDiskCachePersistence(t *testing.T) {
 
 func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
-	cache = NewDiskCache(dp, 100, "/tmp/cachentestaus")
+	cache = &Cache{
+		policy:    dp,
+		maxMemory: 100,
+		storer:    NewDiskStore("/tmp/cachentestaus"),
+	}
 	return
 }
 
