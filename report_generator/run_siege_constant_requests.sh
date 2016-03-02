@@ -9,12 +9,12 @@ fi
 SEED=$1
 CONCURRENT=$2
 REQUESTS_PER_USER=$3
-python urls_randomizer.py urls.txt $SEED
-python urls_randomizer.py turls.txt $SEED
+python urls_randomizer.py urls_no_webp.txt $SEED
+python urls_randomizer.py turls_no_webp.txt $SEED
 
 
-URLS_FILE=./urls.txt_temp.txt
-TURLS_FILE=./turls.txt_temp.txt
+URLS_FILE=./urls_no_webp.txt_temp.txt
+TURLS_FILE=./turls_no_webp.txt_temp.txt
 
 # Siege settings
 DELAY=1
@@ -41,7 +41,7 @@ TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 
 # Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --log=$RAW_FILE --file=$TURLS_FILE |
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUESTS_PER_USER  --log=$RAW_FILE --file=$TURLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
 rm $TMP
