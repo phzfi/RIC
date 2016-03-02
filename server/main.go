@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/joonazan/imagick/imagick"
+	"github.com/gographics/imagick/imagick"
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/configuration"
 	"github.com/valyala/fasthttp"
@@ -58,6 +59,13 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			ctx.NotFound()
 			logging.Debug(err)
 		} else {
+			// ping blob to avoid reading whole image into memory
+			// and set right content-type response header
+			img := images.NewImage()
+			img.PingImageBlob(blob)
+			ctx.SetContentType("image/" + img.GetImageFormat())
+			img.Destroy()
+
 			ctx.Write(blob)
 			logging.Debug("Blob returned")
 		}

@@ -19,31 +19,50 @@ func MakeOperator(mm uint64) Operator {
 
 func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
 
-	blob, found := o.cache.GetBlob(operations)
-	if found {
-		return blob, nil
+	var startimage images.ImageBlob
+	var start int
+
+	for start = len(operations); start > 0; start-- {
+		var found bool
+		startimage, found = o.cache.GetBlob(operations[:start])
+		if found {
+			break
+		}
 	}
 
-	t := <-o.tokens
-	defer func() { o.tokens <- t }()
+	if start == len(operations) {
+		return startimage, nil
+	} else {
+		t := <-o.tokens
+		defer func() { o.tokens <- t }()
 
-	//Check if some other thread already cached the image while we were blocked
-	blob, found = o.cache.GetBlob(operations)
-	if found {
-		return blob, nil
+		//Check if some other thread already cached the image while we were blocked
+		if blob, found := o.cache.GetBlob(operations); found {
+			return blob, nil
+		}
+
+		img := images.NewImage()
+		defer img.Destroy()
+
+		if start != 0 {
+			img.FromBlob(startimage)
+		}
+
+		o.applyOpsToImage(operations[start:], img)
+		blob = img.Blob()
+
+		o.cache.AddBlob(operations, blob)
 	}
 
-	img := images.NewImage()
-	defer img.Destroy()
+	return
+}
 
+func (o Operator) applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
 	for _, op := range operations {
 		err = op.Apply(img)
 		if err != nil {
 			return
 		}
 	}
-
-	blob = img.Blob()
-	o.cache.AddBlob(operations, blob)
 	return
 }
