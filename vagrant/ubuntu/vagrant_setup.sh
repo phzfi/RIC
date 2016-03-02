@@ -9,6 +9,3 @@ apt-get install -y ${IMAGELIBS}
 apt-get install -y ${OPENCL}
 apt-get install -y git gcc binutils automake autoconf
 
-source "vagrant_setup_imagemagick.sh"
-source "vagrant_setup_go.sh"
-

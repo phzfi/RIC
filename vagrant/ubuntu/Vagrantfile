@@ -74,5 +74,7 @@ Vagrant.configure("2") do |config|
   
   # TODO: More?
   config.vm.provision "shell", path: "vagrant_setup.sh"
+  config.vm.provision "shell", path: "vagrant_setup_imagemagick.sh"
+  config.vm.provision "shell", path: "vagrant_setup_go.sh"
 
 end
