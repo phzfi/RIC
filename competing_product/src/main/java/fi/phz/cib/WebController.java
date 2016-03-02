@@ -18,7 +18,7 @@ public class WebController {
 	@Bean
 	public EmbeddedServletContainerCustomizer containerCustomizer() {
 		return (container -> {
-			container.setPort(8005);
+			container.setPort(8007);
 		});
 	}
 
