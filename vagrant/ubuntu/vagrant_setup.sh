@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGELIBS=libwebp-dev libtiff5-dev libpng12-dev libjpeg-dev
+IMAGELIBS=libwebp-dev libtiff5-dev libpng12-dev libjpeg-dev liblqr-1-0-dev
 OPENCL=ocl-icd-opencl-dev opencl-headers ocl-icd-libopencl1
 
 # Install the absolute requirements
