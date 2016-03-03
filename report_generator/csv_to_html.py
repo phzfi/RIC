@@ -61,12 +61,16 @@ def main(args):
     sys.exit(save_to_html(html, 'siegeresults.html'))
 
 
-def is_neutral(i):
+def get_picker(i):
     """
     Checks if the current row in the table should be highlited or not.
 
     """
-    return i not in HIGHLIGHT_HIGHER and i not in HIGHLIGHT_LOWER
+    if i in HIGHLIGHT_HIGHER:
+        return max
+    if i in HIGHLIGHT_LOWER:
+        return min
+    return None
 
 
 def save_to_html(html, to_path):
@@ -80,7 +84,7 @@ def save_to_html(html, to_path):
     return 0
 
 
-def build_row(row_data, neutral):
+def build_row(row_data, picker):
     """
     Returns row html built with the given row_data, title of row and
     row index.
@@ -88,11 +92,11 @@ def build_row(row_data, neutral):
     """
     column = '<td>{0}</td>'
     column_cls = '<td class="{0}">{1}</td>'
-    if neutral:
+    if picker is None:
         return ''.join([column.format(d) for d in row_data])
     if min(row_data) == max(row_data):
         return ''.join([column_cls.format('even', d) for d in row_data])
-    val = max(row_data)
+    val = picker(row_data)
     return ''.join([
         column_cls.format('best' if d == val else 'neutral', d)
         for d in row_data
@@ -113,9 +117,9 @@ def buildHTML(software, titles):
 
     for i, title in enumerate(titles):
         row_data = [app['data'][i] for app in software]
-        neutral = is_neutral(i)
+        picker = get_picker(i)
         row_head = column.format(title)
-        row_content = build_row(row_data, neutral)
+        row_content = build_row(row_data, picker)
         html_table += row.format(row_head + row_content)
 
     return HTML_DOC.format(html_table)
