@@ -1,26 +1,11 @@
 package cache
 
 import (
-	"crypto/md5"
-	"encoding/json"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"sync"
 )
-
-type cacheKey string
-
-// Returns a unique representation of an ops chain. This unique representation can be used as a map key unlike the original ops chain (slice cannot be a key).
-func toKey(operations []ops.Operation) cacheKey {
-	// Todo: Instead of JSON, use compact binary encoding
-	bytes, err := json.Marshal(operations)
-	if err != nil {
-		panic(err)
-	}
-	checksum := md5.Sum(bytes)
-	return cacheKey(string(checksum[:]))
-}
 
 type Cache struct {
 	sync.RWMutex
@@ -49,7 +34,9 @@ type Storer interface {
 // Gets an image blob of requested dimensions
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
-	logging.Debugf("Cache get with key: %v", key)
+
+	b64 := keyToBase64(key)
+	logging.Debugf("Cache get with key: %v", b64)
 
 	// TODO: GetBlob calls policy.Visit(), AddBlob calls policy.Push().
 	// Figure out how thread safety should be handled. Is this current
@@ -59,10 +46,10 @@ func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, foun
 	blob, found = c.storer.Load(key)
 
 	if found {
-		logging.Debugf("Cache found: %v", key)
+		logging.Debugf("Cache found: %v", b64)
 		c.policy.Visit(key)
 	} else {
-		logging.Debugf("Cache not found: %v", key)
+		logging.Debugf("Cache not found: %v", b64)
 	}
 
 	return
@@ -79,7 +66,7 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 	}
 
 	key := toKey(operations)
-	logging.Debugf("Cache add: %v", key)
+	logging.Debugf("Cache add: %v", keyToBase64(key))
 
 	c.Lock()
 	defer c.Unlock()
@@ -93,6 +80,6 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 
 func (c *Cache) deleteOne() {
 	to_delete := c.policy.Pop()
-	logging.Debugf("Cache delete: %v", to_delete)
+	logging.Debugf("Cache delete: %v", keyToBase64(to_delete))
 	c.currentMemory -= c.storer.Delete(to_delete)
 }

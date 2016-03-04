@@ -44,6 +44,10 @@ func NewDiskCache(folder string, mm uint64, policy Policy) *Cache {
 
 var encoder = base64.RawURLEncoding
 
+func keyToBase64(k cacheKey) string {
+	return encoder.EncodeToString([]byte(k))
+}
+
 type DiskStore struct {
 	keyToPath map[cacheKey]string
 
@@ -71,7 +75,7 @@ func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
 }
 
 func (d *DiskStore) Store(key cacheKey, blob images.ImageBlob) {
-	filename := encoder.EncodeToString([]byte(key))
+	filename := keyToBase64(key)
 	path := filepath.Join(filepath.FromSlash(d.folder), filename)
 	d.keyToPath[key] = path
 	err := ioutil.WriteFile(path, blob, os.ModePerm)
