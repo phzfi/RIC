@@ -86,6 +86,7 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 	}
 	c.policy.Push(key)
 	c.currentMemory += uint64(len(blob))
+	logging.Debugf("New cache size: %v", c.currentMemory)
 	c.blobs[key] = blob
 }
 
@@ -93,5 +94,6 @@ func (c *Cache) deleteOne() {
 	to_delete := c.policy.Pop()
 	logging.Debugf("Cache delete: %v", to_delete)
 	c.currentMemory -= uint64(len(c.blobs[to_delete]))
+	logging.Debugf("New cache size: %v", c.currentMemory)
 	delete(c.blobs, to_delete)
 }
