@@ -2,5 +2,6 @@
 *.swo
 *~
 .vagrant
+/server/server
 /server/testresults/*/*
 !/**/placeholder
