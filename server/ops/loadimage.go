@@ -7,15 +7,11 @@ import (
 
 type loadImageOp struct {
 	is ImageSource
-	id string
+	Id string
 }
 
 func (i loadImageOp) Apply(img images.Image) (err error) {
 	logging.Debug("Loading: %v", i.id)
 	err = i.is.searchRoots(i.id, img)
-	if err != nil {
-		return
-	}
-	err = img.Convert("PNG")
 	return
 }

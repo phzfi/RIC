@@ -1,27 +1,18 @@
 package cache
 
 import (
-	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"sync"
 )
 
-type cacheKey string
-
-// Returns a unique representation of an ops chain. This unique representation can be used as a map key unlike the original ops chain (slice cannot be a key).
-func toKey(operations []ops.Operation) cacheKey {
-	//TODO: Currently returns go source code representation of operations which is a very long string. Possibly find a way to shorten the key.
-	return cacheKey(fmt.Sprintf("%#v", operations))
-}
-
 type Cache struct {
 	sync.RWMutex
 
-	blobs map[cacheKey]images.ImageBlob
+	policy Policy
+	storer Storer
 
-	policy                   Policy
 	maxMemory, currentMemory uint64
 }
 
@@ -34,33 +25,31 @@ type Policy interface {
 	Visit(cacheKey)
 }
 
-// Takes the caching policy and the maximum size of the cache in bytes.
-func NewCache(policy Policy, mm uint64) *Cache {
-	logging.Debugf("Cache create: mem:%v", mm)
-	return &Cache{
-		maxMemory: mm,
-		policy:    policy,
-		blobs:     make(map[cacheKey]images.ImageBlob),
-	}
+type Storer interface {
+	Load(cacheKey) (images.ImageBlob, bool)
+	Store(cacheKey, images.ImageBlob)
+	Delete(cacheKey) uint64
 }
 
 // Gets an image blob of requested dimensions
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
-	logging.Debugf("Cache get with key: %v", key)
-	
+
+	b64 := keyToBase64(key)
+	logging.Debugf("Cache get with key: %v", b64)
+
 	// TODO: GetBlob calls policy.Visit(), AddBlob calls policy.Push().
 	// Figure out how thread safety should be handled. Is this current
 	// solution ok?
 	c.RLock()
-	blob, found = c.blobs[key]
 	defer c.RUnlock()
+	blob, found = c.storer.Load(key)
 
 	if found {
-		logging.Debugf("Cache found: %v", key)
+		logging.Debugf("Cache found: %v", b64)
 		c.policy.Visit(key)
 	} else {
-		logging.Debugf("Cache not found: %v", key)
+		logging.Debugf("Cache not found: %v", b64)
 	}
 
 	return
@@ -77,7 +66,7 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 	}
 
 	key := toKey(operations)
-	logging.Debugf("Cache add: %v", key)
+	logging.Debugf("Cache add: %v", keyToBase64(key))
 
 	c.Lock()
 	defer c.Unlock()
@@ -87,13 +76,13 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 	c.policy.Push(key)
 	c.currentMemory += uint64(len(blob))
 	logging.Debugf("New cache size: %v", c.currentMemory)
-	c.blobs[key] = blob
+	c.storer.Store(key, blob)
 }
 
 func (c *Cache) deleteOne() {
 	to_delete := c.policy.Pop()
 	logging.Debugf("Cache delete: %v", to_delete)
-	c.currentMemory -= uint64(len(c.blobs[to_delete]))
+	c.currentMemory -= c.storer.Delete(to_delete)
 	logging.Debugf("New cache size: %v", c.currentMemory)
 	delete(c.blobs, to_delete)
 }
