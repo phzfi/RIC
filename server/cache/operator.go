@@ -4,13 +4,21 @@ import "github.com/phzfi/RIC/server/ops"
 import "github.com/phzfi/RIC/server/images"
 
 type Operator struct {
-	cache  *Cache
+	cache  Cacher
 	tokens TokenPool
+}
+
+type Cacher interface {
+	GetBlob([]ops.Operation) (images.ImageBlob, bool)
+	AddBlob([]ops.Operation, images.ImageBlob)
 }
 
 func MakeOperator(mm uint64) Operator {
 	return Operator{
-		NewLRU(mm),
+		HybridCache{
+			NewLRU(mm),
+			NewDiskCache("/tmp/RIC_diskcache", 1024*1024*1024*4),
+		},
 		MakeTokenPool(2),
 	}
 }

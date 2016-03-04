@@ -9,18 +9,13 @@ import (
 	"path/filepath"
 )
 
-var encoder = base64.RawURLEncoding
-
-type DiskStore struct {
-	keyToPath map[cacheKey]string
-
-	folder string
-}
-
-func NewDiskStore(folder string) *DiskStore {
-	d := DiskStore{
-		keyToPath: make(map[cacheKey]string),
-		folder:    folder,
+// initializes cache with images found in given folder
+func NewDiskCache(folder string, mm uint64) *Cache {
+	store := NewDiskStore(folder)
+	c := &Cache{
+		maxMemory: mm,
+		policy:    NewLRUPolicy(),
+		storer:    store,
 	}
 
 	err := os.MkdirAll(folder, os.ModePerm)
@@ -28,7 +23,7 @@ func NewDiskStore(folder string) *DiskStore {
 		log.Println("Unable to create folder for disk-caching:", err)
 	}
 
-	files, err := filepath.Glob(d.folder + "/*")
+	files, err := filepath.Glob(folder + "/*")
 	if err != nil {
 		log.Println("Error reading previously cached files from disk:", err)
 	}
@@ -38,9 +33,28 @@ func NewDiskStore(folder string) *DiskStore {
 			log.Println("Malformed filename", fn, "in previously cached files:", err)
 			continue
 		}
-		d.keyToPath[cacheKey(bytes)] = fn
+		key := cacheKey(bytes)
+		store.keyToPath[key] = fn
+		c.policy.Push(key)
+		c.currentMemory += fileSize(fn)
 	}
-	return &d
+
+	return c
+}
+
+var encoder = base64.RawURLEncoding
+
+type DiskStore struct {
+	keyToPath map[cacheKey]string
+
+	folder string
+}
+
+func NewDiskStore(folder string) *DiskStore {
+	return &DiskStore{
+		keyToPath: make(map[cacheKey]string),
+		folder:    folder,
+	}
 }
 
 func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
