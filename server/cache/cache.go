@@ -84,5 +84,4 @@ func (c *Cache) deleteOne() {
 	logging.Debugf("Cache delete: %v", to_delete)
 	c.currentMemory -= c.storer.Delete(to_delete)
 	logging.Debugf("New cache size: %v", c.currentMemory)
-	delete(c.blobs, to_delete)
 }

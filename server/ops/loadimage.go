@@ -11,7 +11,7 @@ type loadImageOp struct {
 }
 
 func (i loadImageOp) Apply(img images.Image) (err error) {
-	logging.Debug("Loading: %v", i.id)
-	err = i.is.searchRoots(i.id, img)
+	logging.Debug("Loading: %v", i.Id)
+	err = i.is.searchRoots(i.Id, img)
 	return
 }
