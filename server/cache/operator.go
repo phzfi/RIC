@@ -36,11 +36,11 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		t := <-o.tokens
 		defer func() { o.tokens <- t }()
 
-		//Check if some other thread already cached the image while we were blocked
+		// Check if some other thread already cached the image while we were blocked
 		if blob, found := o.cache.GetBlob(operations); found {
 			return blob, nil
 		}
-
+		
 		img := images.NewImage()
 		defer img.Destroy()
 
@@ -48,22 +48,23 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 			img.FromBlob(startimage)
 		}
 
-		o.applyOpsToImage(operations[start:], img)
-		blob = img.Blob()
-
-		o.cache.AddBlob(operations, blob)
+		blob, err = o.applyOpsToImage(operations, start, img)
+		if err != nil {
+			return
+		}
 	}
 
 	return
 }
 
-func (o Operator) applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
-	for i, op := range operations {
+func (o Operator) applyOpsToImage(operations []ops.Operation, start int, img images.Image) (blob images.ImageBlob, err error) {
+	for i, op := range operations[start:] {
 		err = op.Apply(img)
 		if err != nil {
 			return
 		}
-		o.cache.AddBlob(operations[:i], img.Blob())
+		blob = img.Blob()
+		o.cache.AddBlob(operations[:start + i + 1], blob)
 	}
 	return
 }

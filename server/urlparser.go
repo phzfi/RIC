@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/logging"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
@@ -57,9 +58,10 @@ func (p *parseJob) subResize() {
 	hw := p.ow / 2
 	hh := p.oh / 2
 	for p.w < hw && p.h < hh {
+		logging.Debugf("Sub to %v %v", hw, hh)
 		p.operations = append(p.operations, ops.Resize{hw, hh})
-		hw /= 2
-		hh /= 2
+		hw = hw / 2
+		hh = hh / 2
 	}
 }
 
