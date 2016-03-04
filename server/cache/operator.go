@@ -13,11 +13,11 @@ type Cacher interface {
 	AddBlob([]ops.Operation, images.ImageBlob)
 }
 
-func MakeOperator(mm uint64) Operator {
+func MakeOperator(mm uint64, cacheFolder string) Operator {
 	return Operator{
 		HybridCache{
 			NewLRU(mm),
-			NewDiskCache("/tmp/RIC_diskcache", 1024*1024*1024*4),
+			NewDiskCache(cacheFolder, 1024*1024*1024*4, NewLRUPolicy()),
 		},
 		MakeTokenPool(2),
 	}

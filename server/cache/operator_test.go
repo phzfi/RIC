@@ -23,7 +23,9 @@ func TestOperator(t *testing.T) {
 		&DummyOperation{&log, 1},
 		&DummyOperation{&log, 2},
 	}
-	operator := MakeOperator(512 * 1024 * 1024)
+
+	removeContents(cacheFolder)
+	operator := MakeOperator(512*1024*1024, cacheFolder)
 
 	_, err := operator.GetBlob(operations...)
 	if err != nil {

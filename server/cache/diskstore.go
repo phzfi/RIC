@@ -10,11 +10,11 @@ import (
 )
 
 // initializes cache with images found in given folder
-func NewDiskCache(folder string, mm uint64) *Cache {
+func NewDiskCache(folder string, mm uint64, policy Policy) *Cache {
 	store := NewDiskStore(folder)
 	c := &Cache{
 		maxMemory: mm,
-		policy:    NewLRUPolicy(),
+		policy:    policy,
 		storer:    store,
 	}
 

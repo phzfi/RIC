@@ -3,15 +3,41 @@ package cache
 import (
 	"bytes"
 	"github.com/phzfi/RIC/server/ops"
+	"os"
+	"path/filepath"
 	"testing"
 )
+
+const cacheFolder = "/tmp/cachentestaus"
 
 func TestMemCache(t *testing.T) {
 	allTests(t, setupMemcache)
 }
 
 func TestDiskCache(t *testing.T) {
-	allTests(t, setupDiskCache)
+	allTests(t, func() (*DummyPolicy, *Cache) {
+		removeContents(cacheFolder)
+		return setupDiskCache()
+	})
+}
+
+func removeContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func TestDiskCachePersistence(t *testing.T) {
@@ -35,11 +61,7 @@ func TestDiskCachePersistence(t *testing.T) {
 
 func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
-	cache = &Cache{
-		policy:    dp,
-		maxMemory: 100,
-		storer:    NewDiskStore("/tmp/cachentestaus"),
-	}
+	cache = NewDiskCache(cacheFolder, 100, dp)
 	return
 }
 
