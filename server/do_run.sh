@@ -7,4 +7,4 @@ else
   echo $COUNT " RIC screens found"
   screen -ls | awk -vFS='\t|[.]' '/RIC/ {system("screen -S "$2" -X quit")}'
 fi
-screen -dmS RIC ./server_loop.sh
+screen -dmS RIC sh server_loop.sh
