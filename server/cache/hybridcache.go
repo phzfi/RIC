@@ -10,8 +10,11 @@ import (
 type HybridCache []*Cache
 
 func (caches HybridCache) GetBlob(operations []ops.Operation) (images.ImageBlob, bool) {
-	for _, cache := range caches {
+	for i, cache := range caches {
 		if blob, found := cache.GetBlob(operations); found {
+			for j := 0; j < i; j++ {
+				caches[j].AddBlob(operations, blob)
+			}
 			return blob, true
 		}
 	}
