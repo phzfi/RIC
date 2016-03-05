@@ -1,5 +1,0 @@
-ok  	github.com/phzfi/RIC/server	139.447s
-ok  	github.com/phzfi/RIC/server/cache	0.009s
-ok  	github.com/phzfi/RIC/server/images	27.075s
-?   	github.com/phzfi/RIC/server/logging	[no test files]
-?   	github.com/phzfi/RIC/server/ops	[no test files]
