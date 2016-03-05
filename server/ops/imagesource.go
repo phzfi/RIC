@@ -10,6 +10,14 @@ import (
 	"strings"
 )
 
+
+type ImageSourcer interface {
+	LoadImageOp(string) Operation
+	ImageSize(string) (int, int, error)
+
+}
+
+
 type dim [2]int
 type idToSize map[string]dim
 

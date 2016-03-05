@@ -108,7 +108,7 @@ func extToFormat(ext string) string {
 }
 
 // Generate []Operation thet the given URI represents
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Operation, err error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSourcer) (operations []ops.Operation, err error) {
 	p := parseJob{}
 	p.args = uri.QueryArgs()
 	p.w, p.werr = p.args.GetUint("width")
