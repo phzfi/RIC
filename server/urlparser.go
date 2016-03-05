@@ -57,7 +57,7 @@ func (p *parseJob) denyUpscale() {
 func (p *parseJob) subResize() {
 	hw := p.ow / 2
 	hh := p.oh / 2
-	for p.w < hw && p.h < hh && hw >= 600 && hh >= 600{
+	for p.w < hw && p.h < hh{
 		logging.Debugf("Sub to %v %v", hw, hh)
 		p.operations = append(p.operations, ops.Resize{hw, hh})
 		hw = hw / 2
