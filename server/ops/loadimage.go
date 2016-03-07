@@ -10,6 +10,10 @@ type loadImageOp struct {
 	id string
 }
 
+func (i loadImageOp) GetKey() string {
+	return i.id
+}
+
 func (i loadImageOp) Apply(img images.Image) error {
 	logging.Debug("Loading: %v", i.id)
 	return i.is.searchRoots(i.id, img)
