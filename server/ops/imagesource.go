@@ -16,6 +16,7 @@ type idToSize map[string]dim
 type ImageSource struct {
 	roots []string
 	sizes idToSize
+    mutex sync.Mutex
 }
 
 func MakeImageSource() ImageSource {
@@ -56,21 +57,19 @@ func (i ImageSource) searchRoots(filename string, img images.Image) (err error) 
 
 // TODO: This is a temp solution for ImageSize creating too many Images.
 // Limit to creating only one at time for finding the image size
-var imagesizemutex sync.Mutex
 
 func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
+	i.mutex.Lock()
 
 	if s, ok := i.sizes[fn]; ok {
+		i.mutex.Unlock()
 		return s[0], s[1], nil
 	}
-	
-	// TODO: Figure out another way to find out image size so no blocking is needed
-	imagesizemutex.Lock()
 
 	image := images.NewImage()
 	defer func () {
+		i.mutex.Unlock()
 		image.Destroy()
-		imagesizemutex.Unlock()
 	}()
 
 	err = i.searchRoots(fn, image)

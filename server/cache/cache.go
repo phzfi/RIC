@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
@@ -12,8 +12,11 @@ type cacheKey string
 
 // Returns a unique representation of an ops chain. This unique representation can be used as a map key unlike the original ops chain (slice cannot be a key).
 func toKey(operations []ops.Operation) cacheKey {
-	//TODO: Currently returns go source code representation of operations which is a very long string. Possibly find a way to shorten the key.
-	return cacheKey(fmt.Sprintf("%#v", operations))
+	var buffer bytes.Buffer
+	for _, op := range(operations) {
+		buffer.WriteString(op.GetKey())
+	}
+	return cacheKey(buffer.String())
 }
 
 type Cache struct {
@@ -48,7 +51,7 @@ func NewCache(policy Policy, mm uint64) *Cache {
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
 	logging.Debugf("Cache get with key: %v", key)
-	
+
 	// TODO: GetBlob calls policy.Visit(), AddBlob calls policy.Push().
 	// Figure out how thread safety should be handled. Is this current
 	// solution ok?
