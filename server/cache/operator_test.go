@@ -3,6 +3,9 @@ package cache
 import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
+	"sync"
+	"fmt"
+	"time"
 	"testing"
 )
 
@@ -12,11 +15,17 @@ type DummyOperation struct {
 }
 
 func (o *DummyOperation) GetKey() string {
-	return "test"
+	return fmt.Sprintf("test%v", o.name)
 }
 
+var logMutex *sync.Mutex = &sync.Mutex{}
+
 func (o *DummyOperation) Apply(img images.Image) error {
+	// Take some time for simult opers. tests
+	time.Sleep(200*time.Millisecond)
+	logMutex.Lock()
 	*(o.log) = append(*(o.log), o.name)
+	logMutex.Unlock()
 	return nil
 }
 
@@ -41,5 +50,44 @@ func TestOperator(t *testing.T) {
 		if i != v {
 			t.Fatal("Wrong operation")
 		}
+	}
+}
+
+
+
+func TestDenyIdenticalOperations(t *testing.T) {
+	var log []int
+
+	// Many identical operations
+	operations := [][]ops.Operation{
+		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
+		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
+		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
+		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
+		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
+		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
+	}
+	operator := MakeOperator(512 * 1024 * 1024)
+	
+	// Channel to track amount of completed operations
+	c := make(chan bool, len(operations))
+
+	// Launch operations simultaneously
+	for i := 0; i < len(operations); i++ {
+		opers := operations[i]
+		go func () {
+			_, _ = operator.GetBlob(opers...)
+			c <- true
+		}()
+	}
+	
+	// Wait for the operations to finish
+	for i := 0; i < len(operations); i++ {
+		_ = <- c
+	}
+	
+	// Only 2 operations should've been done - others found from cache
+	if len(log) != 2 {
+		t.Fatal(fmt.Sprintf("%v operations done. Expected 4", len(log)))
 	}
 }
