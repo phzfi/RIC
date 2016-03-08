@@ -10,6 +10,10 @@ type Resize struct {
 	Width, Height int
 }
 
+func (r Resize) GetKey() string {
+	return fmt.Sprintf("%dx%d", r.Width, r.Height)
+}
+
 func (r Resize) Apply(img images.Image) error {
 	logging.Debug(fmt.Sprintf("Resizing image to: %v, %v", r.Width, r.Height))
 	return img.Resize(r.Width, r.Height)

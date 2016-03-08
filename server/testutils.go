@@ -75,16 +75,25 @@ func testGetImages(cases []images.TestCaseAll) (err error) {
 
 	tolerance := 0.002
 
+	// Todo: this threading is copied from common_test.go unify it to single implementation (DRY)
+	sem := make(chan error, len(cases))
 	for _, c := range cases {
-		logging.Debug(fmt.Sprintf("Testing get: %v, %v, %v, %v, %v", c.Testfn, c.Reffn, c.Resfn, c.W, c.H))
-		blob, err := getBlobFromServer(c.Testfn)
-		if err != nil {
-			return err
-		}
+		go func (tc images.TestCaseAll) {
+			logging.Debug(fmt.Sprintf("Testing get: %v, %v, %v, %v, %v", tc.Testfn, tc.Reffn, tc.Resfn, tc.W, tc.H))
+			blob, err := getBlobFromServer(tc.Testfn)
+			if err != nil {
+				sem <- err
+				return
+			}
 
-		err = images.TestAll(c, blob, tolerance)
-		if err != nil {
-			return err
+			sem <- images.TestAll(tc, blob, tolerance)
+		} (c)
+	}
+
+	for range cases {
+		var verr = <- sem
+		if verr != nil && err == nil {
+			err = verr
 		}
 	}
 	return
