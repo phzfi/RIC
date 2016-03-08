@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/phzfi/RIC/server/ops"
-	"github.com/phzfi/RIC/server/configuration"
+	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
@@ -17,7 +17,7 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf configuration.Conf) (operations []ops.Operation, err error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, err error) {
 	args := uri.QueryArgs()
 	filename := string(uri.Path())
 	w, werr := args.GetUint("width")

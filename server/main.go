@@ -116,8 +116,12 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	if imageSource.AddRoot(".") != nil {
 		log.Println("Root not added .")
 	}
+	imgpath, err := conf.GetString("watermark", "path")
+	watermarker := ops.MakeWatermarker(imgpath)
 
-	watermarker := ops.MakeWatermarker(conf.GetString("watermark", "path"))
+	if err != nil {
+		log.Fatal("Error creating listener:" + err.Error())
+	}
 
 	// Configure handler
 	logging.Debug("Configuring handler")

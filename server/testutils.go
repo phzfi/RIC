@@ -6,7 +6,7 @@ import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
-	"github.com/phzfi/RIC/server/configuration"
+	"github.com/phzfi/RIC/server/config"
 	"github.com/valyala/fasthttp"
 	"net"
 	"time"
@@ -18,7 +18,7 @@ var port = 8022
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
 	// Start the server
-	conf, err := configuration.ReadConfig("testconfig.ini")
+	conf, err := config.ReadConfig("testconfig.ini")
 
 	if err != nil {
 		logging.Debug("Error while reading config" + err.Error())

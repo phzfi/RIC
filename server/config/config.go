@@ -1,4 +1,4 @@
-package configuration
+package config
 
 import (
   "bitbucket.org/classroomsystems/ini"
@@ -27,9 +27,9 @@ func ReadConfig(path string) (config Conf, err error) {
 func (conf Conf) GetString(section, key string) (value string, err error) {
   value, success := conf.conf.Get(section, key)
   if (success) {
-    return value
+    return
   } else {
-    return "", errors.New("Value not found for "+ key +" in "+ section) 
+    return "", errors.New("Value not found for "+ key +" in "+ section)
   }
 }
 

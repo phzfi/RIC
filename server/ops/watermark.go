@@ -13,7 +13,7 @@ type watermark struct {
 }
 
 func (w watermark) GetKey() string {
-	return fmt.Sprintf("wm%dx%d", w.vertical, w.horizontal)
+	return fmt.Sprintf("WM%dx%d", w.vertical, w.horizontal)
 }
 
 func (w watermark) Apply(img images.Image) (err error) {
