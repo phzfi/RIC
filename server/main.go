@@ -8,7 +8,7 @@ import (
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
-	"github.com/phzfi/RIC/server/configuration"
+	"github.com/phzfi/RIC/server/config"
 	"github.com/valyala/fasthttp"
 	"log"
 	"net"
@@ -28,7 +28,7 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	config			configuration.Conf
+	config			config.Conf
 	operator    cache.Operator
 	imageSource ops.ImageSource
 	watermarker ops.Watermarker
@@ -103,7 +103,7 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
-func NewServer(port int, maxMemory uint64, conf configuration.Conf) (*fasthttp.Server, *MyHandler, net.Listener) {
+func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, *MyHandler, net.Listener) {
 	logging.Debug("Creating server")
 	imageSource := ops.MakeImageSource()
 	// Add roots
@@ -149,7 +149,7 @@ func main() {
 	flag.Parse()
 	// CLI arguments
 
-	conf, err := configuration.ReadConfig(*cpath)
+	conf, err := config.ReadConfig(*cpath)
 	if err != nil {
 		log.Fatal("Error while reading config at " + *cpath + ": " + err.Error())
 	}

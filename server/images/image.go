@@ -59,12 +59,11 @@ func (img Image) GetExtension() (ext string) {
 
 // Method for converting Image to ImageBlob. Note: Method Destroys the used Image and frees the memory used.
 func (img Image) Blob() (blob ImageBlob) {
-	blob = img.GetImageBlob()
-	img.Destroy()
-	return
+	return img.GetImageBlob()
 }
 
-// Watermark watermarks image.
+// Watermark adds watermark Image to img. Parameters horizontal and vertical tell where
+// watermark is placed. 0.0, 0.0 for leftmost uppercorner and 1.0, 1.0 for rigthmost lower corner.
 func (img Image) Watermark(watermark Image, horizontal, vertical float64) (err error) {
 	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
 	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
