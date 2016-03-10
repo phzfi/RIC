@@ -10,8 +10,8 @@ type Resize struct {
 	Width, Height int
 }
 
-func (r Resize) GetKey() string {
-	return fmt.Sprintf("%dx%d", r.Width, r.Height)
+func (r Resize) Marshal() string {
+	return string(resize) + string(r.Width) + string(r.Height)
 }
 
 func (r Resize) Apply(img images.Image) error {
