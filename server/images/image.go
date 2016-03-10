@@ -57,7 +57,7 @@ func (img Image) GetExtension() (ext string) {
 	return
 }
 
-// Method for converting Image to ImageBlob. Note: Method Destroys the used Image and frees the memory used.
+// Method for converting Image to ImageBlob.
 func (img Image) Blob() (blob ImageBlob) {
 	return img.GetImageBlob()
 }
