@@ -60,12 +60,10 @@ func getBlobFromServer(getname string) (blob images.ImageBlob, err error) {
 
 // Tests getting images. c.Testfn is treated as GET string (filename?params).
 // Executes the tests supported by TestCaseAll.
-func testGetImages(cases []images.TestCaseAll) (err error) {
+func testGetImages(cases []images.TestCaseAll, tolerance float64) (err error) {
 
 	s, ln, srverr := startServer()
 	defer stopServer(s, ln, srverr)
-
-	tolerance := 0.002
 
 	// Todo: this threading is copied from common_test.go unify it to single implementation (DRY)
 	sem := make(chan error, len(cases))
