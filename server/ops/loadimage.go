@@ -10,8 +10,8 @@ type loadImageOp struct {
 	id string
 }
 
-func (i loadImageOp) GetKey() string {
-	return i.id
+func (i loadImageOp) Marshal() string {
+	return string(load) + i.id + string(0)
 }
 
 func (i loadImageOp) Apply(img images.Image) error {

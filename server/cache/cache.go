@@ -1,10 +1,11 @@
 package cache
 
 import (
-	"bytes"
+	"crypto/md5"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
+	"strings"
 	"sync"
 )
 
@@ -12,11 +13,12 @@ type cacheKey string
 
 // Returns a unique representation of an ops chain. This unique representation can be used as a map key unlike the original ops chain (slice cannot be a key).
 func toKey(operations []ops.Operation) cacheKey {
-	var buffer bytes.Buffer
-	for _, op := range(operations) {
-		buffer.WriteString(op.GetKey())
+	marshaled := make([]string, len(operations))
+	for i, op := range operations {
+		marshaled[i] = op.Marshal()
 	}
-	return cacheKey(buffer.String())
+	bytes := md5.Sum([]byte(strings.Join(marshaled, "")))
+	return cacheKey(bytes[:])
 }
 
 type Cache struct {

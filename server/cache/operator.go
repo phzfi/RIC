@@ -1,23 +1,30 @@
 package cache
 
-import "github.com/phzfi/RIC/server/ops"
-import "github.com/phzfi/RIC/server/images"
+import (
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/ops"
+	"sync"
+)
 
 type Operator struct {
-	cache  *Cache
-	tokens chan bool
+	cache *Cache
+
+	sync.Mutex
+	inProgress map[cacheKey]*sync.RWMutex
+	tokens     TokenPool
 }
 
 func MakeOperator(mm uint64) Operator {
-	o := Operator{NewLRU(mm), make(chan bool, 3)}
-	// TODO: Currently only 2 simult. operations allowed. Increate tokens and make them configurable.
-	for i := 0; i < 2; i++ {
-		o.tokens <- true
+	return Operator{
+		cache:      NewLRU(mm),
+		inProgress: make(map[cacheKey]*sync.RWMutex),
+		tokens:     MakeTokenPool(2),
 	}
-	return o
 }
 
 func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
+
+	key := toKey(operations)
 
 	var startimage images.ImageBlob
 	var start int
@@ -33,13 +40,38 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 	if start == len(operations) {
 		return startimage, nil
 	} else {
-		t := <-o.tokens
-		defer func() { o.tokens <- t }()
-
-		//Check if some other thread already cached the image while we were blocked
-		if blob, found := o.cache.GetBlob(operations); found {
-			return blob, nil
+		o.Lock()
+		cond, inProgress := o.inProgress[key]
+		if !inProgress {
+			// image may have entered cache while this goroutine moved to this place in code
+			var found bool
+			blob, found = o.cache.GetBlob(operations)
+			if found {
+				o.Unlock()
+				return
+			}
+			cond = o.addInProgress(key)
 		}
+		o.Unlock()
+
+		if inProgress {
+			// Blocks until image has been processed
+			cond.RLock()
+
+			var found bool
+			blob, found = o.cache.GetBlob(operations)
+			if found {
+				return
+			}
+
+			// This only happens if the freshly resized image is dropped from cache too quickly
+			o.Lock()
+			o.addInProgress(key)
+			o.Unlock()
+		}
+
+		o.tokens.Borrow()
+		defer o.tokens.Return()
 
 		img := images.NewImage()
 		defer img.Destroy()
@@ -48,13 +80,26 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 			img.FromBlob(startimage)
 		}
 
+		// TODO: do not ignore error
 		o.applyOpsToImage(operations[start:], img)
 		blob = img.Blob()
 
 		o.cache.AddBlob(operations, blob)
+
+		cond.Unlock()
+		o.Lock()
+		delete(o.inProgress, key)
+		o.Unlock()
 	}
 
 	return
+}
+
+func (o Operator) addInProgress(key cacheKey) *sync.RWMutex {
+	m := &sync.RWMutex{}
+	m.Lock()
+	o.inProgress[key] = m
+	return m
 }
 
 func (o Operator) applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {

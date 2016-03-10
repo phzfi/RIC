@@ -1,7 +1,6 @@
 package ops
 
 import (
-	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 )
@@ -10,8 +9,8 @@ type LiquidRescale struct {
 	Width, Height int
 }
 
-func (r LiquidRescale) GetKey() string {
-	return fmt.Sprintf("LIQUID%dx%d", r.Width, r.Height)
+func (r LiquidRescale) Marshal() string {
+	return string(liquidRescale) + int32ToString(int32(r.Width)) + int32ToString(int32(r.Height))
 }
 
 func (r LiquidRescale) Apply(img images.Image) error {
