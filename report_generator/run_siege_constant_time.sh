@@ -1,23 +1,23 @@
 #!/bin/bash
 
-if [ $# -lt 2 ]; then
-echo "Script usage: sh run_siege_tests.sh RANDOM_SEED CONCURRENT_USERS "
+if [ $# -lt 3 ]; then
+echo "Script usage: sh run_siege_tests.sh RANDOM_SEED CONCURRENT_USERS TIME_IN_SECONDS "
 exit 1
 fi
 
 
 SEED=$1
 CONCURRENT=$2
-python urls_randomizer.py urls.txt $SEED
-python urls_randomizer.py turls.txt $SEED
+python urls_randomizer.py urls_no_webp.txt $SEED
+python urls_randomizer.py turls_no_webp.txt $SEED
 
 
-URLS_FILE=./urls.txt_temp.txt
-TURLS_FILE=./turls.txt_temp.txt
+URLS_FILE=./urls_no_webp.txt_temp.txt
+TURLS_FILE=./turls_no_webp.txt_temp.txt
 
 # Siege settings
 DELAY=1
-TIME="120s"
+TIME=$3"s"
 SIEGE_CONF=./.siegerc
 
 #RIC SIEGE
@@ -45,8 +45,6 @@ siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$T
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
 rm $TMP
-
-
 
 
 
