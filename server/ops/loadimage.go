@@ -7,11 +7,14 @@ import (
 
 type loadImageOp struct {
 	is ImageSource
-	Id string
+	id string
 }
 
-func (i loadImageOp) Apply(img images.Image) (err error) {
-	logging.Debug("Loading: %v", i.Id)
-	err = i.is.searchRoots(i.Id, img)
-	return
+func (i loadImageOp) GetKey() string {
+	return i.id
+}
+
+func (i loadImageOp) Apply(img images.Image) error {
+	logging.Debug("Loading: %v", i.id)
+	return i.is.searchRoots(i.id, img)
 }

@@ -11,6 +11,10 @@ type DummyOperation struct {
 	name int
 }
 
+func (o *DummyOperation) GetKey() string {
+	return "test"
+}
+
 func (o *DummyOperation) Apply(img images.Image) error {
 	*(o.log) = append(*(o.log), o.name)
 	return nil

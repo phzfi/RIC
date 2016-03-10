@@ -1,11 +1,23 @@
 package cache
 
 import (
+	"bytes"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"sync"
 )
+
+type cacheKey string
+
+// Returns a unique representation of an ops chain. This unique representation can be used as a map key unlike the original ops chain (slice cannot be a key).
+func toKey(operations []ops.Operation) cacheKey {
+	var buffer bytes.Buffer
+	for _, op := range(operations) {
+		buffer.WriteString(op.GetKey())
+	}
+	return cacheKey(buffer.String())
+}
 
 type Cache struct {
 	sync.RWMutex
@@ -34,7 +46,6 @@ type Storer interface {
 // Gets an image blob of requested dimensions
 func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
 	key := toKey(operations)
-
 	b64 := keyToBase64(key)
 	logging.Debugf("Cache get with key: %v", b64)
 
