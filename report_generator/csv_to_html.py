@@ -20,7 +20,7 @@ make html tables. The different formatted csv paths are given as parameters.
 
 
 HIGHLIGHT_HIGHER = (1, 3, 5, 6, 8)
-HIGHLIGHT_LOWER = (2, 4, 7, 9)
+HIGHLIGHT_LOWER = (2, 4, 9)
 HTML_DOC = '''
 <!DOCTYPE html>
 <html>
@@ -43,14 +43,13 @@ logging.basicConfig(
 
 
 def main(args):
-    if len(args) < 2:
+    if len(args) < 3:
         logging.critical('Wrong number of arguments.\n' +
-                         'Usage: "python csv_to_html.py testData*"')
+                         'Usage: "python csv_to_html.py htmlTable testData*"')
         sys.exit(1)
-
     software = []
     titles = None
-    for i, csv in enumerate(args[1:]):
+    for csv in args[2:]:
         csv_name = os.path.basename(csv)
         name = csv_name.split("_")[0]
         if titles is None:
@@ -58,7 +57,7 @@ def main(args):
         data = read_csv_row(csv, 1)
         software.append({'name': name, 'data': data})
     html = buildHTML(software, titles)
-    sys.exit(save_to_html(html, 'siegeresults.html'))
+    sys.exit(save_to_html(html, args[1]))
 
 
 def get_picker(i):
@@ -130,7 +129,7 @@ def read_csv_row(from_path, row_number=None):
     Reads a row in a csv file formatted with the csv_formatter script.
 
     """
-    forms = [str, int, float, int, float, float, float, float, int, int]
+    forms = [int, float, int, float, float, float, float, int, int]
     try:
         with codecs.open(from_path, 'r', 'utf-8') as inp:
             reader = csv.reader(inp, dialect='excel', lineterminator='\n')
@@ -141,7 +140,7 @@ def read_csv_row(from_path, row_number=None):
             f = lambda x: x[1] if (x[0] == row_number) else None
             iterated = map(f, enumerate(reader))
             row = filter(lambda x: x is not None, iterated)[0]
-            return [a(b.strip()) for (a,b) in zip(forms, row)]
+            return [a(b.strip()) for (a, b) in zip(forms, row)]
     except Exception as excp:
         print(excp)
         msg = '{0} exception while reading csv from: {1}'
