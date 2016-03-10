@@ -10,7 +10,7 @@ type LiquidRescale struct {
 }
 
 func (r LiquidRescale) Marshal() string {
-	return string(liquidRescale) + string(r.Width) + string(r.Height)
+	return string(liquidRescale) + int32ToString(int32(r.Width)) + int32ToString(int32(r.Height))
 }
 
 func (r LiquidRescale) Apply(img images.Image) error {
