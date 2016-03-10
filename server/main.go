@@ -120,7 +120,7 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 	handler := &MyHandler{
 		requests:    0,
 		imageSource: imageSource,
-		operator:    cache.MakeOperator(maxMemory),
+		operator:    cache.MakeOperator(maxMemory, "/tmp/RICdiskcache"),
 	}
 
 	// Configure server

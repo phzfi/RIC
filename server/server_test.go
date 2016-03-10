@@ -31,6 +31,7 @@ func TestGetImageBySize(t *testing.T) {
 
 	testfolder := "testimages/server/"
 	resfolder := "testresults/server/"
+	tolerance := 0.002
 
 	cases := []images.TestCaseAll{
 		{images.TestCase{testfolder + "01.jpg?width=100&height=100", testfolder + "01_100x100.jpg", resfolder + "01_100x100.jpg"}, "JPEG", 100, 100},
@@ -51,7 +52,7 @@ func TestGetImageBySize(t *testing.T) {
 		{images.TestCase{testfolder + "02.webp?width=300&height=50", testfolder + "02_300x50.webp", resfolder + "02_300x50.webp"}, "WEBP", 300, 50},
 	}
 
-	err := testGetImages(cases)
+	err := testGetImages(cases, tolerance)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,6 +63,7 @@ func TestGetImageFit(t *testing.T) {
 
 	testfolder := "testimages/server/"
 	resfolder := "testresults/server/"
+	tolerance := 0.002
 
 	cases := []images.TestCaseAll{
 		{images.TestCase{testfolder + "03.jpg?width=500&height=100&mode=fit", testfolder + "03_h100.jpg", resfolder + "03_h100.jpg"}, "JPEG", 143, 100},
@@ -82,7 +84,7 @@ func TestGetImageFit(t *testing.T) {
 		{images.TestCase{testfolder + "04.webp?width=500&height=50&mode=fit", testfolder + "04_h50.webp", resfolder + "04_h50.webp"}, "WEBP", 71, 50},
 	}
 
-	err := testGetImages(cases)
+	err := testGetImages(cases, tolerance)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,6 +94,7 @@ func TestGetImageFit(t *testing.T) {
 func TestGetImageSingleParam(t *testing.T) {
 	testfolder := "testimages/server/"
 	resfolder := "testresults/server/"
+	tolerance := 0.002
 
 	cases := []images.TestCaseAll{
 		{images.TestCase{testfolder + "03.jpg?height=100", testfolder + "03_h100.jpg", resfolder + "03_h100.jpg"}, "JPEG", 143, 100},
@@ -112,7 +115,7 @@ func TestGetImageSingleParam(t *testing.T) {
 		{images.TestCase{testfolder + "04.webp?height=50", testfolder + "04_h50.webp", resfolder + "04_h50.webp"}, "WEBP", 71, 50},
 	}
 
-	err := testGetImages(cases)
+	err := testGetImages(cases, tolerance)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,6 +125,7 @@ func TestGetImageSingleParam(t *testing.T) {
 func TestGetLiquid(t *testing.T) {
 	testfolder := "testimages/server/"
 	resfolder := "testresults/server/"
+	tolerance := 0.06
 
 	cases := []images.TestCaseAll{
 		{images.TestCase{testfolder + "01.jpg?width=143&height=100&mode=liquid", testfolder + "liquid_01_143x100.jpg", resfolder + "liquid_01_143x100.jpg"}, "JPEG", 143, 100},
@@ -130,7 +134,7 @@ func TestGetLiquid(t *testing.T) {
 		{images.TestCase{testfolder + "03.jpg?height=300&mode=liquid", testfolder + "liquid_03_h300.jpg", resfolder + "liquid_03_h300.jpg"}, "JPEG", 429, 300},
 	}
 
-	err := testGetImages(cases)
+	err := testGetImages(cases, tolerance)
 	if err != nil {
 		t.Fatal(err)
 	}

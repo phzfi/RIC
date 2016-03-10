@@ -4,17 +4,23 @@ import "github.com/phzfi/RIC/server/ops"
 import "github.com/phzfi/RIC/server/images"
 
 type Operator struct {
-	cache  *Cache
-	tokens chan bool
+	cache  Cacher
+	tokens TokenPool
 }
 
-func MakeOperator(mm uint64) Operator {
-	o := Operator{NewLRU(mm), make(chan bool, 3)}
-	// TODO: Currently only 2 simult. operations allowed. Increate tokens and make them configurable.
-	for i := 0; i < 2; i++ {
-		o.tokens <- true
+type Cacher interface {
+	GetBlob([]ops.Operation) (images.ImageBlob, bool)
+	AddBlob([]ops.Operation, images.ImageBlob)
+}
+
+func MakeOperator(mm uint64, cacheFolder string) Operator {
+	return Operator{
+		HybridCache{
+			NewLRU(mm),
+			NewDiskCache(cacheFolder, 1024*1024*1024*4, NewLRUPolicy()),
+		},
+		MakeTokenPool(2),
 	}
-	return o
 }
 
 func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
@@ -33,14 +39,14 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 	if start == len(operations) {
 		return startimage, nil
 	} else {
-		t := <-o.tokens
-		defer func() { o.tokens <- t }()
+		o.tokens.Borrow()
+		defer o.tokens.Return()
 
-		//Check if some other thread already cached the image while we were blocked
+		// Check if some other thread already cached the image while we were blocked
 		if blob, found := o.cache.GetBlob(operations); found {
 			return blob, nil
 		}
-
+		
 		img := images.NewImage()
 		defer img.Destroy()
 
@@ -48,21 +54,23 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 			img.FromBlob(startimage)
 		}
 
-		o.applyOpsToImage(operations[start:], img)
-		blob = img.Blob()
-
-		o.cache.AddBlob(operations, blob)
+		blob, err = o.applyOpsToImage(operations, start, img)
+		if err != nil {
+			return
+		}
 	}
 
 	return
 }
 
-func (o Operator) applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
-	for _, op := range operations {
+func (o Operator) applyOpsToImage(operations []ops.Operation, start int, img images.Image) (blob images.ImageBlob, err error) {
+	for i, op := range operations[start:] {
 		err = op.Apply(img)
 		if err != nil {
 			return
 		}
+		blob = img.Blob()
+		o.cache.AddBlob(operations[:start + i + 1], blob)
 	}
 	return
 }

@@ -1,9 +1,74 @@
 package cache
 
 import (
+	"bytes"
 	"github.com/phzfi/RIC/server/ops"
+	"os"
+	"path/filepath"
 	"testing"
 )
+
+const cacheFolder = "/tmp/cachentestaus"
+
+func TestMemCache(t *testing.T) {
+	allTests(t, setupMemcache)
+}
+
+func TestDiskCache(t *testing.T) {
+	allTests(t, func() (*DummyPolicy, *Cache) {
+		removeContents(cacheFolder)
+		return setupDiskCache()
+	})
+}
+
+func removeContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func TestDiskCachePersistence(t *testing.T) {
+	id := []ops.Operation{&DummyOperation{}, &DummyOperation{}}
+	data := []byte{1, 2, 3, 4, 7}
+
+	_, cache := setupDiskCache()
+	cache.AddBlob(id, data)
+
+	_, cache = setupDiskCache()
+	recovered, ok := cache.GetBlob(id)
+
+	if !ok {
+		t.Fatal("The new cache instance did not find the image previously saved on disk.")
+	}
+
+	if !bytes.Equal(data, recovered) {
+		t.Fatal("The cache returned different data than what was cached.")
+	}
+}
+
+func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
+	dp = NewDummyPolicy(make(Log))
+	cache = NewDiskCache(cacheFolder, 100, dp)
+	return
+}
+
+func allTests(t *testing.T, f setupFunc) {
+	testCache(t, f)
+	testCacheExit(t, f)
+}
 
 const (
 	Visit = iota
@@ -43,13 +108,15 @@ func NewDummyPolicy(log Log) *DummyPolicy {
 	return &DummyPolicy{fifo: &FIFO{}, loki: log}
 }
 
-func setup() (dp *DummyPolicy, cache *Cache) {
+func setupMemcache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
 	cache = NewCache(dp, 100)
 	return
 }
 
-func TestCache(t *testing.T) {
+type setupFunc func() (dp *DummyPolicy, cache *Cache)
+
+func testCache(t *testing.T, setup setupFunc) {
 	id := []ops.Operation{&DummyOperation{}}
 	dp, cache := setup()
 
@@ -77,7 +144,7 @@ func TestCache(t *testing.T) {
 	}
 }
 
-func TestCacheExit(t *testing.T) {
+func testCacheExit(t *testing.T, setup setupFunc) {
 	var (
 		do  = &DummyOperation{}
 		id1 = []ops.Operation{do}
