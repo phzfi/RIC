@@ -23,7 +23,7 @@ func NewImage() Image {
 	return Image{imagick.NewMagickWand()}
 }
 
-// Clone an image. Remember images and made clones need to be destroyed using Destroy(), ToBlob() or Resize().
+// Clone an image. Remember images and made clones need to be destroyed using Destroy().
 func (img Image) Clone() Image {
 	return Image{img.MagickWand.Clone()}
 }
