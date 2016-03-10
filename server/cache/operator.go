@@ -10,14 +10,14 @@ type Operator struct {
 	cache *Cache
 
 	sync.Mutex
-	inProgress map[cacheKey]*sync.Cond
+	inProgress map[cacheKey]*sync.RWMutex
 	tokens     TokenPool
 }
 
 func MakeOperator(mm uint64) Operator {
 	return Operator{
 		cache:      NewLRU(mm),
-		inProgress: make(map[cacheKey]*sync.Cond),
+		inProgress: make(map[cacheKey]*sync.RWMutex),
 		tokens:     MakeTokenPool(2),
 	}
 }
@@ -41,14 +41,23 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		return startimage, nil
 	} else {
 		o.Lock()
-		cond, ok := o.inProgress[key]
-		if !ok {
-			o.inProgress[key] = sync.NewCond(&sync.Mutex{})
+		cond, inProgress := o.inProgress[key]
+		if !inProgress {
+			// image may have entered cache while this goroutine moved to this place in code
+			var found bool
+			blob, found = o.cache.GetBlob(operations)
+			if found {
+				o.Unlock()
+				return
+			}
+			cond = o.addInProgress(key)
 		}
 		o.Unlock()
 
-		if ok {
-			cond.Wait()
+		if inProgress {
+			// Blocks until image has been processed
+			cond.RLock()
+
 			var found bool
 			blob, found = o.cache.GetBlob(operations)
 			if found {
@@ -57,7 +66,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 
 			// This only happens if the freshly resized image is dropped from cache too quickly
 			o.Lock()
-			o.inProgress[key] = sync.NewCond(&sync.Mutex{})
+			o.addInProgress(key)
 			o.Unlock()
 		}
 
@@ -76,9 +85,21 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		blob = img.Blob()
 
 		o.cache.AddBlob(operations, blob)
+
+		cond.Unlock()
+		o.Lock()
+		delete(o.inProgress, key)
+		o.Unlock()
 	}
 
 	return
+}
+
+func (o Operator) addInProgress(key cacheKey) *sync.RWMutex {
+	m := &sync.RWMutex{}
+	m.Lock()
+	o.inProgress[key] = m
+	return m
 }
 
 func (o Operator) applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
