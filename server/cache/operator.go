@@ -71,6 +71,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 			img.FromBlob(startimage)
 		}
 
+		// TODO: do not ignore error
 		o.applyOpsToImage(operations[start:], img)
 		blob = img.Blob()
 
