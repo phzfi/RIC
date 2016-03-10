@@ -1,21 +1,30 @@
 package cache
 
-import "github.com/phzfi/RIC/server/ops"
-import "github.com/phzfi/RIC/server/images"
+import (
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/ops"
+	"sync"
+)
 
 type Operator struct {
-	cache  *Cache
-	tokens TokenPool
+	cache *Cache
+
+	sync.Mutex
+	inProgress map[cacheKey]*sync.Cond
+	tokens     TokenPool
 }
 
 func MakeOperator(mm uint64) Operator {
 	return Operator{
-		NewLRU(mm),
-		MakeTokenPool(2),
+		cache:      NewLRU(mm),
+		inProgress: make(map[cacheKey]*sync.Cond),
+		tokens:     MakeTokenPool(2),
 	}
 }
 
 func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
+
+	key := toKey(operations)
 
 	var startimage images.ImageBlob
 	var start int
@@ -31,13 +40,29 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 	if start == len(operations) {
 		return startimage, nil
 	} else {
+		o.Lock()
+		cond, ok := o.inProgress[key]
+		if !ok {
+			o.inProgress[key] = sync.NewCond(&sync.Mutex{})
+		}
+		o.Unlock()
+
+		if ok {
+			cond.Wait()
+			var found bool
+			blob, found = o.cache.GetBlob(operations)
+			if found {
+				return
+			}
+
+			// This only happens if the freshly resized image is dropped from cache too quickly
+			o.Lock()
+			o.inProgress[key] = sync.NewCond(&sync.Mutex{})
+			o.Unlock()
+		}
+
 		o.tokens.Borrow()
 		defer o.tokens.Return()
-
-		//Check if some other thread already cached the image while we were blocked
-		if blob, found := o.cache.GetBlob(operations); found {
-			return blob, nil
-		}
 
 		img := images.NewImage()
 		defer img.Destroy()
