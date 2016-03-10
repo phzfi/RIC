@@ -20,18 +20,18 @@ function getImage() {
   var id = document.getElementById('imgname').value;
   var imgW = document.getElementById('imdiv').clientWidth;
   var imgH = document.getElementById('imdiv').clientHeight;
-  var zoom = Math.round((window.outerWidth / (window.innerWidth + 18 / window.devicePixelRatio))*100) / 100;
   
-  // if large screen is zoomed in
-  if (screen.width > 1000 && zoom != 1) {
+  
+  // detect zoom for large computer screens
+  if (screen.width > 1000) {
 	  // set maximum img-element css size
 	  // and "squeeze" HQ image into that
 	  var I = document.getElementById('I');
 	  I.width = imgW;
 	  I.height = imgH;
 	  
-	  imgW *= zoom;
-	  imgH *= zoom;
+	  imgW = Math.round(imgW * window.devicePixelRatio);
+	  imgH = Math.round(imgH * window.devicePixelRatio);
   }
 
   if (id.indexOf('.') === -1) {
@@ -73,8 +73,7 @@ function setScreenInfo() {
   text += '<br>' + 'imgdiv clientHeight: ' + document.getElementById('imdiv').clientHeight;
   text += '<br>' + 'window.innerWidth: ' + window.innerWidth;
   text += '<br>' + 'window.outerWidth: ' + window.outerWidth + '<br>';
-  text += '<br>' + 'Exact Zoom: ' + window.outerWidth / (window.innerWidth + 18/dpr);
-  text += '<br>' + 'Rounded Zoom: ' + Math.round((window.outerWidth / (window.innerWidth + 18/dpr))*100) / 100;
+  text += '<br> Zoom (for screens > 1000 css-px): ' + dpr;
   if (screen.width > 1000)
 	text += '<br> Computer screen';
   else
