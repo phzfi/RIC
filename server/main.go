@@ -74,21 +74,6 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func getParams(a *fasthttp.Args) (w *uint, h *uint, m string) {
-	qw, e := a.GetUint("width")
-	if e == nil {
-		uqw := uint(qw)
-		w = &uqw
-	}
-	qh, e := a.GetUint("height")
-	if e == nil {
-		uqh := uint(qh)
-		h = &uqh
-	}
-
-	m = string(a.Peek("mode"))
-	return
-}
 
 // Respond to POST message by saying Hello
 func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
