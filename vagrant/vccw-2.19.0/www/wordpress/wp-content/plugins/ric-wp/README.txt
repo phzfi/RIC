@@ -25,11 +25,13 @@ Replace URI variable with your RIC server URI in "client.js" in your "ric-wp" pl
 
 When creating your image divs, use the following format: 
 
-<div style="height: [your_image_height]px; width: [your_image_width]px;">
-	<img id="[your_image_id]" class="ricimg"></img>
+<div class="ricdiv" style="height:[your_image_height]px; width:[your_image_width]px;">
+	<img data-id="[your_image_id]" data-mode="nofit" class="ricimg"></img>
 </div>
 
 Where id is given with or without the image format ending. The height and width are the dimensions of the image queried from the RIC image server.
+Resize mode is optional and aspect ratio is preserved by default.
+Width and height can be left blank, in which case the image is fit to the content width.
 
 == Changelog ==
 
