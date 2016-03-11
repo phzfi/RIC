@@ -21,8 +21,7 @@ This section describes how to install the plugin and get it working.
 
 == Instructions ==
 
-Replace URI variable with your RIC server URI in "client.js" in your "ric-wp" plugin folder.
-
+Define RIC image server url in wordpress admin site for ric-wp plugin settings.
 When creating your image divs, use the following format: 
 
 <div class="ricdiv" style="height:[your_image_height]px; width:[your_image_width]px;">
