@@ -3,7 +3,7 @@ package images
 import (
 	"errors"
 	"fmt"
-	"github.com/joonazan/imagick/imagick"
+	"gopkg.in/gographics/imagick.v2/imagick"
 	"path/filepath"
 )
 

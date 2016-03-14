@@ -3,6 +3,7 @@ package ops
 import "github.com/phzfi/RIC/server/images"
 
 type Operation interface {
+	GetKey() string
 	Apply(images.Image) error
 }
 
