@@ -116,11 +116,52 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	if imageSource.AddRoot(".") != nil {
 		log.Println("Root not added .")
 	}
+	logging.Debug("Reading watermarker config")
+
 	imgpath, err := conf.GetString("watermark", "path")
-	watermarker := ops.MakeWatermarker(imgpath)
+	if err != nil {
+		log.Fatal("Error reading path for watermark image. " + err.Error())
+	}
+
+	minHeight, err := conf.GetInt("watermark", "minheight")
+	if err != nil {
+		log.Fatal("Error reading config size minimum height restriction. " + err.Error())
+	}
+
+	minWidth, err := conf.GetInt("watermark", "minwidth")
+	if err != nil {
+		log.Fatal("Error reading config size minimum width restriction. " + err.Error())
+	}
+
+	maxHeight, err := conf.GetInt("watermark", "maxheight")
+	if err != nil {
+		log.Fatal("Error reading config size maximum height restriction. " + err.Error())
+	}
+
+	maxWidth, err := conf.GetInt("watermark", "maxwidth")
+	if err != nil {
+		log.Fatal("Error reading config size maximum width restriction. " + err.Error())
+	}
+
+	addMark, err := conf.GetBool("watermark", "addmark")
+	if err != nil {
+		log.Fatal("Error reading config addmark value. " + err.Error())
+	}
+
+	ver, err := conf.GetFloat64("watermark", "vertical")
+	if err != nil {
+		log.Fatal("Error reading config vertical alignment. " + err.Error())
+	}
+
+	hor, err := conf.GetFloat64("watermark", "horizontal")
+	if err != nil {
+		log.Fatal("Error reading config horizontal alignment. " + err.Error())
+	}
+
+	watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
 
 	if err != nil {
-		log.Fatal("Error creating listener:" + err.Error())
+		log.Fatal("Error creating watermarker:" + err.Error())
 	}
 
 	// Configure handler

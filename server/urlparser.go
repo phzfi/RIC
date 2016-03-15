@@ -86,49 +86,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	watermark := func() {
-		logging.Debug("Reading size restrictions")
-		minHeight, err := conf.GetInt("watermark", "minheight")
-		if err != nil {
-			logging.Debug("Error reading config size minimum height restriction. " + err.Error())
-			return
-		}
-		minWidth, err := conf.GetInt("watermark", "minwidth")
-		if err != nil {
-			logging.Debug("Error reading config size minimum width restriction. " + err.Error())
-			return
-		}
-		maxHeight, err := conf.GetInt("watermark", "maxheight")
-		if err != nil {
-			logging.Debug("Error reading config size maximum height restriction. " + err.Error())
-			return
-		}
-		maxWidth, err := conf.GetInt("watermark", "maxwidth")
-		if err != nil {
-			logging.Debug("Error reading config size maximum width restriction. " + err.Error())
-			return
-		}
-		addMark, err := conf.GetBool("watermark", "addmark")
-		if err != nil {
-			logging.Debug("Error reading config addmark value. " + err.Error())
-			return
-		}
-
-		ver, err := conf.GetFloat64("watermark", "vertical")
-		if err != nil {
-			logging.Debug("Error reading config vertical alignment. " + err.Error())
-			return
-		}
-		hor, err := conf.GetFloat64("watermark", "horizontal")
-		if err != nil {
-			logging.Debug("Error reading config horizontal alignment. " + err.Error())
-			return
-		}
-
-		heightOK := h > minHeight && h < maxHeight
-		widthOK := w > minWidth && w < maxWidth
-		if addMark && heightOK && widthOK {
+		heightOK := h > marker.Minheight && h < marker.Maxheight
+		widthOK := w > marker.Minwidth && w < marker.Maxwidth
+		if marker.AddMark && heightOK && widthOK {
 			logging.Debug("Adding watermarkOp")
-			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, hor, ver))
+			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))
 		}
 	}
 
