@@ -6,11 +6,12 @@ import (
 	"strings"
 )
 
+
 func init() {
 	imagick.Initialize()
 }
 
-// Imageblob is just an image file dumped, byte by byte to an byte array.
+// ImageBlob is just an image file dumped, byte by byte to an byte array.
 type ImageBlob []byte
 
 // Image is an uncompressed image that must be convertd to blob before serving to a client.
@@ -37,12 +38,12 @@ func (img Image) Convert(ext string) (err error) {
 }
 
 // Returns image width
-func (img Image) GetWidth() (width int) {
+func (img Image) GetWidth() int {
 	return int(img.GetImageWidth())
 }
 
 // Returns image height
-func (img Image) GetHeight() (height int) {
+func (img Image) GetHeight() int {
 	return int(img.GetImageHeight())
 }
 
@@ -59,4 +60,12 @@ func (img Image) GetExtension() (ext string) {
 // Method for converting Image to ImageBlob.
 func (img Image) Blob() ImageBlob {
 	return img.GetImageBlob()
+}
+
+// Watermark adds watermark Image to img. Parameters horizontal and vertical tell where
+// watermark is placed. 0.0, 0.0 for leftmost uppercorner and 1.0, 1.0 for rigthmost lower corner.
+func (img Image) Watermark(watermark Image, horizontal, vertical float64) error {
+	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
+	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
+	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)
 }
