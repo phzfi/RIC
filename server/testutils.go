@@ -10,6 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"net"
 	"time"
+	"log"
 )
 
 // Port will be incremented for each server created in the test
@@ -18,10 +19,10 @@ var port = 8022
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
 	// Start the server
-	conf, err := config.ReadConfig("testconfig.ini")
+	conf, err := config.ReadConfig("config/testconfig.ini")
 
 	if err != nil {
-		logging.Debug("Error while reading config" + err.Error())
+		log.Fatal("Error while reading config" + err.Error())
 		return
 	}
 
