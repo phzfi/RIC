@@ -23,7 +23,7 @@ func NewImage() Image {
 	return Image{imagick.NewMagickWand()}
 }
 
-// Clone an image. Remember images and made clones need to be destroyed using Destroy(), ToBlob() or Resize().
+// Clone an image. Remember images and made clones need to be destroyed using Destroy().
 func (img Image) Clone() Image {
 	return Image{img.MagickWand.Clone()}
 }
@@ -38,12 +38,12 @@ func (img Image) Convert(ext string) (err error) {
 }
 
 // Returns image width
-func (img Image) GetWidth() (width int) {
+func (img Image) GetWidth() int {
 	return int(img.GetImageWidth())
 }
 
 // Returns image height
-func (img Image) GetHeight() (height int) {
+func (img Image) GetHeight() int {
 	return int(img.GetImageHeight())
 }
 
@@ -57,14 +57,14 @@ func (img Image) GetExtension() (ext string) {
 	return
 }
 
-// Method for converting Image to ImageBlob. Note: Method Destroys the used Image and frees the memory used.
-func (img Image) Blob() (blob ImageBlob) {
+// Method for converting Image to ImageBlob.
+func (img Image) Blob() ImageBlob {
 	return img.GetImageBlob()
 }
 
 // Watermark adds watermark Image to img. Parameters horizontal and vertical tell where
 // watermark is placed. 0.0, 0.0 for leftmost uppercorner and 1.0, 1.0 for rigthmost lower corner.
-func (img Image) Watermark(watermark Image, horizontal, vertical float64) (err error) {
+func (img Image) Watermark(watermark Image, horizontal, vertical float64) error {
 	x := int(float64((img.GetWidth() - watermark.GetWidth())) * horizontal)
 	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
 	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)
