@@ -10,7 +10,7 @@ import (
 type Operator struct {
 	cache Cacher
 
-	sync.Mutex
+	sync.RWMutex
 	inProgress map[string]*sync.RWMutex
 	tokens     TokenPool
 }
@@ -53,19 +53,20 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 	if start == len(operations) {
 		return startimage, nil
 	} else {
-		o.Lock()
+		o.RLock()
 		cond, inProgress := o.inProgress[key]
+		o.RUnlock()
+
 		if !inProgress {
 			// image may have entered cache while this goroutine moved to this place in code
 			var found bool
 			blob, found = o.cache.GetBlob(key)
 			if found {
-				o.Unlock()
 				return
 			}
+
 			cond = o.addInProgress(key)
 		}
-		o.Unlock()
 
 		if inProgress {
 			// Blocks until image has been processed
@@ -78,9 +79,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 			}
 
 			// This only happens if the freshly resized image is dropped from cache too quickly
-			o.Lock()
 			o.addInProgress(key)
-			o.Unlock()
 		}
 
 		o.tokens.Borrow()
@@ -108,10 +107,14 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 	return
 }
 
-func (o Operator) addInProgress(key string) *sync.RWMutex {
+func (o *Operator) addInProgress(key string) *sync.RWMutex {
 	m := &sync.RWMutex{}
 	m.Lock()
+
+	o.Lock()
 	o.inProgress[key] = m
+	o.Unlock()
+
 	return m
 }
 
