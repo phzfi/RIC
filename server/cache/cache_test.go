@@ -2,13 +2,10 @@ package cache
 
 import (
 	"bytes"
-	"os"
-	"path/filepath"
+	"github.com/phzfi/RIC/server/testutils"
 	"testing"
 	"time"
 )
-
-const cacheFolder = "/tmp/cachentestaus"
 
 func TestMemCache(t *testing.T) {
 	allTests(t, setupMemcache)
@@ -16,32 +13,13 @@ func TestMemCache(t *testing.T) {
 
 func TestDiskCache(t *testing.T) {
 	allTests(t, func() (*DummyPolicy, *Cache) {
-		removeContents(cacheFolder)
+		testutils.RemoveContents(testutils.CacheFolder)
 		return setupDiskCache()
 	})
 }
 
-func removeContents(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func TestDiskCachePersistence(t *testing.T) {
-	id := cacheKey("testdiskpersist")
+	id := string("testdiskpersist")
 	data := []byte{1, 2, 3, 4, 7}
 
 	_, cache := setupDiskCache()
@@ -63,7 +41,7 @@ func TestDiskCachePersistence(t *testing.T) {
 
 func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
-	cache = NewDiskCache(cacheFolder, 100, dp)
+	cache = NewDiskCache(testutils.CacheFolder, 100, dp)
 	return
 }
 
@@ -78,7 +56,7 @@ const (
 	Pop
 )
 
-type Log map[cacheKey][]uint
+type Log map[string][]uint
 
 type DummyPolicy struct {
 	fifo Policy
@@ -87,21 +65,21 @@ type DummyPolicy struct {
 	pops int
 }
 
-func (d DummyPolicy) Visit(k cacheKey) {
+func (d DummyPolicy) Visit(k string) {
 	d.log(k, Visit)
 	d.fifo.Visit(k)
 }
 
-func (d DummyPolicy) log(k cacheKey, t uint) {
+func (d DummyPolicy) log(k string, t uint) {
 	d.loki[k] = append(d.loki[k], t)
 }
 
-func (d DummyPolicy) Push(k cacheKey) {
+func (d DummyPolicy) Push(k string) {
 	d.log(k, Push)
 	d.fifo.Push(k)
 }
 
-func (d *DummyPolicy) Pop() cacheKey {
+func (d *DummyPolicy) Pop() string {
 	d.pops += 1
 	return d.fifo.Pop()
 }
@@ -119,7 +97,7 @@ func setupMemcache() (dp *DummyPolicy, cache *Cache) {
 type setupFunc func() (dp *DummyPolicy, cache *Cache)
 
 func testCache(t *testing.T, setup setupFunc) {
-	id := cacheKey("testcache")
+	id := string("testcache")
 	dp, cache := setup()
 
 	found := func() bool {
@@ -150,9 +128,9 @@ func testCache(t *testing.T, setup setupFunc) {
 
 func testCacheExit(t *testing.T, setup setupFunc) {
 	var (
-		id1 = cacheKey("cacheexit1")
-		id2 = cacheKey("cacheexit2")
-		id3 = cacheKey("cacheexit3")
+		id1 = string("cacheexit1")
+		id2 = string("cacheexit2")
+		id3 = string("cacheexit3")
 	)
 	dp, cache := setup()
 

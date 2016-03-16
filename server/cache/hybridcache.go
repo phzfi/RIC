@@ -8,11 +8,11 @@ import (
 // Images are stored in every cache
 type HybridCache []*Cache
 
-func (caches HybridCache) GetBlob(key cacheKey) (images.ImageBlob, bool) {
+func (caches HybridCache) GetBlob(string string) (images.ImageBlob, bool) {
 	for i, cache := range caches {
-		if blob, found := cache.GetBlob(key); found {
+		if blob, found := cache.GetBlob(string); found {
 			for j := 0; j < i; j++ {
-				caches[j].AddBlob(key, blob)
+				caches[j].AddBlob(string, blob)
 			}
 			return blob, true
 		}
@@ -20,8 +20,8 @@ func (caches HybridCache) GetBlob(key cacheKey) (images.ImageBlob, bool) {
 	return nil, false
 }
 
-func (caches HybridCache) AddBlob(key cacheKey, blob images.ImageBlob) {
+func (caches HybridCache) AddBlob(string string, blob images.ImageBlob) {
 	for _, cache := range caches {
-		cache.AddBlob(key, blob)
+		cache.AddBlob(string, blob)
 	}
 }
