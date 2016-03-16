@@ -3,7 +3,6 @@ package cache
 import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"github.com/phzfi/RIC/server/ops"
 	"sync"
 )
 
@@ -32,8 +31,7 @@ type Storer interface {
 }
 
 // Gets an image blob of requested dimensions
-func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
-	key := toKey(operations)
+func (c *Cache) GetBlob(key cacheKey) (blob images.ImageBlob, found bool) {
 
 	b64 := keyToBase64(key)
 	logging.Debugf("Cache get with key: %v", b64)
@@ -55,7 +53,7 @@ func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, foun
 	return
 }
 
-func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
+func (c *Cache) AddBlob(key cacheKey, blob images.ImageBlob) {
 
 	// This is the only point where the cache is mutated.
 	// While this runs the there can be no reads from "blobs".
@@ -65,7 +63,6 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 		return
 	}
 
-	key := toKey(operations)
 	logging.Debugf("Cache add: %v", keyToBase64(key))
 
 	c.Lock()

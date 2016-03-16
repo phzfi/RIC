@@ -2,7 +2,6 @@ package cache
 
 import (
 	"bytes"
-	"github.com/phzfi/RIC/server/ops"
 	"os"
 	"path/filepath"
 	"testing"
@@ -42,7 +41,7 @@ func removeContents(dir string) error {
 }
 
 func TestDiskCachePersistence(t *testing.T) {
-	id := []ops.Operation{&DummyOperation{}, &DummyOperation{}}
+	id := cacheKey("testdiskpersist")
 	data := []byte{1, 2, 3, 4, 7}
 
 	_, cache := setupDiskCache()
@@ -120,7 +119,7 @@ func setupMemcache() (dp *DummyPolicy, cache *Cache) {
 type setupFunc func() (dp *DummyPolicy, cache *Cache)
 
 func testCache(t *testing.T, setup setupFunc) {
-	id := []ops.Operation{&DummyOperation{}}
+	id := cacheKey("testcache")
 	dp, cache := setup()
 
 	found := func() bool {
@@ -136,7 +135,7 @@ func testCache(t *testing.T, setup setupFunc) {
 
 	time.Sleep(100) // only necessary for pure disk cache
 
-	if tx := dp.loki[toKey(id)]; len(tx) != 1 || tx[0] != Push {
+	if tx := dp.loki[id]; len(tx) != 1 || tx[0] != Push {
 		t.Fatal("Cache did not use policy properly")
 	}
 
@@ -144,17 +143,16 @@ func testCache(t *testing.T, setup setupFunc) {
 		t.Fatal("Not found after adding to cache")
 	}
 
-	if tx := dp.loki[toKey(id)]; len(tx) != 2 || tx[1] != Visit {
+	if tx := dp.loki[id]; len(tx) != 2 || tx[1] != Visit {
 		t.Fatal("Cache did not use policy properly")
 	}
 }
 
 func testCacheExit(t *testing.T, setup setupFunc) {
 	var (
-		do  = &DummyOperation{}
-		id1 = []ops.Operation{do}
-		id2 = append(id1, do)
-		id3 = append(id2, do)
+		id1 = cacheKey("cacheexit1")
+		id2 = cacheKey("cacheexit2")
+		id3 = cacheKey("cacheexit3")
 	)
 	dp, cache := setup()
 

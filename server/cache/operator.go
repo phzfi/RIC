@@ -15,8 +15,8 @@ type Operator struct {
 }
 
 type Cacher interface {
-	GetBlob([]ops.Operation) (images.ImageBlob, bool)
-	AddBlob([]ops.Operation, images.ImageBlob)
+	GetBlob(cacheKey) (images.ImageBlob, bool)
+	AddBlob(cacheKey, images.ImageBlob)
 }
 
 func MakeOperator(mm uint64, cacheFolder string) Operator {
@@ -39,7 +39,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 
 	for start = len(operations); start > 0; start-- {
 		var found bool
-		startimage, found = o.cache.GetBlob(operations[:start])
+		startimage, found = o.cache.GetBlob(toKey(operations[:start]))
 		if found {
 			break
 		}
@@ -53,7 +53,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		if !inProgress {
 			// image may have entered cache while this goroutine moved to this place in code
 			var found bool
-			blob, found = o.cache.GetBlob(operations)
+			blob, found = o.cache.GetBlob(key)
 			if found {
 				o.Unlock()
 				return
@@ -67,7 +67,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 			cond.RLock()
 
 			var found bool
-			blob, found = o.cache.GetBlob(operations)
+			blob, found = o.cache.GetBlob(key)
 			if found {
 				return
 			}
@@ -92,7 +92,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		o.applyOpsToImage(operations[start:], img)
 		blob = img.Blob()
 
-		o.cache.AddBlob(operations, blob)
+		o.cache.AddBlob(key, blob)
 
 		cond.Unlock()
 		o.Lock()

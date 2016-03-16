@@ -88,6 +88,6 @@ func TestDenyIdenticalOperations(t *testing.T) {
 
 	// Only 2 operations should've been done - others found from cache
 	if len(log) != 2 {
-		t.Fatal(fmt.Sprintf("%v operations done. Expected 4", len(log)))
+		t.Fatal(fmt.Sprintf("%v operations done. Expected 2", len(log)))
 	}
 }
