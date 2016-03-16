@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 // initializes cache with images found in given folder
@@ -49,6 +50,7 @@ func keyToBase64(k cacheKey) string {
 }
 
 type DiskStore struct {
+	sync.RWMutex
 	keyToPath map[cacheKey]string
 
 	folder string
@@ -62,7 +64,10 @@ func NewDiskStore(folder string) *DiskStore {
 }
 
 func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
+	d.RLock()
 	path, ok := d.keyToPath[key]
+	d.RUnlock()
+
 	if ok {
 		var err error
 		blob, err = ioutil.ReadFile(path)
@@ -77,23 +82,30 @@ func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
 func (d *DiskStore) Store(key cacheKey, blob images.ImageBlob) {
 	filename := keyToBase64(key)
 	path := filepath.Join(filepath.FromSlash(d.folder), filename)
-	d.keyToPath[key] = path
-	err := ioutil.WriteFile(path, blob, os.ModePerm)
-	if err != nil {
-		log.Println("Unable to write file into disk cache:", err)
-	}
+
+	go func() {
+		err := ioutil.WriteFile(path, blob, os.ModePerm)
+		if err != nil {
+			log.Println("Unable to write file into disk cache:", err)
+		}
+		d.Lock()
+		d.keyToPath[key] = path
+		d.Unlock()
+	}()
 }
 
 func (d *DiskStore) Delete(key cacheKey) (size uint64) {
+	d.Lock()
 	path := d.keyToPath[key]
+	delete(d.keyToPath, key)
+	d.Unlock()
 
 	size = fileSize(path)
 
 	err := os.Remove(path)
 	if err != nil {
-		log.Println("Error deleting file in from disk cache:", err)
+		log.Println("Error deleting file from disk cache:", err)
 	}
-	delete(d.keyToPath, key)
 
 	return
 }
