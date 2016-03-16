@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/config"
+	"github.com/phzfi/RIC/server/logging"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
@@ -15,7 +17,7 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Operation, err error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, err error) {
 	args := uri.QueryArgs()
 	filename := string(uri.Path())
 	w, werr := args.GetUint("width")
@@ -83,6 +85,15 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 		}
 	}
 
+	watermark := func() {
+		heightOK := h > marker.Minheight && h < marker.Maxheight
+		widthOK := w > marker.Minwidth && w < marker.Maxwidth
+		if marker.AddMark && heightOK && widthOK {
+			logging.Debug("Adding watermarkOp")
+			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))
+		}
+	}
+
 	switch mode {
 	case "resize":
 		resize()
@@ -93,6 +104,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource) (operations []ops.Opera
 	default:
 		resize()
 	}
+	watermark()
 
 	ext := filepath.Ext(filename)
 	if ext != "" {
