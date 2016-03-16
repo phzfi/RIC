@@ -9,6 +9,10 @@ type LiquidRescale struct {
 	Width, Height int
 }
 
+func (r LiquidRescale) Marshal() string {
+	return string(liquidRescale) + int32ToString(int32(r.Width)) + int32ToString(int32(r.Height))
+}
+
 func (r LiquidRescale) Apply(img images.Image) error {
 	logging.Debugf("Liquid rescaling image to: %v, %v", r.Width, r.Height)
 	// The third argument to LiquidRescaleImage is the maximum transversal step, or how many pixels a seam can move sideways.

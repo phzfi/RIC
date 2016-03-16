@@ -8,6 +8,30 @@ import (
 	"testing"
 )
 
+type CommonTestCase struct {
+	test images.TestCaseAll
+	op ops.Operation
+}
+
+type CommonTest func (CommonTestCase) (error)
+
+func threadedTesting(cases []CommonTestCase, test CommonTest) (err error) {
+	sem := make(chan error, len(cases))
+	for _, c := range cases {
+		go func (tc CommonTestCase) {
+			sem <- test(tc)
+		} (c)
+	}
+	for range cases {
+		var verr = <- sem
+		if verr != nil && err == nil {
+			// Pick the first error but wait for termination
+			err = verr
+		}
+	}
+	return
+}
+
 func TestOperatorConvert(t *testing.T) {
 
 	operator, src := SetupOperatorSource()
@@ -20,33 +44,45 @@ func TestOperatorConvert(t *testing.T) {
 	resfolder := "testresults/common/"
 	tolerance := 0.002
 
-	cases := []images.FormatTestCase{
-		{images.TestCase{testimage, testfolder + "converted.jpg", resfolder + "converted.jpg"}, "JPEG"},
-		{images.TestCase{testimage, testfolder + "converted.webp", resfolder + "converted.webp"}, "WEBP"},
-		{images.TestCase{testimage, testfolder + "converted.tiff", resfolder + "converted.tiff"}, "TIFF"},
-		{images.TestCase{testimage, testfolder + "converted.gif", resfolder + "converted.gif"}, "GIF"},
-		{images.TestCase{testimage, testfolder + "converted.png", resfolder + "converted.png"}, "PNG"},
-		{images.TestCase{testimage, testfolder + "converted.bmp", resfolder + "converted.bmp"}, "BMP"},
-		{images.TestCase{testimage2, testfolder + "converted2.jpg", resfolder + "converted2.jpg"}, "JPEG"},
-		{images.TestCase{testimage2, testfolder + "converted2.webp", resfolder + "converted2.webp"}, "WEBP"},
-		{images.TestCase{testimage3, testfolder + "converted3.jpg", resfolder + "converted3.jpg"}, "JPEG"},
-		{images.TestCase{testimage3, testfolder + "converted3.webp", resfolder + "converted3.webp"}, "WEBP"},
-		{images.TestCase{testimage4, testfolder + "converted4.jpg", resfolder + "converted4.jpg"}, "JPEG"},
-		{images.TestCase{testimage4, testfolder + "converted4.webp", resfolder + "converted4.webp"}, "WEBP"},
+	var conv = func (a, b, c, d string) CommonTestCase {
+		va := images.TestCase{a, testfolder + b, resfolder + c}
+		vb := images.TestCaseAll{va, d, -1, -1}
+		return CommonTestCase{vb, ops.Convert{d}}
 	}
 
-	for _, c := range cases {
-		logging.Debug(fmt.Sprintf("Testing convert: %v, %v, %v, %v", c.Testfn, c.Reffn, c.Format, c.Resfn))
+	cases := []CommonTestCase{
+		conv(testimage, "converted.jpg", "converted.jpg", "JPEG"),
+		conv(testimage, "converted.webp", "converted.webp", "WEBP"),
+		conv(testimage, "converted.tiff", "converted.tiff", "TIFF"),
+		conv(testimage, "converted.gif", "converted.gif", "GIF"),
+		conv(testimage, "converted.png", "converted.png", "PNG"),
+		conv(testimage, "converted.bmp", "converted.bmp", "BMP"),
+		conv(testimage2, "converted2.jpg", "converted2.jpg", "JPEG"),
+		conv(testimage2, "converted2.webp", "converted2.webp", "WEBP"),
+		conv(testimage3, "converted3.jpg", "converted3.jpg", "JPEG"),
+		conv(testimage3, "converted3.webp", "converted3.webp", "WEBP"),
+		conv(testimage4, "converted4.jpg", "converted4.jpg", "JPEG"),
+		conv(testimage4, "converted4.webp", "converted4.webp", "WEBP"),
+	}
 
-		blob, err := operator.GetBlob(src.LoadImageOp(c.Testfn), ops.Convert{c.Format})
+	var test = func (c CommonTestCase) (err error) {
+		var vt = c.test
+		var vo = c.op.(ops.Convert)
+		logging.Debug(fmt.Sprintf("Testing convert: %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.Format, vt.Resfn))
+
+		blob, err := operator.GetBlob(src.LoadImageOp(vt.Testfn), vo)
 		if err != nil {
-			t.Fatal(err)
+			return
 		}
 
-		err = images.FormatTest(c, blob, tolerance)
-		if err != nil {
-			t.Fatal(err)
-		}
+		var ft = images.FormatTestCase{images.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.Format}
+		err = images.FormatTest(ft, blob, tolerance)
+		return
+	}
+
+	var verr = threadedTesting(cases, test)
+	if verr != nil {
+		t.Fatal(verr)
 	}
 }
 
@@ -62,34 +98,46 @@ func TestOperatorResize(t *testing.T) {
 	resfolder := "testresults/common/"
 	tolerance := 0.002
 
-	cases := []images.SizeTestCase{
-		{images.TestCase{testimage, testfolder + "1_100x100.jpg", resfolder + "1_100x100.jpg"}, 100, 100},
-		{images.TestCase{testimage, testfolder + "1_200x200.jpg", resfolder + "1_200x200.jpg"}, 200, 200},
-		{images.TestCase{testimage, testfolder + "1_300x400.jpg", resfolder + "1_300x400.jpg"}, 300, 400},
-		{images.TestCase{testimage, testfolder + "1_500x200.jpg", resfolder + "1_500x200.jpg"}, 500, 200},
-		{images.TestCase{testimage, testfolder + "1_30x20.jpg", resfolder + "1_30x20.jpg"}, 30, 20},
-		{images.TestCase{testimage, testfolder + "1_600x600.jpg", resfolder + "1_600x600.jpg"}, 600, 600},
-		{images.TestCase{testimage2, testfolder + "2_100x100.jpg", resfolder + "2_100x100.jpg"}, 100, 100},
-		{images.TestCase{testimage2, testfolder + "2_200x200.jpg", resfolder + "2_200x200.jpg"}, 200, 200},
-		{images.TestCase{testimage3, testfolder + "3_100x100.jpg", resfolder + "3_100x100.jpg"}, 100, 100},
-		{images.TestCase{testimage3, testfolder + "3_200x200.jpg", resfolder + "3_200x200.jpg"}, 200, 200},
-		{images.TestCase{testimage4, testfolder + "4_100x100.jpg", resfolder + "4_100x100.jpg"}, 100, 100},
-		{images.TestCase{testimage4, testfolder + "4_200x200.jpg", resfolder + "4_200x200.jpg"}, 200, 200},
+	var res = func (a, b, c string, d, e int) CommonTestCase {
+		va := images.TestCase{a, testfolder + b, resfolder + c}
+		vb := images.TestCaseAll{va, "Whatever", d, e}
+		return CommonTestCase{vb, ops.Resize{d, e}}
 	}
 
-	for _, c := range cases {
+	cases := []CommonTestCase{
+		res(testimage, "1_100x100.jpg", "1_100x100.jpg", 100, 100),
+		res(testimage, "1_200x200.jpg", "1_200x200.jpg", 200, 200),
+		res(testimage, "1_300x400.jpg", "1_300x400.jpg", 300, 400),
+		res(testimage, "1_500x200.jpg", "1_500x200.jpg", 500, 200),
+		res(testimage, "1_30x20.jpg", "1_30x20.jpg", 30, 20),
+		res(testimage, "1_600x600.jpg", "1_600x600.jpg", 600, 600),
+		res(testimage2, "2_100x100.jpg", "2_100x100.jpg", 100, 100),
+		res(testimage2, "2_200x200.jpg", "2_200x200.jpg", 200, 200),
+		res(testimage3, "3_100x100.jpg", "3_100x100.jpg", 100, 100),
+		res(testimage3, "3_200x200.jpg", "3_200x200.jpg", 200, 200),
+		res(testimage4, "4_100x100.jpg", "4_100x100.jpg", 100, 100),
+		res(testimage4, "4_200x200.jpg", "4_200x200.jpg", 200, 200),
+	}
 
-		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", c.Testfn, c.Reffn, c.W, c.H, c.Resfn))
 
-		blob, err := operator.GetBlob(src.LoadImageOp(c.Testfn), ops.Resize{c.W, c.H})
+	var test = func (c CommonTestCase) (err error) {
+		var vt = c.test
+		var vo = c.op.(ops.Resize)
+		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.W, vt.H, vt.Resfn))
+
+		blob, err := operator.GetBlob(src.LoadImageOp(vt.Testfn), vo)
 		if err != nil {
-			t.Fatal(err)
+			return
 		}
 
-		err = images.SizeTest(c, blob, tolerance)
-		if err != nil {
-			t.Fatal(err)
-		}
+		var rt = images.SizeTestCase{images.TestCase{ vt.Testfn, vt.Reffn, vt.Resfn }, vt.W, vt.H}
+		err = images.SizeTest(rt, blob, tolerance)
+		return
+	}
+
+	var verr = threadedTesting(cases, test)
+	if verr != nil {
+		t.Fatal(verr)
 	}
 }
 
@@ -103,24 +151,35 @@ func TestOperatorLiquidRescale(t *testing.T) {
 	resfolder := "testresults/common/"
 	tolerance := 0.05
 
-	cases := []images.SizeTestCase{
-		{images.TestCase{testimage, testfolder + "liquid1_100x100.jpg", resfolder + "liquid1_100x100.jpg"}, 100, 100},
-		{images.TestCase{testimage, testfolder + "liquid1_500x200.jpg", resfolder + "liquid1_500x200.jpg"}, 500, 200},
-		{images.TestCase{testimage2, testfolder + "liquid2_200x200.jpg", resfolder + "liquid2_200x200.jpg"}, 200, 200},
+	var res = func (a, b, c string, d, e int) CommonTestCase {
+		va := images.TestCase{a, testfolder + b, resfolder + c}
+		vb := images.TestCaseAll{va, "Whatever", d, e}
+		return CommonTestCase{vb, ops.LiquidRescale{d, e}}
 	}
 
-	for _, c := range cases {
+	cases := []CommonTestCase{
+		res(testimage, "liquid1_100x100.jpg", "liquid1_100x100.jpg", 100, 100),
+		res(testimage, "liquid1_500x200.jpg", "liquid1_500x200.jpg", 500, 200),
+		res(testimage2, "liquid2_200x200.jpg", "liquid2_200x200.jpg", 200, 200),
+	}
 
-		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", c.Testfn, c.Reffn, c.W, c.H, c.Resfn))
+	var test = func (c CommonTestCase) (err error) {
+		var vt = c.test
+		var vo = c.op.(ops.LiquidRescale)
+		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.W, vt.H, vt.Resfn))
 
-		blob, err := operator.GetBlob(src.LoadImageOp(c.Testfn), ops.LiquidRescale{c.W, c.H})
+		blob, err := operator.GetBlob(src.LoadImageOp(vt.Testfn), vo)
 		if err != nil {
-			t.Fatal(err)
+			return
 		}
 
-		err = images.SizeTest(c, blob, tolerance)
-		if err != nil {
-			t.Fatal(err)
-		}
+		var rt = images.SizeTestCase{images.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.W, vt.H}
+		err = images.SizeTest(rt, blob, tolerance)
+		return
+	}
+
+	var verr = threadedTesting(cases, test)
+	if verr != nil {
+		t.Fatal(verr)
 	}
 }
