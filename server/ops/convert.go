@@ -11,7 +11,7 @@ type Convert struct {
 }
 
 func (c Convert) Marshal() string {
-	return string(convert) + c.Format + string(0)
+	return string(convertID) + c.Format + string(0)
 }
 
 func (c Convert) Apply(img images.Image) error {

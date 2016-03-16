@@ -10,7 +10,7 @@ type Resize struct {
 }
 
 func (r Resize) Marshal() string {
-	return string(resize) + int32ToString(int32(r.Width)) + int32ToString(int32(r.Height))
+	return string(resizeID) + int32ToString(uint32(r.Width)) + int32ToString(uint32(r.Height))
 }
 
 func (r Resize) Apply(img images.Image) error {
@@ -18,7 +18,7 @@ func (r Resize) Apply(img images.Image) error {
 	return img.Resize(r.Width, r.Height)
 }
 
-func int32ToString(x int32) string {
+func int32ToString(x uint32) string {
 	return string([]byte{
 		byte((x >> 24) & 0xff),
 		byte((x >> 16) & 0xff),

@@ -11,7 +11,7 @@ type loadImageOp struct {
 }
 
 func (i loadImageOp) Marshal() string {
-	return string(load) + i.id + string(0)
+	return string(loadID) + i.id + string(0)
 }
 
 func (i loadImageOp) Apply(img images.Image) error {

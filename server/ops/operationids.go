@@ -1,8 +1,9 @@
 package ops
 
 const (
-	resize = iota
-	liquidRescale
-	load
-	convert
+	resizeID = iota
+	liquidRescaleID
+	loadID
+	convertID
+	watemarkID
 )
