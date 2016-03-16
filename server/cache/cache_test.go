@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 const cacheFolder = "/tmp/cachentestaus"
@@ -46,6 +47,8 @@ func TestDiskCachePersistence(t *testing.T) {
 
 	_, cache := setupDiskCache()
 	cache.AddBlob(id, data)
+
+	time.Sleep(100)
 
 	_, cache = setupDiskCache()
 	recovered, ok := cache.GetBlob(id)
@@ -130,6 +133,8 @@ func testCache(t *testing.T, setup setupFunc) {
 	}
 
 	cache.AddBlob(id, make([]byte, 10))
+
+	time.Sleep(100) // only necessary for pure disk cache
 
 	if tx := dp.loki[toKey(id)]; len(tx) != 1 || tx[0] != Push {
 		t.Fatal("Cache did not use policy properly")

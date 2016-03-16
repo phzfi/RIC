@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 // initializes cache with images found in given folder
@@ -34,10 +35,13 @@ func NewDiskCache(folder string, mm uint64, policy Policy) *Cache {
 			log.Println("Malformed filename", fn, "in previously cached files:", err)
 			continue
 		}
+
 		key := cacheKey(bytes)
-		store.keyToPath[key] = fn
 		c.policy.Push(key)
-		c.currentMemory += fileSize(fn)
+
+		size := fileSize(fn)
+		store.entries[key] = entry{fn, size}
+		c.currentMemory += size
 	}
 
 	return c
@@ -49,28 +53,35 @@ func keyToBase64(k cacheKey) string {
 	return encoder.EncodeToString([]byte(k))
 }
 
+type keyToEntry map[cacheKey]entry
+
+type entry struct {
+	Path string
+	Size uint64
+}
+
 type DiskStore struct {
 	sync.RWMutex
-	keyToPath map[cacheKey]string
+	entries keyToEntry
 
 	folder string
 }
 
 func NewDiskStore(folder string) *DiskStore {
 	return &DiskStore{
-		keyToPath: make(map[cacheKey]string),
-		folder:    folder,
+		entries: make(keyToEntry),
+		folder:  folder,
 	}
 }
 
 func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
 	d.RLock()
-	path, ok := d.keyToPath[key]
+	entry, ok := d.entries[key]
 	d.RUnlock()
 
 	if ok {
 		var err error
-		blob, err = ioutil.ReadFile(path)
+		blob, err = ioutil.ReadFile(entry.Path)
 		if err != nil {
 			log.Println("Error reading file from disk cache:", err)
 			ok = false
@@ -89,25 +100,33 @@ func (d *DiskStore) Store(key cacheKey, blob images.ImageBlob) {
 			log.Println("Unable to write file into disk cache:", err)
 		}
 		d.Lock()
-		d.keyToPath[key] = path
+		d.entries[key] = entry{path, uint64(len(blob))}
 		d.Unlock()
 	}()
 }
 
-func (d *DiskStore) Delete(key cacheKey) (size uint64) {
+func (d *DiskStore) Delete(key cacheKey) uint64 {
 	d.Lock()
-	path := d.keyToPath[key]
-	delete(d.keyToPath, key)
-	d.Unlock()
+	entry, ok := d.entries[key]
 
-	size = fileSize(path)
-
-	err := os.Remove(path)
-	if err != nil {
-		log.Println("Error deleting file from disk cache:", err)
+	// Pretty dirty solution, but this path is only used if an image is deleted just after being cached.
+	for !ok {
+		d.Unlock()
+		time.Sleep(100)
+		d.Lock()
+		entry, ok = d.entries[key]
 	}
 
-	return
+	delete(d.entries, key)
+	d.Unlock()
+
+	go func() {
+		err := os.Remove(entry.Path)
+		if err != nil {
+			log.Println("Error deleting file from disk cache:", err)
+		}
+	}()
+	return entry.Size
 }
 
 func fileSize(path string) uint64 {
