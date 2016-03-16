@@ -54,7 +54,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 		return startimage, nil
 	} else {
 		o.RLock()
-		cond, inProgress := o.inProgress[key]
+		isReady, inProgress := o.inProgress[key]
 		o.RUnlock()
 
 		if !inProgress {
@@ -65,12 +65,12 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 				return
 			}
 
-			cond = o.addInProgress(key)
+			isReady = o.addInProgress(key)
 		}
 
 		if inProgress {
 			// Blocks until image has been processed
-			cond.RLock()
+			isReady.RLock()
 
 			var found bool
 			blob, found = o.cache.GetBlob(key)
@@ -98,7 +98,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 
 		o.cache.AddBlob(key, blob)
 
-		cond.Unlock()
+		isReady.Unlock()
 		o.Lock()
 		delete(o.inProgress, key)
 		o.Unlock()

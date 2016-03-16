@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const cacheFolder = "operatortests"
+const cacheFolder = "/tmp/operatortests"
 
 type DummyOperation struct {
 	log  *[]int

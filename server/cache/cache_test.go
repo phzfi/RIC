@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const cachefolder = "cachetests"
+const cachefolder = "/tmp/cachetests"
 
 func TestMemCache(t *testing.T) {
 	allTests(t, setupMemcache)
