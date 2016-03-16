@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const cacheFolder = "operatortests"
+
 type DummyOperation struct {
 	log  *[]int
 	name int
@@ -38,8 +40,8 @@ func TestOperator(t *testing.T) {
 		&DummyOperation{&log, 2},
 	}
 
-	testutils.RemoveContents(testutils.CacheFolder)
-	operator := MakeDefault(512*1024*1024, testutils.CacheFolder)
+	testutils.RemoveContents(cacheFolder)
+	operator := MakeDefault(512*1024*1024, cacheFolder)
 
 	_, err := operator.GetBlob(operations...)
 	if err != nil {
@@ -68,7 +70,7 @@ func TestDenyIdenticalOperations(t *testing.T) {
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 	}
-	operator := MakeDefault(512*1024*1024, testutils.CacheFolder)
+	operator := MakeDefault(512*1024*1024, cacheFolder)
 
 	// Channel to track amount of completed operations
 	c := make(chan bool, len(operations))

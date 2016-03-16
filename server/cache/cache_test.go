@@ -7,13 +7,15 @@ import (
 	"time"
 )
 
+const cachefolder = "cachetests"
+
 func TestMemCache(t *testing.T) {
 	allTests(t, setupMemcache)
 }
 
 func TestDiskCache(t *testing.T) {
 	allTests(t, func() (*DummyPolicy, *Cache) {
-		testutils.RemoveContents(testutils.CacheFolder)
+		testutils.RemoveContents(cachefolder)
 		return setupDiskCache()
 	})
 }
@@ -41,7 +43,7 @@ func TestDiskCachePersistence(t *testing.T) {
 
 func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
-	cache = NewDiskCache(testutils.CacheFolder, 100, dp)
+	cache = NewDiskCache(cachefolder, 100, dp)
 	return
 }
 

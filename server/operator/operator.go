@@ -35,7 +35,7 @@ func MakeDefault(mm uint64, cacheFolder string) Operator {
 	})
 }
 
-func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
+func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
 
 	key := toKey(operations)
 
@@ -94,7 +94,7 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		}
 
 		// TODO: do not ignore error
-		o.applyOpsToImage(operations[start:], img)
+		applyOpsToImage(operations[start:], img)
 		blob = img.Blob()
 
 		o.cache.AddBlob(key, blob)
@@ -115,7 +115,7 @@ func (o Operator) addInProgress(key string) *sync.RWMutex {
 	return m
 }
 
-func (o Operator) applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
+func applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
 	for _, op := range operations {
 		err = op.Apply(img)
 		if err != nil {

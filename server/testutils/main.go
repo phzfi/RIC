@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 )
 
-const CacheFolder = "/tmp/cachentestaus"
-
 func RemoveContents(dir string) error {
 	d, err := os.Open(dir)
 	if err != nil {
