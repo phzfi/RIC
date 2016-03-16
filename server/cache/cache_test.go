@@ -134,7 +134,7 @@ func testCache(t *testing.T, setup setupFunc) {
 
 	cache.AddBlob(id, make([]byte, 10))
 
-	time.Sleep(100) // only necessary for pure disk cache
+	time.Sleep(100 * time.Millisecond) // only necessary for pure disk cache
 
 	if tx := dp.loki[toKey(id)]; len(tx) != 1 || tx[0] != Push {
 		t.Fatal("Cache did not use policy properly")
