@@ -11,7 +11,7 @@ type DummyOperation struct {
 	name int
 }
 
-func (o *DummyOperation) GetKey() string {
+func (o *DummyOperation) Marshal() string {
 	return "test"
 }
 
