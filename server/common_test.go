@@ -149,7 +149,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 	testimage := testfolder + "toresize"
 	testimage2 := testfolder + "toresize2"
 	resfolder := "testresults/common/"
-	tolerance := 0.002
+	tolerance := 0.05
 
 	var res = func (a, b, c string, d, e int) CommonTestCase {
 		va := images.TestCase{a, testfolder + b, resfolder + c}

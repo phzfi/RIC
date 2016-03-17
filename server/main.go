@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gopkg.in/gographics/imagick.v2/imagick"
-	"github.com/phzfi/RIC/server/cache"
-	"github.com/phzfi/RIC/server/logging"
-	"github.com/phzfi/RIC/server/images"
-	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/config"
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/operator"
+	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
+	"gopkg.in/gographics/imagick.v2/imagick"
 	"log"
 	"net"
 	"strconv"
@@ -28,8 +28,8 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	config			config.Conf
-	operator    cache.Operator
+	config      config.Conf
+	operator    operator.Operator
 	imageSource ops.ImageSource
 	watermarker ops.Watermarker
 }
@@ -168,10 +168,10 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	logging.Debug("Configuring handler")
 	handler := &MyHandler{
 		requests:    0,
-		config: conf,
+		config:      conf,
 		imageSource: imageSource,
+		operator:    operator.MakeDefault(maxMemory, "/tmp/RICdiskcache"),
 		watermarker: watermarker,
-		operator:    cache.MakeOperator(maxMemory),
 	}
 
 	// Configure server
@@ -201,7 +201,7 @@ func main() {
 
 	def, err := conf.GetUint64("server", "memory")
 	if err != nil {
-		def = 512*1024*1024
+		def = 512 * 1024 * 1024
 	}
 	mem := flag.Uint64("m", def, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
