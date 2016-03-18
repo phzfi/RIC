@@ -3,7 +3,7 @@ import logging
 import codecs
 import random
 import traceback
-
+from os import path
 
 """
 urls_randomizer is used to randomize the urls.txt and turls.txt with a given
@@ -22,13 +22,14 @@ def main():
                          'Usage: "python urls_randomizer URLS_FILE SEED"')
         sys.exit(1)
     urls_file = sys.argv[1]
+    temp_file = '{:s}_temp.txt'.format(path.path.splitext(urls_file)[0])
     seed = sys.argv[2]
     try:
         seed = int(seed)
     except ValueError:
         logging.critical('Seed was not an integer')
     urls = read_urls(urls_file)
-    save_random_urls(urls, urls_file+'_temp.txt', seed)
+    save_random_urls(urls, temp_file, seed)
 
 
 def read_urls(urls_file):
