@@ -18,8 +18,8 @@ logging.basicConfig(filename='log/error.log',
 
 def main():
     if len(sys.argv) != 3:
-        logging.critical('Wrong number of arguments.',
-                         'Usage: "python urls_randomizer URLS_FILE SEED"')
+        logging.critical('Wrong number of arguments. ' +
+                         'Usage: "python urls_randomizer URLS_FILE SEED')
         sys.exit(1)
     urls_file = sys.argv[1]
     temp_file = '{:s}_temp.txt'.format(path.path.splitext(urls_file)[0])
