@@ -8,14 +8,14 @@ fi
 
 SEED=$1
 CONCURRENT=$2
-python urls_randomizer.py urls_no_webp.txt $SEED
-python urls_randomizer.py turls_no_webp.txt $SEED
-python urls_randomizer.py jurls_no_webp.txt $SEED
+python urls_randomizer.py urls_no_webp_local.txt $SEED
+python urls_randomizer.py turls_no_webp_local.txt $SEED
+python urls_randomizer.py jurls_no_webp_local.txt $SEED
 
 
-URLS_FILE=./urls_no_webp.txt_temp.txt
-TURLS_FILE=./turls_no_webp.txt_temp.txt
-JURLS_FILE=./jurls_no_webp.txt_temp.txt
+URLS_FILE=./urls_no_webp_local.txt_temp.txt
+TURLS_FILE=./turls_no_webp_local.txt_temp.txt
+JURLS_FILE=./jurls_no_webp_local.txt_temp.txt
 
 # Siege settings
 DELAY=2
