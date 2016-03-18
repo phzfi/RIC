@@ -22,6 +22,7 @@ logging.basicConfig(filename='log/error.log',
                     level=logging.ERROR,
                     format='%(asctime)s: %(levelname)s: %(message)s')
 
+
 def main():
     if len(sys.argv) != 3:
         logging.critical('Wrong number of arguments. ' +

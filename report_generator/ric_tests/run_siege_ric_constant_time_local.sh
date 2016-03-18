@@ -9,16 +9,16 @@ fi
 
 SEED=$1
 CONCURRENT=$2
-URLS_FILE=../siege_url_files/urls_local.txt
+URLS_FILE=./siege_url_files/urls_local.txt
 
-python ../urls_randomizer.py $URLS_FILE $SEED
+python ./urls_randomizer.py $URLS_FILE $SEED
 
-URLS_FILE=../urls_no_webp.txt_temp.txt
+URLS_FILE="$URLS_FILE""_temp.txt"
 
 # Siege settings
 DELAY=1
 TIME=$3"s"
-SIEGE_CONF=../.siegerc
+SIEGE_CONF=./.siegerc
 
 #RIC SIEGE
 RAW_FILE=./raw/ric_$(date +%Y-%m-%d_%H-%M-%S).txt
