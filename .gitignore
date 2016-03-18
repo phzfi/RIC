@@ -5,3 +5,4 @@
 /server/server
 /server/testresults/*/*
 !/**/placeholder
+/competing_product/debug.log

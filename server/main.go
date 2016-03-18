@@ -3,12 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gographics/imagick/imagick"
-	"github.com/phzfi/RIC/server/cache"
-	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/operator"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
+	"gopkg.in/gographics/imagick.v2/imagick"
 	"log"
 	"net"
 	"strconv"
@@ -27,8 +28,10 @@ type MyHandler struct {
 	// Request count (statistics)
 	requests uint64
 
-	operator    cache.Operator
+	config      config.Conf
+	operator    operator.Operator
 	imageSource ops.ImageSource
+	watermarker ops.Watermarker
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -45,7 +48,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
-		operations, err := ParseURI(url, h.imageSource)
+		operations, err := ParseURI(url, h.imageSource, h.watermarker, h.config)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -100,10 +103,9 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
-func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Listener) {
+func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, *MyHandler, net.Listener) {
 	logging.Debug("Creating server")
 	imageSource := ops.MakeImageSource()
-
 	// Add roots
 	// TODO: This must be externalized outside the source code.
 	logging.Debug("Adding roots")
@@ -114,13 +116,62 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 	if imageSource.AddRoot(".") != nil {
 		log.Println("Root not added .")
 	}
+	logging.Debug("Reading watermarker config")
+
+	imgpath, err := conf.GetString("watermark", "path")
+	if err != nil {
+		log.Fatal("Error reading path for watermark image. " + err.Error())
+	}
+
+	minHeight, err := conf.GetInt("watermark", "minheight")
+	if err != nil {
+		log.Fatal("Error reading config size minimum height restriction. " + err.Error())
+	}
+
+	minWidth, err := conf.GetInt("watermark", "minwidth")
+	if err != nil {
+		log.Fatal("Error reading config size minimum width restriction. " + err.Error())
+	}
+
+	maxHeight, err := conf.GetInt("watermark", "maxheight")
+	if err != nil {
+		log.Fatal("Error reading config size maximum height restriction. " + err.Error())
+	}
+
+	maxWidth, err := conf.GetInt("watermark", "maxwidth")
+	if err != nil {
+		log.Fatal("Error reading config size maximum width restriction. " + err.Error())
+	}
+
+	addMark, err := conf.GetBool("watermark", "addmark")
+	if err != nil {
+		log.Fatal("Error reading config addmark value. " + err.Error())
+	}
+
+	ver, err := conf.GetFloat64("watermark", "vertical")
+	if err != nil {
+		log.Fatal("Error reading config vertical alignment. " + err.Error())
+	}
+
+	hor, err := conf.GetFloat64("watermark", "horizontal")
+	if err != nil {
+		log.Fatal("Error reading config horizontal alignment. " + err.Error())
+	}
+
+	watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
+
+	if err != nil {
+		log.Fatal("Error creating watermarker:" + err.Error())
+	}
 
 	// Configure handler
 	logging.Debug("Configuring handler")
 	handler := &MyHandler{
 		requests:    0,
+		config:      conf,
 		imageSource: imageSource,
-		operator:    cache.MakeOperator(maxMemory),
+		operator:    operator.MakeDefault(maxMemory, "/tmp/RICdiskcache"),
+		watermarker: watermarker,
 	}
 
 	// Configure server
@@ -139,8 +190,20 @@ func NewServer(port int, maxMemory uint64) (*fasthttp.Server, *MyHandler, net.Li
 
 func main() {
 
+	cpath := flag.String("c", "config.ini", "Sets the configuration .ini file used.")
+	flag.Parse()
 	// CLI arguments
-	mem := flag.Uint64("m", 500*1024*1024, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
+
+	conf, err := config.ReadConfig(*cpath)
+	if err != nil {
+		log.Fatal("Error while reading config at " + *cpath + ": " + err.Error())
+	}
+
+	def, err := conf.GetUint64("server", "memory")
+	if err != nil {
+		def = 512 * 1024 * 1024
+	}
+	mem := flag.Uint64("m", def, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	flag.Parse()
 
 	imagick.Initialize()
@@ -149,9 +212,9 @@ func main() {
 	log.Println("Server starting...")
 	logging.Debug("Debug enabled")
 
-	server, handler, ln := NewServer(8005, *mem)
+	server, handler, ln := NewServer(8005, *mem, conf)
 	handler.started = time.Now()
-	err := server.Serve(ln)
+	err = server.Serve(ln)
 	end := time.Now()
 
 	// Get number of requests
