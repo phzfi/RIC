@@ -15,19 +15,19 @@ func NewCache(policy Policy, mm uint64) *Cache {
 	}
 }
 
-type MemoryStore map[cacheKey]images.ImageBlob
+type MemoryStore map[string]images.ImageBlob
 
-func (s MemoryStore) Load(key cacheKey) (b images.ImageBlob, ok bool) {
-	b, ok = s[key]
+func (s MemoryStore) Load(string string) (b images.ImageBlob, ok bool) {
+	b, ok = s[string]
 	return
 }
 
-func (s MemoryStore) Store(key cacheKey, value images.ImageBlob) {
-	s[key] = value
+func (s MemoryStore) Store(string string, value images.ImageBlob) {
+	s[string] = value
 }
 
-func (s MemoryStore) Delete(key cacheKey) (size uint64) {
-	size = uint64(len(s[key]))
-	delete(s, key)
+func (s MemoryStore) Delete(string string) (size uint64) {
+	size = uint64(len(s[string]))
+	delete(s, string)
 	return
 }

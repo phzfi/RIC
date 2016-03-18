@@ -36,11 +36,11 @@ func NewDiskCache(folder string, mm uint64, policy Policy) *Cache {
 			continue
 		}
 
-		key := cacheKey(bytes)
-		c.policy.Push(key)
+		string := string(bytes)
+		c.policy.Push(string)
 
 		size := fileSize(fn)
-		store.entries[key] = entry{fn, size}
+		store.entries[string] = entry{fn, size}
 		c.currentMemory += size
 	}
 
@@ -49,11 +49,11 @@ func NewDiskCache(folder string, mm uint64, policy Policy) *Cache {
 
 var encoder = base64.RawURLEncoding
 
-func keyToBase64(k cacheKey) string {
+func stringToBase64(k string) string {
 	return encoder.EncodeToString([]byte(k))
 }
 
-type keyToEntry map[cacheKey]entry
+type stringToEntry map[string]entry
 
 type entry struct {
 	Path string
@@ -62,21 +62,21 @@ type entry struct {
 
 type DiskStore struct {
 	sync.RWMutex
-	entries keyToEntry
+	entries stringToEntry
 
 	folder string
 }
 
 func NewDiskStore(folder string) *DiskStore {
 	return &DiskStore{
-		entries: make(keyToEntry),
+		entries: make(stringToEntry),
 		folder:  folder,
 	}
 }
 
-func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
+func (d *DiskStore) Load(string string) (blob images.ImageBlob, ok bool) {
 	d.RLock()
-	entry, ok := d.entries[key]
+	entry, ok := d.entries[string]
 	d.RUnlock()
 
 	if ok {
@@ -90,8 +90,8 @@ func (d *DiskStore) Load(key cacheKey) (blob images.ImageBlob, ok bool) {
 	return
 }
 
-func (d *DiskStore) Store(key cacheKey, blob images.ImageBlob) {
-	filename := keyToBase64(key)
+func (d *DiskStore) Store(string string, blob images.ImageBlob) {
+	filename := stringToBase64(string)
 	path := filepath.Join(filepath.FromSlash(d.folder), filename)
 
 	go func() {
@@ -100,24 +100,24 @@ func (d *DiskStore) Store(key cacheKey, blob images.ImageBlob) {
 			log.Println("Unable to write file into disk cache:", err)
 		}
 		d.Lock()
-		d.entries[key] = entry{path, uint64(len(blob))}
+		d.entries[string] = entry{path, uint64(len(blob))}
 		d.Unlock()
 	}()
 }
 
-func (d *DiskStore) Delete(key cacheKey) uint64 {
+func (d *DiskStore) Delete(string string) uint64 {
 	d.Lock()
-	entry, ok := d.entries[key]
+	entry, ok := d.entries[string]
 
 	// Pretty dirty solution, but this path is only used if an image is deleted just after being cached.
 	for !ok {
 		d.Unlock()
 		time.Sleep(100)
 		d.Lock()
-		entry, ok = d.entries[key]
+		entry, ok = d.entries[string]
 	}
 
-	delete(d.entries, key)
+	delete(d.entries, string)
 	d.Unlock()
 
 	go func() {

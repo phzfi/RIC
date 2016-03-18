@@ -9,7 +9,7 @@ func NewLRU(mm uint64) *Cache {
 type LRU struct {
 	sync.Mutex
 
-	toList     map[cacheKey]*list
+	toList     map[string]*list
 	head, tail list
 }
 
@@ -17,14 +17,14 @@ func NewLRUPolicy() *LRU {
 
 	lru := new(LRU)
 
-	lru.toList = make(map[cacheKey]*list)
+	lru.toList = make(map[string]*list)
 	lru.head.next = &lru.tail
 	lru.tail.prev = &lru.head
 
 	return lru
 }
 
-func (lru *LRU) Push(id cacheKey) {
+func (lru *LRU) Push(id string) {
 
 	l := list{id: id}
 
@@ -38,7 +38,7 @@ func (lru *LRU) Push(id cacheKey) {
 	lru.toList[id] = &l
 }
 
-func (lru *LRU) Visit(id cacheKey) {
+func (lru *LRU) Visit(id string) {
 
 	lru.Lock()
 	defer lru.Unlock()
@@ -47,7 +47,7 @@ func (lru *LRU) Visit(id cacheKey) {
 	lru.Push(id)
 }
 
-func (lru *LRU) Pop() (id cacheKey) {
+func (lru *LRU) Pop() (id string) {
 
 	first := lru.first()
 	if first == &lru.tail {
@@ -71,7 +71,7 @@ func (lru LRU) last() *list {
 
 type list struct {
 	next, prev *list
-	id         cacheKey
+	id         string
 }
 
 func (l list) remove() {
