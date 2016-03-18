@@ -49,25 +49,26 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	denyUpscale := func() {
+		f := float32(w) / float32(h)
 		if w > ow {
 			w = ow
-			adjustHeight()
+			h = int(float32(w) / f + 0.5)
 		}
 		if h > oh {
 			h = oh
-			adjustWidth()
+			w = int(f * float32(h) + 0.5)
 		}
 	}
 
 	resize := func() {
-		denyUpscale()
 		adjustSize()
+		denyUpscale()
 		operations = append(operations, ops.Resize{w, h})
 	}
 
 	liquid := func() {
-		denyUpscale()
 		adjustSize()
+		denyUpscale()
 		operations = append(operations, ops.LiquidRescale{w, h})
 	}
 
