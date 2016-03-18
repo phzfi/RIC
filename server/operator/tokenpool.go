@@ -7,7 +7,7 @@ type TokenPool chan token
 func MakeTokenPool(size int) (t TokenPool) {
 	t = make(TokenPool, size)
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < size; i++ {
 		t <- token{}
 	}
 
