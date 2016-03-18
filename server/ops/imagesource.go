@@ -30,22 +30,28 @@ func (i ImageSource) LoadImageOp(id string) Operation {
 	return loadImageOp{&i, id}
 }
 
-// Search root for an image. Returned image should be destroyed by image.Destroy, image.Resized or image.ToBlob or other.
-func (i ImageSource) searchRoots(filename string, img images.Image) (err error) {
+// Searches root for an image. If found loads the image to img. Otherwise does nothing and returns an error.
+func (i ImageSource) searchRoots(fn string, img images.Image) (err error) {
+	return i.searchRootsCustomTrialFunc(fn, img.FromFile)
+}
+
+
+// Searches root for an image. Calls the given trialFunc with the given fn for every root until trialFunc does not return an error. Returns if trialFunc succeeds. returns with error if no trialFunc succeeds.
+func (i ImageSource) searchRootsCustomTrialFunc(fn string, trialFunc func (fn string) (err error)) (err error) {
 	if len(i.roots) == 0 {
 		logging.Debug("No roots")
 		err = os.ErrNotExist
 		return
 	}
 	// Extract requested type/extension and id from filename
-	ext := strings.TrimLeft(filepath.Ext(filename), ".")
-	id := strings.TrimRight(filename[0:len(filename)-len(ext)], ".")
+	ext := strings.TrimLeft(filepath.Ext(fn), ".")
+	id := strings.TrimRight(fn[0:len(fn)-len(ext)], ".")
 	// Search requested image from all roots by trial and error
 	for _, root := range i.roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
 		// Assume image is stored as .jpg -> change extension to .jpg
 		trial := filepath.Join(root, id) + ".jpg"
-		err = img.FromFile(trial)
+		err = trialFunc(trial)
 		if err == nil {
 			logging.Debug("Found: " + trial)
 			break
@@ -55,9 +61,7 @@ func (i ImageSource) searchRoots(filename string, img images.Image) (err error) 
 	return
 }
 
-// TODO: This is a temp solution for ImageSize creating too many Images.
-// Limit to creating only one at time for finding the image size
-
+// Get image size
 func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 	i.mutex.RLock()
 	s, ok := i.sizes[fn]
@@ -70,7 +74,7 @@ func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 	image := images.NewImage()
 	defer image.Destroy()
 
-	err = i.searchRoots(fn, image)
+	err = i.pingRoots(fn, image)
 	if err != nil {
 		return
 	}
@@ -83,6 +87,11 @@ func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 	i.mutex.Unlock()
 
 	return
+}
+
+// Searches root for an image. If found, loads only the image metadata to img. Otherwise does nothing and returns an error.
+func (i ImageSource) pingRoots(fn string, img images.Image) (err error) {
+	return i.searchRootsCustomTrialFunc(fn, img.PingImage)
 }
 
 // A very trivial (and inefficient way to handle roots)
