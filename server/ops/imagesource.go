@@ -5,9 +5,9 @@ import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"os"
-	"sync"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 type dim [2]int
@@ -16,16 +16,18 @@ type idToSize map[string]dim
 type ImageSource struct {
 	roots []string
 	sizes idToSize
+	mutex *sync.RWMutex
 }
 
 func MakeImageSource() ImageSource {
 	return ImageSource{
 		sizes: make(idToSize),
+		mutex: new(sync.RWMutex),
 	}
 }
 
 func (i ImageSource) LoadImageOp(id string) Operation {
-	return loadImageOp{i, id}
+	return loadImageOp{&i, id}
 }
 
 // Search root for an image. Returned image should be destroyed by image.Destroy, image.Resized or image.ToBlob or other.
@@ -53,25 +55,20 @@ func (i ImageSource) searchRoots(filename string, img images.Image) (err error) 
 	return
 }
 
-
 // TODO: This is a temp solution for ImageSize creating too many Images.
 // Limit to creating only one at time for finding the image size
-var imagesizemutex sync.Mutex
 
 func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
+	i.mutex.RLock()
+	s, ok := i.sizes[fn]
+	i.mutex.RUnlock()
 
-	if s, ok := i.sizes[fn]; ok {
+	if ok {
 		return s[0], s[1], nil
 	}
-	
-	// TODO: Figure out another way to find out image size so no blocking is needed
-	imagesizemutex.Lock()
 
 	image := images.NewImage()
-	defer func () {
-		image.Destroy()
-		imagesizemutex.Unlock()
-	}()
+	defer image.Destroy()
 
 	err = i.searchRoots(fn, image)
 	if err != nil {
@@ -80,7 +77,11 @@ func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 
 	w = image.GetWidth()
 	h = image.GetHeight()
+
+	i.mutex.Lock()
 	i.sizes[fn] = dim{w, h}
+	i.mutex.Unlock()
+
 	return
 }
 
