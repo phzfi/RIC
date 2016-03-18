@@ -2,34 +2,20 @@ package images
 
 import (
   "testing"
-  "fmt"
-  "bytes"
 )
 
-func readImageProperties(img Image, prefix string) (properties []string) {
-  for _, p := range img.GetImageProperties(prefix) {
-    properties = append(properties, img.GetImageProperty(p))
-  }
-  return
-}
-
-func readImageProfiles(img Image, prefix string) (profiles []string) {
-  for _, p := range img.GetImageProfiles(prefix) {
-    profiles = append(profiles, img.GetImageProfile(p))
-  }
-  return
-}
 
 func compare(t *testing.T, before []string, after []string) {
   if len(before) == len(after) {
     for i, _ := range before {
+      // only compare field names: Some field values should be different since
+      // they are changed in resize/convert (e.g. exif:thumbnail:XResolution).
       if before[i] != after[i] {
-        fmt.Println(before[i] + " - " + after[i])
-        t.Fatal("Image metadata does not match! Different values.")
+        t.Fatal("Image metadata does not match! Different fields.")
       }
     }
   } else {
-    t.Fatal("Image metadata does not match! Different length.")
+    t.Fatal("Image metadata does not match! Different number of fields.")
   }
 }
 
@@ -40,22 +26,25 @@ func TestPreserveMetadataJpgResize(t *testing.T) {
   defer imgAfter.Destroy()
 
   imgBefore.FromFile("../testimages/metadata/IPTC-Photometadata.jpg")
-  //EXIFbefore := readImageProfiles(imgBefore, "exif")
-  EXIFbefore := []byte(imgBefore.GetImageProfile("exif"))
-  //IPTCbefore := readImageProfiles(imgBefore, "iptc")
-  //XMP_before := readImageProfiles(imgBefore, "xmp")
+  exifPropertiesBefore := imgBefore.GetImageProperties("exif:*")
+  iptc4xmpPropertiesBefore := imgBefore.GetImageProperties("Iptc4xmp*")
+  exifProfilesBefore := imgBefore.GetImageProfiles("exif")
+  iptcProfilesBefore := imgBefore.GetImageProfiles("iptc")
+  xmp_ProfilesBefore := imgBefore.GetImageProfiles("xmp")
 
   imgBefore.Resize(100, 100)
   imgAfter.FromBlob(imgBefore.Blob())
-  EXIFafter := []byte(imgAfter.GetImageProfile("exif"))
-  //EXIFafter := readImageProfiles(imgAfter, "exif")
-  //IPTCafter := readImageProfiles(imgAfter, "iptc")
-  //XMP_after := readImageProfiles(imgAfter, "xmp")
+  exifPropertiesAfter := imgAfter.GetImageProperties("exif:*")
+  iptc4xmpPropertiesAfter := imgAfter.GetImageProperties("Iptc4xmp*")
+  exifProfilesAfter := imgAfter.GetImageProfiles("exif")
+  iptcProfilesAfter := imgAfter.GetImageProfiles("iptc")
+  xmp_ProfilesAfter := imgAfter.GetImageProfiles("xmp")
 
-  fmt.Println(bytes.Equal(EXIFbefore, EXIFafter))
-  //compare(t, EXIFbefore, EXIFafter)
-  //compare(t, IPTCbefore, IPTCafter)
-  //compare(t, XMP_before, XMP_after)
+  compare(t, exifPropertiesBefore, exifPropertiesAfter)
+  compare(t, iptc4xmpPropertiesBefore, iptc4xmpPropertiesAfter)
+  compare(t, exifProfilesBefore, exifProfilesAfter)
+  compare(t, iptcProfilesBefore, iptcProfilesAfter)
+  compare(t, xmp_ProfilesBefore, xmp_ProfilesAfter)
 }
 
 func TestPreserveMetadataJpgToPNG(t *testing.T) {
@@ -65,19 +54,25 @@ func TestPreserveMetadataJpgToPNG(t *testing.T) {
   defer imgAfter.Destroy()
 
   imgBefore.FromFile("../testimages/metadata/IPTC-Photometadata.jpg")
-  EXIFbefore := readImageProfiles(imgBefore, "exif")
-  IPTCbefore := readImageProfiles(imgBefore, "iptc")
-  XMP_before := readImageProfiles(imgBefore, "xmp")
+  exifPropertiesBefore := imgBefore.GetImageProperties("exif:*")
+  iptc4xmpPropertiesBefore := imgBefore.GetImageProperties("Iptc4xmp*")
+  exifProfilesBefore := imgBefore.GetImageProfiles("exif")
+  iptcProfilesBefore := imgBefore.GetImageProfiles("iptc")
+  xmp_ProfilesBefore := imgBefore.GetImageProfiles("xmp")
 
   imgBefore.Convert("PNG")
   imgAfter.FromBlob(imgBefore.Blob())
-  EXIFafter := readImageProfiles(imgAfter, "exif")
-  IPTCafter := readImageProfiles(imgAfter, "iptc")
-  XMP_after := readImageProfiles(imgAfter, "xmp")
+  exifPropertiesAfter := imgAfter.GetImageProperties("exif:*")
+  iptc4xmpPropertiesAfter := imgAfter.GetImageProperties("Iptc4xmp*")
+  exifProfilesAfter := imgAfter.GetImageProfiles("exif")
+  iptcProfilesAfter := imgAfter.GetImageProfiles("iptc")
+  xmp_ProfilesAfter := imgAfter.GetImageProfiles("xmp")
 
-  compare(t, EXIFbefore, EXIFafter)
-  compare(t, IPTCbefore, IPTCafter)
-  compare(t, XMP_before, XMP_after)
+  compare(t, exifPropertiesBefore, exifPropertiesAfter)
+  compare(t, iptc4xmpPropertiesBefore, iptc4xmpPropertiesAfter)
+  compare(t, exifProfilesBefore, exifProfilesAfter)
+  compare(t, iptcProfilesBefore, iptcProfilesAfter)
+  compare(t, xmp_ProfilesBefore, xmp_ProfilesAfter)
 }
 
 func TestPreserveMetadataJpgToTiff(t *testing.T) {
@@ -87,24 +82,33 @@ func TestPreserveMetadataJpgToTiff(t *testing.T) {
   defer imgAfter.Destroy()
 
   imgBefore.FromFile("../testimages/metadata/IPTC-Photometadata.jpg")
-  //EXIFbefore := readImageProfiles(imgBefore, "exif")
-  IPTCbefore := imgBefore.GetImageProfile("iptc")
-  //XMP_before := imgBefore.GetImageProfile("xmp")
-  fmt.Println(imgBefore.GetImageProfiles("*"))
+  iptc4xmpPropertiesBefore := imgBefore.GetImageProperties("Iptc4xmp*")
+  iptcProfilesBefore := imgBefore.GetImageProfiles("iptc")
+  xmp_ProfilesBefore := imgBefore.GetImageProfiles("xmp")
 
   imgBefore.Convert("TIFF")
-  imgBefore.SetImageProfile("tiff", []byte(imgBefore.GetImageProfile("exif")))
-  fmt.Println(imgBefore.GetImageProfiles("*"))
   imgAfter.FromBlob(imgBefore.Blob())
-  fmt.Println(imgAfter.GetImageProfiles("*"))
-  fmt.Println(imgAfter.GetImageProperties("*"))
-  //EXIFafter := readImageProfiles(imgAfter, "exif")
-  IPTCafter := imgAfter.GetImageProfile("iptc")
-  //XMP_after := imgAfter.GetImageProfile("xmp")
+  iptc4xmpPropertiesAfter := imgAfter.GetImageProperties("Iptc4xmp*")
+  iptcProfilesAfter := imgAfter.GetImageProfiles("iptc")
+  xmp_ProfilesAfter := imgAfter.GetImageProfiles("xmp")
 
+  compare(t, iptc4xmpPropertiesBefore, iptc4xmpPropertiesAfter)
+  compare(t, iptcProfilesBefore, iptcProfilesAfter)
+  compare(t, xmp_ProfilesBefore, xmp_ProfilesAfter)
+}
 
-  //compare(t, EXIFbefore, EXIFafter)
-  fmt.Println(bytes.Equal([]byte(IPTCbefore), []byte(IPTCafter)))
-  //compare(t, IPTCbefore, IPTCafter)
-  //compare(t, XMP_before, XMP_after)
+func TestPreserveMetadataJpgToGif(t *testing.T) {
+  imgBefore := NewImage()
+  imgAfter := NewImage()
+  defer imgBefore.Destroy()
+  defer imgAfter.Destroy()
+
+  imgBefore.FromFile("../testimages/metadata/IPTC-Photometadata.jpg")
+  iptcProfilesBefore := imgBefore.GetImageProfiles("iptc")
+
+  imgBefore.Convert("GIF")
+  imgAfter.FromBlob(imgBefore.Blob())
+  iptcProfilesAfter := imgAfter.GetImageProfiles("iptc")
+
+  compare(t, iptcProfilesBefore, iptcProfilesAfter)
 }
