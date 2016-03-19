@@ -2,7 +2,7 @@
 
 
 if [ $# -lt 3 ]; then
-echo "Script usage: sh run_siege_same_request_amount.sh RANDOM_SEED CONCURRENT_USERS REQUESTS_PER_USER"
+echo "Script usage: $0 RANDOM_SEED CONCURRENT_USERS REQUESTS_PER_USER"
 exit 1
 fi
 
@@ -18,7 +18,7 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/urls_local.txt
+URLS_FILE=siege_url_files/turls_local.txt
 SEED=$1
 python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
 URLS_FILE="${URLS_FILE%.*}"_temp.txt
