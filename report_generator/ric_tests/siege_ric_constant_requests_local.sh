@@ -32,7 +32,7 @@ REQUESTS_PER_USER=$3
 
 #RIC SIEGE
 RAW_FILE=./raw/ric_$(date +%Y-%m-%d_%H-%M-%S).txt
-RIC_OUT_FILE=./results/ric_$(date +%Y-%m-%d_%H-%M-%S).csv
+RIC_OUT_FILE=./results/ric_CRL_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege

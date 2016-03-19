@@ -32,7 +32,7 @@ REQUESTS_PER_USER=$3
 
 #CIB SIEGE
 RAW_FILE=./raw/cib_$(date +%Y-%m-%d_%H-%M-%S).txt
-CIB_OUT_FILE=./results/cib_$(date +%Y-%m-%d_%H-%M-%S).csv
+CIB_OUT_FILE=./results/cib_CRL_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
