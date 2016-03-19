@@ -32,7 +32,7 @@ TIME=$3"s"
 
 #RIC SIEGE
 RAW_FILE=./raw/ric_$(date +%Y-%m-%d_%H-%M-%S).txt
-RIC_OUT_FILE=./results/ric_$(date +%Y-%m-%d_%H-%M-%S).csv
+RIC_OUT_FILE=./results/ric_CTL_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege

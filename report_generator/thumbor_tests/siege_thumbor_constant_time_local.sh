@@ -32,7 +32,7 @@ TIME=$3"s"
 
 #THUMBOR SIEGE
 RAW_FILE=./raw/thumbor_$(date +%Y-%m-%d_%H-%M-%S).txt
-THUMBOR_OUT_FILE=./results/thumbor_$(date +%Y-%m-%d_%H-%M-%S).csv
+THUMBOR_OUT_FILE=./results/thumbor_CTL_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
