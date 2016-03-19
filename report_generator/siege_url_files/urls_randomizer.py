@@ -18,8 +18,10 @@ logging.basicConfig(filename='log/error.log',
 
 def main():
     if len(sys.argv) != 3:
-        logging.critical('Wrong number of arguments. ' +
-                         'Usage: "python urls_randomizer URLS_FILE SEED')
+        mess = ('Wrong number of arguments.\n' +
+                'Usage: "python urls_randomizer URLS_FILE SEED')
+        logging.critical(mess)
+        print(mess)
         sys.exit(1)
     urls_file = sys.argv[1]
     print(urls_file)

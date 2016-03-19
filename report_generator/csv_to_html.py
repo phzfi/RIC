@@ -45,8 +45,10 @@ logging.basicConfig(
 
 def main(args):
     if len(args) < 3:
-        logging.critical('Wrong number of arguments.\n' +
-                         'Usage: "python csv_to_html.py htmlTable testData*"')
+        mess = ('Wrong number of arguments.\n' +
+                'Usage: "python csv_to_html.py htmlTable testData*"')
+        logging.critical(mess)
+        print(mess)
         sys.exit(1)
     software = []
     titles = None

@@ -30,9 +30,9 @@ CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
 
-#RIC SIEGE
-RAW_FILE=./raw/ric_$(date +%Y-%m-%d_%H-%M-%S).txt
-RIC_OUT_FILE=./results/ric_$(date +%Y-%m-%d_%H-%M-%S).csv
+#THUMBOR SIEGE
+RAW_FILE=./raw/thumbor_$(date +%Y-%m-%d_%H-%M-%S).txt
+THUMBOR_OUT_FILE=./results/thumbor_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
@@ -41,9 +41,9 @@ siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUES
 cat $TMP >> $RAW_FILE
 rm $TMP
 
-python3 csv_formatter.py $RAW_FILE $RIC_OUT_FILE
+python3 csv_formatter.py $RAW_FILE $THUMBOR_OUT_FILE
 
 # Formatter
 rm $URLS_FILE
 
-python3 csv_to_html.py html_tables/ricConstantRequestsResultsLocal.html $RIC_OUT_FILE
+python3 csv_to_html.py html_tables/thumborConstantRequestsResultsLocal.html $THUMBOR_OUT_FILE
