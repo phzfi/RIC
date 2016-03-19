@@ -130,7 +130,7 @@ def read_csv_row(from_path, row_number=None):
     Reads a row in a csv file formatted with the csv_formatter script.
 
     """
-    forms = [int, float, int, float, float, float, float, int, int]
+    forms = [str, int, float, int, float, float, float, float, int, int]
     try:
         with codecs.open(from_path, 'r', 'utf-8') as inp:
             reader = csv.reader(inp, dialect='excel', lineterminator='\n')
@@ -140,7 +140,7 @@ def read_csv_row(from_path, row_number=None):
                 return next(reader)
             f = lambda x: x[1] if (x[0] == row_number) else None
             iterated = map(f, enumerate(reader))
-            row = filter(lambda x: x is not None, iterated)[0]
+            row = next(filter(lambda x: x is not None, iterated))
             return [a(b.strip()) for (a, b) in zip(forms, row)]
     except Exception as excp:
         print(excp)

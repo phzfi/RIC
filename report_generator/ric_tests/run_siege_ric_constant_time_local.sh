@@ -18,9 +18,9 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=/siege_url_files/urls_local.txt
+URLS_FILE=siege_url_files/urls_local.txt
 SEED=$1
-python /siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
+python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
 URLS_FILE="${URLS_FILE%.*}"_temp.txt
 
 # Siege settings
@@ -41,8 +41,9 @@ siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$T
 cat $TMP >> $RAW_FILE
 rm $TMP
 
-python csv_formatter.py $RAW_FILE $RIC_OUT_FILE
+python3 csv_formatter.py $RAW_FILE $RIC_OUT_FILE
 
 # Formatter
 rm $URLS_FILE
-python csv_to_html.py html_tables/ricConstantTimeResultsLocal.html $RIC_OUT_FILE
+
+python3 csv_to_html.py html_tables/ricConstantTimeResultsLocal.html $RIC_OUT_FILE
