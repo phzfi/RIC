@@ -59,15 +59,17 @@ def main(args):
             titles = read_csv_row(csv, 0)
         data = read_csv_row(csv, 1)
         software.append({'name': name, 'data': data})
-    html = buildHTML(software, titles)
+    html = buildHTML(software, titles, len(args) != 3)
     sys.exit(save_to_html(html, args[1]))
 
 
-def get_picker(i):
+def get_picker(i, colors):
     """
     Checks if the current row in the table should be highlited or not.
 
     """
+    if not colors:
+        return None
     if i in HIGHLIGHT_HIGHER:
         return max
     if i in HIGHLIGHT_LOWER:
@@ -105,7 +107,7 @@ def build_row(row_data, picker):
     ])
 
 
-def buildHTML(software, titles):
+def buildHTML(software, titles, colors=True):
     """
     Builds the html to display the given data in a table.
 
@@ -119,7 +121,7 @@ def buildHTML(software, titles):
 
     for i, title in enumerate(titles):
         row_data = [app['data'][i] for app in software]
-        picker = get_picker(i)
+        picker = get_picker(i, colors)
         row_head = column.format(title)
         row_content = build_row(row_data, picker)
         html_table += row.format(row_head + row_content)
