@@ -115,7 +115,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 }
 
 func roundedIntegerDivision(n, m int) int {
-	if n < 0 == m < 0 {
+	if (n < 0) == (m < 0) {
 		return (n + m/2) / m
 	} else { // -5 / 6 should round to -1
 		return (n - m/2) / m
