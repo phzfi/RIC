@@ -10,8 +10,8 @@ type Convert struct {
 	Format string
 }
 
-func (c Convert) GetKey() string {
-	return c.Format
+func (c Convert) Marshal() string {
+	return string(convertID) + c.Format + string(0)
 }
 
 func (c Convert) Apply(img images.Image) error {

@@ -5,17 +5,17 @@ func NewFIFO(mm uint64) *Cache {
 }
 
 type FIFO struct {
-	data       []cacheKey
+	data       []string
 	head, tail int
 }
 
-func (q *FIFO) Visit(_ cacheKey) {}
+func (q *FIFO) Visit(_ string) {}
 
-func (q *FIFO) Push(info cacheKey) {
+func (q *FIFO) Push(info string) {
 
 	if size, arraySize := q.Len(), len(q.data); size+2 > arraySize {
 
-		new_data := make([]cacheKey, (size+1)*2)
+		new_data := make([]string, (size+1)*2)
 
 		for i := 0; i < size; i++ {
 			new_data[i] = q.data[(q.head+i)%arraySize]
@@ -30,7 +30,7 @@ func (q *FIFO) Push(info cacheKey) {
 	q.tail %= len(q.data)
 }
 
-func (q *FIFO) Pop() (info cacheKey) {
+func (q *FIFO) Pop() (info string) {
 
 	if q.Len() == 0 {
 		panic("Queue underflow")

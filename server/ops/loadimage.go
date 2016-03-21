@@ -6,12 +6,12 @@ import (
 )
 
 type loadImageOp struct {
-	is ImageSource
+	is *ImageSource
 	id string
 }
 
-func (i loadImageOp) GetKey() string {
-	return i.id
+func (i loadImageOp) Marshal() string {
+	return string(loadID) + i.id + string(0)
 }
 
 func (i loadImageOp) Apply(img images.Image) error {

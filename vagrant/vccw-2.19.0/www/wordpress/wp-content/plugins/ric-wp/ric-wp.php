@@ -208,12 +208,17 @@ function load_js_file()
 	$jsdata = array(
 		'URI' =>  get_option('my_option_name')
 	);
-  wp_enqueue_script('client_js', plugins_url('/client.js',__FILE__));
-  wp_localize_script('client_js', 'php_vars' , $jsdata);
+	wp_enqueue_script('client_js', plugins_url('/client.js',__FILE__));
+	wp_localize_script('client_js', 'php_vars' , $jsdata);
 }
 
+function load_css_file()
+{
+	wp_enqueue_style( 'client_css', plugins_url('/client.css',__FILE__));
+}
 
 add_action('wp_head', 'load_js_file');
+add_action('wp_head', 'load_css_file');
 run_ric_wp();
 
 ?>
