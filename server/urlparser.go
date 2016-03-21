@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
@@ -31,11 +31,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	operations = []ops.Operation{source.LoadImageOp(filename)}
 
 	adjustWidth := func() {
-		w = int(float32(h*ow)/float32(oh) + 0.5)
+		w = roundedIntegerDivision(h*ow, oh)
 	}
 
 	adjustHeight := func() {
-		h = int(float32(w*oh)/float32(ow) + 0.5)
+		h = roundedIntegerDivision(w*oh, ow)
 	}
 
 	adjustSize := func() {
@@ -112,4 +112,12 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	return
+}
+
+func roundedIntegerDivision(n, m int) int {
+	if n < 0 == m < 0 {
+		return (n + m/2) / m
+	} else { // -5 / 6 should round to -1
+		return (n - m/2) / m
+	}
 }
