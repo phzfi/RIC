@@ -11,8 +11,13 @@ type Operator struct {
 	cache Cacher
 
 	sync.Mutex
-	inProgress map[string]*sync.RWMutex
+	inProgress map[string]*Progress
 	tokens     TokenPool
+}
+
+type Progress struct {
+	sync.RWMutex
+	images.ImageBlob
 }
 
 type Cacher interface {
@@ -23,7 +28,7 @@ type Cacher interface {
 func Make(cache Cacher) Operator {
 	return Operator{
 		cache:      cache,
-		inProgress: make(map[string]*sync.RWMutex),
+		inProgress: make(map[string]*Progress),
 		tokens:     MakeTokenPool(2),
 	}
 }
@@ -53,7 +58,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 	if start == len(operations) {
 		return startimage, nil
 	} else {
-		// Only one goroutine gets through this with inProgress == false
+		// Only one goroutine gets through this with inProgress being false
 		o.Lock()
 		isReady, inProgress := o.inProgress[key]
 		if !inProgress {
@@ -64,42 +69,21 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 		if inProgress {
 			// Blocks until image has been processed
 			isReady.RLock()
-
-			var found bool
-			blob, found = o.cache.GetBlob(key)
-			if found {
-				return
-			}
-
-			// This only happens if the freshly resized image is dropped from cache too quickly
-			//o.addInProgress(key)
-			// TODO: do something about it
+			return isReady.ImageBlob, nil
 		}
 
 		// image may have entered cache while this goroutine moved to this place in code
 		var found bool
 		blob, found = o.cache.GetBlob(key)
-		if found {
-			return
+		if !found {
+			blob = o.makeBlob(startimage, operations[start:])
 		}
-
-		o.tokens.Borrow()
-		defer o.tokens.Return()
-
-		img := images.NewImage()
-		defer img.Destroy()
-
-		if start != 0 {
-			img.FromBlob(startimage)
-		}
-
-		// TODO: do not ignore error
-		applyOpsToImage(operations[start:], img)
-		blob = img.Blob()
 
 		o.cache.AddBlob(key, blob)
 
+		isReady.ImageBlob = blob
 		isReady.Unlock()
+
 		o.Lock()
 		delete(o.inProgress, key)
 		o.Unlock()
@@ -108,12 +92,29 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 	return
 }
 
-func (o *Operator) addInProgress(key string) *sync.RWMutex {
-	m := &sync.RWMutex{}
-	m.Lock()
+func (o *Operator) addInProgress(key string) *Progress {
+	p := new(Progress)
+	p.Lock()
 
-	o.inProgress[key] = m
-	return m
+	o.inProgress[key] = p
+	return p
+}
+
+func (o *Operator) makeBlob(startBlob images.ImageBlob, operations []ops.Operation) images.ImageBlob {
+	o.tokens.Borrow()
+	defer o.tokens.Return()
+
+	img := images.NewImage()
+	defer img.Destroy()
+
+	if startBlob != nil {
+		img.FromBlob(startBlob)
+	}
+
+	// TODO: do not ignore error
+	applyOpsToImage(operations, img)
+
+	return img.Blob()
 }
 
 func applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {

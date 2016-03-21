@@ -71,13 +71,6 @@ func TestDenyIdenticalOperations(t *testing.T) {
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
-
-		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
-		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
-		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
-		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
-		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
-		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 	}
 	operator := MakeDefault(512*1024*1024, cacheFolder)
 
