@@ -24,12 +24,12 @@ func (img *Image) FromFile(filename string) error {
 	if err != nil {
 		return err
 	}
-	blob := ImageBlob(buffer.Bytes())
+	blob := buffer.Bytes()
 
 	return img.FromBlob(blob)
 }
 
-// Return binary ImageBlob of an image from web.
+// Return binary blob of an image from web.
 func (img *Image) FromWeb(url string) error {
 
 	//resp, err := http.Get(url)
@@ -46,6 +46,6 @@ func (img *Image) FromWeb(url string) error {
 	return img.FromBlob(body)
 }
 
-func (img *Image) FromBlob(blob ImageBlob) error {
+func (img *Image) FromBlob(blob []byte) error {
 	return img.ReadImageBlob(blob)
 }

@@ -58,7 +58,7 @@ func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
 }
 
 // Gets blob from server. package variable port is used as port and localhost as address
-func getBlobFromServer(getname string) (blob images.ImageBlob, err error) {
+func getBlobFromServer(getname string) (blob []byte, err error) {
 	_, blob, err = fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
 	if err != nil {
 		return

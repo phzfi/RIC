@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func CheckDistortion(blob ImageBlob, reffn string, tol float64, resfn string) (err error) {
+func CheckDistortion(blob []byte, reffn string, tol float64, resfn string) (err error) {
 
 	ref := NewImage()
 	defer ref.Destroy()
@@ -58,7 +58,7 @@ type TestCaseAll struct {
 	W, H   int
 }
 
-func CheckImage(blob ImageBlob, c TestCase, tol float64, f func(Image) error) (err error) {
+func CheckImage(blob []byte, c TestCase, tol float64, f func(Image) error) (err error) {
 	img := NewImage()
 	defer img.Destroy()
 	img.FromBlob(blob)
@@ -112,14 +112,14 @@ func CheckAllFunc(c TestCaseAll) func(Image) error {
 	}
 }
 
-func FormatTest(c FormatTestCase, blob ImageBlob, tolerance float64) error {
+func FormatTest(c FormatTestCase, blob []byte, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckFormatFunc(c))
 }
 
-func SizeTest(c SizeTestCase, blob ImageBlob, tolerance float64) error {
+func SizeTest(c SizeTestCase, blob []byte, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckSizeFunc(c))
 }
 
-func TestAll(c TestCaseAll, blob ImageBlob, tolerance float64) error {
+func TestAll(c TestCaseAll, blob []byte, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckAllFunc(c))
 }

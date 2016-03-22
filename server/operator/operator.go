@@ -17,12 +17,12 @@ type Operator struct {
 
 type Progress struct {
 	sync.RWMutex
-	images.ImageBlob
+	blob []byte
 }
 
 type Cacher interface {
-	GetBlob(string) (images.ImageBlob, bool)
-	AddBlob(string, images.ImageBlob)
+	GetBlob(string) ([]byte, bool)
+	AddBlob(string, []byte)
 }
 
 func Make(cache Cacher) Operator {
@@ -40,11 +40,11 @@ func MakeDefault(mm uint64, cacheFolder string) Operator {
 	})
 }
 
-func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, err error) {
+func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error) {
 
 	key := toKey(operations)
 
-	var startimage images.ImageBlob
+	var startimage []byte
 	var start int
 
 	for start = len(operations); start > 0; start-- {
@@ -69,7 +69,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 		if inProgress {
 			// Blocks until image has been processed
 			isReady.RLock()
-			return isReady.ImageBlob, nil
+			return isReady.blob, nil
 		}
 
 		// image may have entered cache while this goroutine moved to this place in code
@@ -81,7 +81,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, 
 
 		o.cache.AddBlob(key, blob)
 
-		isReady.ImageBlob = blob
+		isReady.blob = blob
 		isReady.Unlock()
 
 		o.Lock()
@@ -100,7 +100,7 @@ func (o *Operator) addInProgress(key string) *Progress {
 	return p
 }
 
-func (o *Operator) makeBlob(startBlob images.ImageBlob, operations []ops.Operation) images.ImageBlob {
+func (o *Operator) makeBlob(startBlob []byte, operations []ops.Operation) []byte {
 	o.tokens.Borrow()
 	defer o.tokens.Return()
 
