@@ -34,6 +34,6 @@ func (d *DummyPolicy) Pop() string {
 	return d.fifo.Pop()
 }
 
-func NewDummyPolicy(log Log) *DummyPolicy {
-	return &DummyPolicy{fifo: &FIFO{}, loki: log}
+func NewDummyPolicy() *DummyPolicy {
+	return &DummyPolicy{fifo: &FIFO{}, loki: make(Log)}
 }

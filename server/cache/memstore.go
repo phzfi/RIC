@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 )
 
@@ -15,14 +14,14 @@ func NewCache(policy Policy, mm uint64) *Cache {
 	}
 }
 
-type MemoryStore map[string]images.ImageBlob
+type MemoryStore map[string][]byte
 
-func (s MemoryStore) Load(string string) (b images.ImageBlob, ok bool) {
+func (s MemoryStore) Load(string string) (b []byte, ok bool) {
 	b, ok = s[string]
 	return
 }
 
-func (s MemoryStore) Store(string string, value images.ImageBlob) {
+func (s MemoryStore) Store(string string, value []byte) {
 	s[string] = value
 }
 

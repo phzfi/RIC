@@ -17,11 +17,36 @@ func TestMemCache(t *testing.T) {
 }
 
 func TestDiskCache(t *testing.T) {
-	allTests(t, func() (*DummyPolicy, *Cache) {
+	allTests(t, func() (*DummyPolicy, Cacher) {
 		testutils.RemoveContents(cachefolder)
 		return setupDiskCache()
 	})
 }
+
+func TestHybridCache(t *testing.T) {
+	allTests(t, func() (*DummyPolicy, Cacher) {
+		dp, cache := setupMemcache()
+		return dp, HybridCache{cache}
+	})
+}
+
+func TestHybridSecondary(t *testing.T) {
+	allTests(t, func() (*DummyPolicy, Cacher) {
+		dp, cache := setupMemcache()
+		return dp, HybridCache{
+			AmnesiaCache{},
+			AmnesiaCache{},
+			cache,
+		}
+	})
+}
+
+type AmnesiaCache struct{}
+
+func (AmnesiaCache) GetBlob(_ string) ([]byte, bool) {
+	return nil, false
+}
+func (AmnesiaCache) AddBlob(_ string, _ []byte) {}
 
 func TestDiskCachePersistence(t *testing.T) {
 	id := "testdiskpersist"
@@ -44,16 +69,16 @@ func TestDiskCachePersistence(t *testing.T) {
 	}
 }
 
-type setupFunc func() (dp *DummyPolicy, cache *Cache)
+type setupFunc func() (dp *DummyPolicy, cache Cacher)
 
-func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
-	dp = NewDummyPolicy(make(Log))
+func setupDiskCache() (dp *DummyPolicy, cache Cacher) {
+	dp = NewDummyPolicy()
 	cache = NewDiskCache(cachefolder, cacheSize, dp)
 	return
 }
 
-func setupMemcache() (dp *DummyPolicy, cache *Cache) {
-	dp = NewDummyPolicy(make(Log))
+func setupMemcache() (dp *DummyPolicy, cache Cacher) {
+	dp = NewDummyPolicy()
 	cache = NewCache(dp, cacheSize)
 	return
 }

@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"sync"
 )
@@ -16,8 +15,8 @@ type Policy interface {
 }
 
 type Storer interface {
-	Load(string) (images.ImageBlob, bool)
-	Store(string, images.ImageBlob)
+	Load(string) ([]byte, bool)
+	Store(string, []byte)
 	Delete(string) uint64
 }
 
@@ -31,7 +30,7 @@ type Cache struct {
 }
 
 // Gets an image blob of requested dimensions
-func (c *Cache) GetBlob(string string) (blob images.ImageBlob, found bool) {
+func (c *Cache) GetBlob(string string) (blob []byte, found bool) {
 
 	b64 := stringToBase64(string)
 	logging.Debugf("Cache get with string: %v", b64)
@@ -50,7 +49,7 @@ func (c *Cache) GetBlob(string string) (blob images.ImageBlob, found bool) {
 	return
 }
 
-func (c *Cache) AddBlob(string string, blob images.ImageBlob) {
+func (c *Cache) AddBlob(string string, blob []byte) {
 
 	// This is the only point where the cache is mutated.
 	// While this runs the there can be no reads from the storer.
