@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"errors"
 )
 
 type DummyOperation struct {
@@ -89,5 +90,23 @@ func TestDenyIdenticalOperations(t *testing.T) {
 	// Only 2 operations should've been done - others found from cache
 	if len(log) != 2 {
 		t.Fatal(fmt.Sprintf("%v operations done. Expected 4", len(log)))
+	}
+}
+
+type BrokenOperation struct {}
+
+func (BrokenOperation)Marshal() string {
+	return "broken"
+}
+
+func (BrokenOperation)Apply(image images.Image) error {
+	return errors.New("This operation is broken")
+}
+
+func TestBrokenOperation(t *testing.T){
+	operator := MakeOperator(512*1024*1024, cacheFolder)
+	_, err := operator.GetBlob(BrokenOperation{})
+	if(err == nil){
+		t.Fatal("Broken operation did not return error")
 	}
 }

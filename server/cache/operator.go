@@ -89,7 +89,10 @@ func (o Operator) GetBlob(operations ...ops.Operation) (blob images.ImageBlob, e
 		}
 
 		// TODO: do not ignore error
-		o.applyOpsToImage(operations[start:], img)
+		err = o.applyOpsToImage(operations[start:], img)
+		if(err != nil){
+			return
+		}
 		blob = img.Blob()
 
 		o.cache.AddBlob(operations, blob)
