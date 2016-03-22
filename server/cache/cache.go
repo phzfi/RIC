@@ -3,7 +3,6 @@ package cache
 import (
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"github.com/phzfi/RIC/server/ops"
 	"sync"
 )
 
@@ -18,36 +17,35 @@ type Cache struct {
 
 type Policy interface {
 	// Push and Pop do not need to be thread safe
-	Push(cacheKey)
-	Pop() cacheKey
+	Push(string)
+	Pop() string
 
 	// Image is requested and found in cache. Needs to be thread safe.
-	Visit(cacheKey)
+	Visit(string)
 }
 
 type Storer interface {
-	Load(cacheKey) (images.ImageBlob, bool)
-	Store(cacheKey, images.ImageBlob)
-	Delete(cacheKey) uint64
+	Load(string) (images.ImageBlob, bool)
+	Store(string, images.ImageBlob)
+	Delete(string) uint64
 }
 
 // Gets an image blob of requested dimensions
-func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, found bool) {
-	key := toKey(operations)
+func (c *Cache) GetBlob(string string) (blob images.ImageBlob, found bool) {
 
-	b64 := keyToBase64(key)
-	logging.Debugf("Cache get with key: %v", b64)
+	b64 := stringToBase64(string)
+	logging.Debugf("Cache get with string: %v", b64)
 
 	// TODO: GetBlob calls policy.Visit(), AddBlob calls policy.Push().
 	// Figure out how thread safety should be handled. Is this current
 	// solution ok?
 	c.RLock()
 	defer c.RUnlock()
-	blob, found = c.storer.Load(key)
+	blob, found = c.storer.Load(string)
 
 	if found {
 		logging.Debugf("Cache found: %v", b64)
-		c.policy.Visit(key)
+		c.policy.Visit(string)
 	} else {
 		logging.Debugf("Cache not found: %v", b64)
 	}
@@ -55,7 +53,7 @@ func (c *Cache) GetBlob(operations []ops.Operation) (blob images.ImageBlob, foun
 	return
 }
 
-func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
+func (c *Cache) AddBlob(string string, blob images.ImageBlob) {
 
 	// This is the only point where the cache is mutated.
 	// While this runs the there can be no reads from "blobs".
@@ -65,21 +63,20 @@ func (c *Cache) AddBlob(operations []ops.Operation, blob images.ImageBlob) {
 		return
 	}
 
-	key := toKey(operations)
-	logging.Debugf("Cache add: %v", keyToBase64(key))
+	logging.Debugf("Cache add: %v", stringToBase64(string))
 
 	c.Lock()
 	defer c.Unlock()
 	for c.currentMemory+size > c.maxMemory {
 		c.deleteOne()
 	}
-	c.policy.Push(key)
+	c.policy.Push(string)
 	c.currentMemory += uint64(len(blob))
-	c.storer.Store(key, blob)
+	c.storer.Store(string, blob)
 }
 
 func (c *Cache) deleteOne() {
 	to_delete := c.policy.Pop()
-	logging.Debugf("Cache delete: %v", keyToBase64(to_delete))
+	logging.Debugf("Cache delete: %v", stringToBase64(to_delete))
 	c.currentMemory -= c.storer.Delete(to_delete)
 }

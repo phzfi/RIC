@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/operator"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"gopkg.in/gographics/imagick.v2/imagick"
@@ -29,7 +29,7 @@ type MyHandler struct {
 	requests uint64
 
 	config      config.Conf
-	operator    cache.Operator
+	operator    operator.Operator
 	imageSource ops.ImageSource
 	watermarker ops.Watermarker
 }
@@ -170,7 +170,7 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 		requests:    0,
 		config:      conf,
 		imageSource: imageSource,
-		operator:    cache.MakeOperator(maxMemory, "/tmp/RICdiskcache"),
+		operator:    operator.MakeDefault(maxMemory, "/tmp/RICdiskcache"),
 		watermarker: watermarker,
 	}
 

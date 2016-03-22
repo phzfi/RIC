@@ -6,7 +6,7 @@ import (
 )
 
 type loadImageOp struct {
-	is ImageSource
+	is *ImageSource
 	id string
 }
 

@@ -2,14 +2,12 @@ package cache
 
 import (
 	"bytes"
-	"github.com/phzfi/RIC/server/ops"
-	"os"
-	"path/filepath"
+	"github.com/phzfi/RIC/server/testutils"
 	"testing"
 	"time"
 )
 
-const cacheFolder = "/tmp/cachentestaus"
+const cachefolder = "/tmp/cachetests"
 
 func TestMemCache(t *testing.T) {
 	allTests(t, setupMemcache)
@@ -17,32 +15,13 @@ func TestMemCache(t *testing.T) {
 
 func TestDiskCache(t *testing.T) {
 	allTests(t, func() (*DummyPolicy, *Cache) {
-		removeContents(cacheFolder)
+		testutils.RemoveContents(cachefolder)
 		return setupDiskCache()
 	})
 }
 
-func removeContents(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func TestDiskCachePersistence(t *testing.T) {
-	id := []ops.Operation{&DummyOperation{}, &DummyOperation{}}
+	id := string("testdiskpersist")
 	data := []byte{1, 2, 3, 4, 7}
 
 	_, cache := setupDiskCache()
@@ -64,7 +43,7 @@ func TestDiskCachePersistence(t *testing.T) {
 
 func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
-	cache = NewDiskCache(cacheFolder, 100, dp)
+	cache = NewDiskCache(cachefolder, 100, dp)
 	return
 }
 
@@ -79,7 +58,7 @@ const (
 	Pop
 )
 
-type Log map[cacheKey][]uint
+type Log map[string][]uint
 
 type DummyPolicy struct {
 	fifo Policy
@@ -88,21 +67,21 @@ type DummyPolicy struct {
 	pops int
 }
 
-func (d DummyPolicy) Visit(k cacheKey) {
+func (d DummyPolicy) Visit(k string) {
 	d.log(k, Visit)
 	d.fifo.Visit(k)
 }
 
-func (d DummyPolicy) log(k cacheKey, t uint) {
+func (d DummyPolicy) log(k string, t uint) {
 	d.loki[k] = append(d.loki[k], t)
 }
 
-func (d DummyPolicy) Push(k cacheKey) {
+func (d DummyPolicy) Push(k string) {
 	d.log(k, Push)
 	d.fifo.Push(k)
 }
 
-func (d *DummyPolicy) Pop() cacheKey {
+func (d *DummyPolicy) Pop() string {
 	d.pops += 1
 	return d.fifo.Pop()
 }
@@ -120,7 +99,7 @@ func setupMemcache() (dp *DummyPolicy, cache *Cache) {
 type setupFunc func() (dp *DummyPolicy, cache *Cache)
 
 func testCache(t *testing.T, setup setupFunc) {
-	id := []ops.Operation{&DummyOperation{}}
+	id := string("testcache")
 	dp, cache := setup()
 
 	found := func() bool {
@@ -134,9 +113,9 @@ func testCache(t *testing.T, setup setupFunc) {
 
 	cache.AddBlob(id, make([]byte, 10))
 
-	time.Sleep(100) // only necessary for pure disk cache
+	time.Sleep(100 * time.Millisecond) // only necessary for pure disk cache
 
-	if tx := dp.loki[toKey(id)]; len(tx) != 1 || tx[0] != Push {
+	if tx := dp.loki[id]; len(tx) != 1 || tx[0] != Push {
 		t.Fatal("Cache did not use policy properly")
 	}
 
@@ -144,17 +123,16 @@ func testCache(t *testing.T, setup setupFunc) {
 		t.Fatal("Not found after adding to cache")
 	}
 
-	if tx := dp.loki[toKey(id)]; len(tx) != 2 || tx[1] != Visit {
+	if tx := dp.loki[id]; len(tx) != 2 || tx[1] != Visit {
 		t.Fatal("Cache did not use policy properly")
 	}
 }
 
 func testCacheExit(t *testing.T, setup setupFunc) {
 	var (
-		do  = &DummyOperation{}
-		id1 = []ops.Operation{do}
-		id2 = append(id1, do)
-		id3 = append(id2, do)
+		id1 = string("cacheexit1")
+		id2 = string("cacheexit2")
+		id3 = string("cacheexit3")
 	)
 	dp, cache := setup()
 

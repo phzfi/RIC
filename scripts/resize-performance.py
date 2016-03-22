@@ -67,7 +67,7 @@ class Query(object):
             LOGGER.exception('HTTPException', exc_info=excp)
             return None
         if response.status != 200:
-            LOGGER.warn('STATUS: ' + response.status)
+            LOGGER.warn('STATUS: ' + str(response.status))
             return None
         return {
             'elapsed': duration,
@@ -133,6 +133,7 @@ def paint(raw, plotdata, xkcd=False):
 
     # Second plot
     PLT.figure('grouped data')
+    PLT.title('Average time taken to resize vs Pixel count')
     if xkcd:
         PLT.xkcd()
     M = N // 4
@@ -155,7 +156,7 @@ def paint(raw, plotdata, xkcd=False):
             imax = min(M - 1, i + LWIDTH)
             nydata[i, 0] = statistics.mean(gydata[imin:imax, 0])
         gydata[1:M-1,0] = nydata[1:M-1,0]
-        
+
     PLT.xlabel('pixels')
     PLT.ylabel('seconds')
     PLT.grid(True, which='major', axis='both', linestyle='--')
@@ -212,7 +213,7 @@ def main(options):
     if PLT is not None:
         paint(ok_set, tplot)
     return 0
-    
+
 
 if __name__ == '__main__':
     options = get_opts(sys.argv[1:])
