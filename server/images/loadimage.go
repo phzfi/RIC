@@ -32,12 +32,10 @@ func (img *Image) FromFile(filename string) error {
 // Return binary blob of an image from web.
 func (img *Image) FromWeb(url string) error {
 
-	//resp, err := http.Get(url)
 	statuscode, body, err := fasthttp.Get(nil, url)
 	if err != nil {
 		return err
 	}
-	//defer resp.Body.Close()
 
 	if statuscode != 200 {
 		return errors.New(fmt.Sprintf("Couldn't load image. Server returned %i", statuscode))
