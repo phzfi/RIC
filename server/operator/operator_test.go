@@ -1,35 +1,30 @@
 package operator
 
 import (
-	"fmt"
-	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/testutils"
-	"sync"
 	"testing"
-	"time"
 )
 
 const cacheFolder = "/tmp/operatortests"
 
-type DummyOperation struct {
-	log  *[]int
-	name int
-}
+func TestAlreadyCached(t *testing.T) {
+	var log, log2 []int
 
-func (o *DummyOperation) Marshal() string {
-	return fmt.Sprintf("test%v", o.name)
-}
+	operator := MakeDefault(1000, cacheFolder)
 
-var logMutex *sync.Mutex = &sync.Mutex{}
+	operator.GetBlob(
+		&DummyOperation{&log, 9},
+		&DummyOperation{&log, 3},
+	)
+	operator.GetBlob(
+		&DummyOperation{&log2, 9},
+		&DummyOperation{&log2, 3},
+	)
 
-func (o *DummyOperation) Apply(img images.Image) error {
-	// Take some time for simult opers. tests
-	time.Sleep(200 * time.Millisecond)
-	logMutex.Lock()
-	*(o.log) = append(*(o.log), o.name)
-	logMutex.Unlock()
-	return nil
+	if len(log2) != 0 {
+		t.Fatal("Operator did not use a cached result, instead running the operations again.")
+	}
 }
 
 func TestOperator(t *testing.T) {
@@ -92,6 +87,6 @@ func TestDenyIdenticalOperations(t *testing.T) {
 
 	// Only 2 operations should've been done - others found from cache
 	if len(log) != 2 {
-		t.Fatal(fmt.Sprintf("%v operations done. Expected 2", len(log)))
+		t.Fatalf("%v operations done. Expected 2", len(log))
 	}
 }
