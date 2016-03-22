@@ -2,34 +2,34 @@ package cache
 
 import "testing"
 
-func TestPushPop(t *testing.T){
+func TestPushPop(t *testing.T) {
 	lru := NewLRUPolicy()
-	keys := []cacheKey{"a", "b"}
-	for _, k := range keys{
+	keys := []string{"a", "b"}
+	for _, k := range keys {
 		lru.Push(k)
 	}
-	for _, k := range keys{
+	for _, k := range keys {
 		check := lru.Pop()
-		if(check != k){
+		if check != k {
 			t.Fatalf("LRU should have popped %s, but popped %s", k, check)
 		}
 	}
 }
 
-func TestVisit(t *testing.T){
+func TestVisit(t *testing.T) {
 	lru := NewLRUPolicy()
-	keys := []cacheKey{"a", "b", "c", "d"}
-	out := []cacheKey{"b", "d", "a", "c"}
-	for _, k := range keys{
+	keys := []string{"a", "b", "c", "d"}
+	out := []string{"b", "d", "a", "c"}
+	for _, k := range keys {
 		lru.Push(k)
 	}
 	lru.Visit("a")
 	lru.Visit("c")
-	
-	for _, k := range out{
+
+	for _, k := range out {
 
 		check := lru.Pop()
-		if(check != k){
+		if check != k {
 			t.Fatalf("LRU should have popped %s, but popped %s", k, check)
 		}
 	}
