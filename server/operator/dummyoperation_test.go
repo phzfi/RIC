@@ -20,7 +20,7 @@ var logMutex *sync.Mutex = &sync.Mutex{}
 
 func (o *DummyOperation) Apply(img images.Image) error {
 	// Take some time for simult opers. tests
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 	logMutex.Lock()
 	*(o.log) = append(*(o.log), o.name)
 	logMutex.Unlock()

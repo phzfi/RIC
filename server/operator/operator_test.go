@@ -27,6 +27,22 @@ func TestAlreadyCached(t *testing.T) {
 	}
 }
 
+func TestPartiallyCached(t *testing.T) {
+	var log, log2 []int
+
+	operator := MakeDefault(1000, cacheFolder)
+
+	operator.GetBlob(&DummyOperation{&log, 9})
+	operator.GetBlob(
+		&DummyOperation{&log2, 9},
+		&DummyOperation{&log2, 3},
+	)
+
+	if len(log2) != 1 {
+		t.Fatalf("Operator ran %d operations instead of 1.", len(log2))
+	}
+}
+
 func TestOperator(t *testing.T) {
 	var log []int
 	operations := []ops.Operation{
