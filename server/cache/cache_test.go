@@ -24,7 +24,7 @@ func TestDiskCache(t *testing.T) {
 }
 
 func TestDiskCachePersistence(t *testing.T) {
-	id := string("testdiskpersist")
+	id := "testdiskpersist"
 	data := []byte{1, 2, 3, 4, 7}
 
 	_, cache := setupDiskCache()
@@ -64,7 +64,7 @@ func allTests(t *testing.T, f setupFunc) {
 }
 
 func testCache(t *testing.T, setup setupFunc) {
-	id := string("testcache")
+	id := "testcache"
 	dp, cache := setup()
 
 	found := func() bool {
@@ -95,9 +95,9 @@ func testCache(t *testing.T, setup setupFunc) {
 
 func testCacheExit(t *testing.T, setup setupFunc) {
 	var (
-		id1 = string("cacheexit1")
-		id2 = string("cacheexit2")
-		id3 = string("cacheexit3")
+		id1 = "cacheexit1"
+		id2 = "cacheexit2"
+		id3 = "cacheexit3"
 	)
 	dp, cache := setup()
 
@@ -111,5 +111,11 @@ func testCacheExit(t *testing.T, setup setupFunc) {
 }
 
 func TestTooBig(t *testing.T) {
+	dp, cache := setupMemcache()
+	const id = "string"
+	cache.AddBlob(id, make([]byte, cacheSize+1))
 
+	if len(dp.loki[id]) != 0 {
+		t.Fatalf("Despite being too big, resource was cached. %#v", dp.loki[id])
+	}
 }
