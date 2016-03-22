@@ -7,7 +7,10 @@ import (
 	"time"
 )
 
-const cachefolder = "/tmp/cachetests"
+const (
+	cachefolder = "/tmp/cachetests"
+	cacheSize   = 100
+)
 
 func TestMemCache(t *testing.T) {
 	allTests(t, setupMemcache)
@@ -27,7 +30,7 @@ func TestDiskCachePersistence(t *testing.T) {
 	_, cache := setupDiskCache()
 	cache.AddBlob(id, data)
 
-	time.Sleep(100)
+	time.Sleep(100 * time.Millisecond)
 
 	_, cache = setupDiskCache()
 	recovered, ok := cache.GetBlob(id)
@@ -41,9 +44,17 @@ func TestDiskCachePersistence(t *testing.T) {
 	}
 }
 
+type setupFunc func() (dp *DummyPolicy, cache *Cache)
+
 func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
 	dp = NewDummyPolicy(make(Log))
-	cache = NewDiskCache(cachefolder, 100, dp)
+	cache = NewDiskCache(cachefolder, cacheSize, dp)
+	return
+}
+
+func setupMemcache() (dp *DummyPolicy, cache *Cache) {
+	dp = NewDummyPolicy(make(Log))
+	cache = NewCache(dp, cacheSize)
 	return
 }
 
@@ -51,52 +62,6 @@ func allTests(t *testing.T, f setupFunc) {
 	testCache(t, f)
 	testCacheExit(t, f)
 }
-
-const (
-	Visit = iota
-	Push
-	Pop
-)
-
-type Log map[string][]uint
-
-type DummyPolicy struct {
-	fifo Policy
-
-	loki Log
-	pops int
-}
-
-func (d DummyPolicy) Visit(k string) {
-	d.log(k, Visit)
-	d.fifo.Visit(k)
-}
-
-func (d DummyPolicy) log(k string, t uint) {
-	d.loki[k] = append(d.loki[k], t)
-}
-
-func (d DummyPolicy) Push(k string) {
-	d.log(k, Push)
-	d.fifo.Push(k)
-}
-
-func (d *DummyPolicy) Pop() string {
-	d.pops += 1
-	return d.fifo.Pop()
-}
-
-func NewDummyPolicy(log Log) *DummyPolicy {
-	return &DummyPolicy{fifo: &FIFO{}, loki: log}
-}
-
-func setupMemcache() (dp *DummyPolicy, cache *Cache) {
-	dp = NewDummyPolicy(make(Log))
-	cache = NewCache(dp, 100)
-	return
-}
-
-type setupFunc func() (dp *DummyPolicy, cache *Cache)
 
 func testCache(t *testing.T, setup setupFunc) {
 	id := string("testcache")
@@ -143,4 +108,8 @@ func testCacheExit(t *testing.T, setup setupFunc) {
 	if dp.pops != 1 {
 		t.Fatal("Wrong amount of blobs removed from cache")
 	}
+}
+
+func TestTooBig(t *testing.T) {
+
 }
