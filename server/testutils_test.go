@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/phzfi/RIC/server/config"
-	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/operator"
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/testutils"
 	"github.com/valyala/fasthttp"
 	"log"
 	"net"
@@ -69,7 +69,7 @@ func getBlobFromServer(getname string) (blob []byte, err error) {
 
 // Tests getting images. c.Testfn is treated as GET string (filename?params).
 // Executes the tests supported by TestCaseAll.
-func testGetImages(cases []images.TestCaseAll) (err error) {
+func testGetImages(cases []testutils.TestCaseAll) (err error) {
 
 	s, ln, srverr := startServer()
 	defer stopServer(s, ln, srverr)
@@ -79,7 +79,7 @@ func testGetImages(cases []images.TestCaseAll) (err error) {
 	// Todo: this threading is copied from common_test.go unify it to single implementation (DRY)
 	sem := make(chan error, len(cases))
 	for _, c := range cases {
-		go func(tc images.TestCaseAll) {
+		go func(tc testutils.TestCaseAll) {
 			logging.Debug(fmt.Sprintf("Testing get: %v, %v, %v, %v, %v", tc.Testfn, tc.Reffn, tc.Resfn, tc.W, tc.H))
 			blob, err := getBlobFromServer(tc.Testfn)
 			if err != nil {
@@ -87,7 +87,7 @@ func testGetImages(cases []images.TestCaseAll) (err error) {
 				return
 			}
 
-			sem <- images.TestAll(tc, blob, tolerance)
+			sem <- testutils.TestAll(tc, blob, tolerance)
 		}(c)
 	}
 
