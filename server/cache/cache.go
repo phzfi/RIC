@@ -6,15 +6,6 @@ import (
 	"sync"
 )
 
-type Cache struct {
-	sync.RWMutex
-
-	policy Policy
-	storer Storer
-
-	maxMemory, currentMemory uint64
-}
-
 type Policy interface {
 	// Push and Pop do not need to be thread safe
 	Push(string)
@@ -30,18 +21,24 @@ type Storer interface {
 	Delete(string) uint64
 }
 
+type Cache struct {
+	sync.RWMutex
+
+	policy Policy
+	storer Storer
+
+	maxMemory, currentMemory uint64
+}
+
 // Gets an image blob of requested dimensions
 func (c *Cache) GetBlob(string string) (blob images.ImageBlob, found bool) {
 
 	b64 := stringToBase64(string)
 	logging.Debugf("Cache get with string: %v", b64)
 
-	// TODO: GetBlob calls policy.Visit(), AddBlob calls policy.Push().
-	// Figure out how thread safety should be handled. Is this current
-	// solution ok?
 	c.RLock()
-	defer c.RUnlock()
 	blob, found = c.storer.Load(string)
+	c.RUnlock()
 
 	if found {
 		logging.Debugf("Cache found: %v", b64)
@@ -56,7 +53,7 @@ func (c *Cache) GetBlob(string string) (blob images.ImageBlob, found bool) {
 func (c *Cache) AddBlob(string string, blob images.ImageBlob) {
 
 	// This is the only point where the cache is mutated.
-	// While this runs the there can be no reads from "blobs".
+	// While this runs the there can be no reads from the storer.
 	size := uint64(len(blob))
 
 	if size > c.maxMemory {
