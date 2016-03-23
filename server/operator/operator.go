@@ -76,13 +76,16 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error)
 		var found bool
 		blob, found = o.cache.GetBlob(key)
 		if !found {
-			blob = o.makeBlob(startimage, operations[start:])
+			blob, err = o.makeBlob(startimage, operations[start:])
+			if err != nil {
+				return nil, err
+			}
 		}
-
-		o.cache.AddBlob(key, blob)
 
 		isReady.blob = blob
 		isReady.Unlock()
+
+		o.cache.AddBlob(key, blob)
 
 		o.Lock()
 		delete(o.inProgress, key)
@@ -100,7 +103,7 @@ func (o *Operator) addInProgress(key string) *Progress {
 	return p
 }
 
-func (o *Operator) makeBlob(startBlob []byte, operations []ops.Operation) []byte {
+func (o *Operator) makeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
 	o.tokens.Borrow()
 	defer o.tokens.Return()
 
@@ -111,18 +114,12 @@ func (o *Operator) makeBlob(startBlob []byte, operations []ops.Operation) []byte
 		img.FromBlob(startBlob)
 	}
 
-	// TODO: do not ignore error
-	applyOpsToImage(operations, img)
-
-	return img.Blob()
-}
-
-func applyOpsToImage(operations []ops.Operation, img images.Image) (err error) {
 	for _, op := range operations {
-		err = op.Apply(img)
+		err := op.Apply(img)
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
-	return
+
+	return img.Blob(), nil
 }

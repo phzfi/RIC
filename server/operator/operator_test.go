@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"errors"
+	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/testutils"
 	"testing"
@@ -104,5 +106,23 @@ func TestDenyIdenticalOperations(t *testing.T) {
 	// Only 2 operations should've been done - others found from cache
 	if len(log) != 2 {
 		t.Fatalf("%v operations done. Expected 2", len(log))
+	}
+}
+
+type BrokenOperation struct{}
+
+func (BrokenOperation) Marshal() string {
+	return "broken"
+}
+
+func (BrokenOperation) Apply(image images.Image) error {
+	return errors.New("This operation is broken")
+}
+
+func TestBrokenOperation(t *testing.T) {
+	operator := MakeDefault(512*1024*1024, cacheFolder)
+	_, err := operator.GetBlob(BrokenOperation{})
+	if err == nil {
+		t.Fatal("Broken operation did not return error")
 	}
 }
