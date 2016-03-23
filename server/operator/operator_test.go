@@ -10,10 +10,15 @@ import (
 
 const cacheFolder = "/tmp/operatortests"
 
+func prepare() Operator {
+	testutils.RemoveContents(cacheFolder)
+	return MakeDefault(1000, cacheFolder)
+}
+
 func TestAlreadyCached(t *testing.T) {
 	var log, log2 []int
 
-	operator := MakeDefault(1000, cacheFolder)
+	operator := prepare()
 
 	operator.GetBlob(
 		&DummyOperation{&log, 9},
@@ -32,7 +37,7 @@ func TestAlreadyCached(t *testing.T) {
 func TestPartiallyCached(t *testing.T) {
 	var log, log2 []int
 
-	operator := MakeDefault(1000, cacheFolder)
+	operator := prepare()
 
 	operator.GetBlob(&DummyOperation{&log, 9})
 	operator.GetBlob(
@@ -53,8 +58,7 @@ func TestOperator(t *testing.T) {
 		&DummyOperation{&log, 2},
 	}
 
-	testutils.RemoveContents(cacheFolder)
-	operator := MakeDefault(512*1024*1024, cacheFolder)
+	operator := prepare()
 
 	_, err := operator.GetBlob(operations...)
 	if err != nil {
@@ -72,8 +76,6 @@ func TestOperator(t *testing.T) {
 }
 
 func TestDenyIdenticalOperations(t *testing.T) {
-	testutils.RemoveContents(cacheFolder)
-
 	var log []int
 
 	// Many identical operations
@@ -85,7 +87,7 @@ func TestDenyIdenticalOperations(t *testing.T) {
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 	}
-	operator := MakeDefault(512*1024*1024, cacheFolder)
+	operator := prepare()
 
 	// Channel to track amount of completed operations
 	c := make(chan bool, len(operations))
@@ -120,7 +122,7 @@ func (BrokenOperation) Apply(image images.Image) error {
 }
 
 func TestBrokenOperation(t *testing.T) {
-	operator := MakeDefault(512*1024*1024, cacheFolder)
+	operator := prepare()
 	_, err := operator.GetBlob(BrokenOperation{})
 	if err == nil {
 		t.Fatal("Broken operation did not return error")
