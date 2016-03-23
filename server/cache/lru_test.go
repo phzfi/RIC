@@ -3,7 +3,7 @@ package cache
 import "testing"
 
 func TestPushPop(t *testing.T) {
-	lru := NewLRUPolicy()
+	lru := NewLRU()
 	keys := []string{"a", "b"}
 	for _, k := range keys {
 		lru.Push(k)
@@ -17,7 +17,7 @@ func TestPushPop(t *testing.T) {
 }
 
 func TestVisit(t *testing.T) {
-	lru := NewLRUPolicy()
+	lru := NewLRU()
 	keys := []string{"a", "b", "c", "d"}
 	out := []string{"b", "d", "a", "c"}
 	for _, k := range keys {
@@ -33,4 +33,16 @@ func TestVisit(t *testing.T) {
 			t.Fatalf("LRU should have popped %s, but popped %s", k, check)
 		}
 	}
+}
+
+func TestUnderflow(t *testing.T) {
+	lru := NewLRU()
+
+	defer func() {
+		if recover() == nil {
+			t.Fatal("No panic occurred.")
+		}
+	}()
+
+	lru.Pop()
 }

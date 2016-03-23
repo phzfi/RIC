@@ -35,8 +35,8 @@ func Make(cache Cacher) Operator {
 
 func MakeDefault(mm uint64, cacheFolder string) Operator {
 	return Make(cache.HybridCache{
-		cache.NewLRU(mm),
-		cache.NewDiskCache(cacheFolder, 1024*1024*1024*4, cache.NewLRUPolicy()),
+		cache.NewCache(cache.NewLRU(), mm),
+		cache.NewDiskCache(cacheFolder, 1024*1024*1024*4, cache.NewLRU()),
 	})
 }
 
