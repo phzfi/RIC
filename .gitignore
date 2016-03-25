@@ -3,5 +3,6 @@
 *~
 .vagrant
 /server/server
+/server/server.exe
 /server/testresults/*/*
 !/**/placeholder
