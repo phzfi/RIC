@@ -73,6 +73,10 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		operations = append(operations, ops.LiquidRescale{w, h})
 	}
 
+	crop := func() {
+		operations = append(operations, ops.Crop{w, h, 0, 0})
+	}
+
 	fit := func() {
 		if w > ow {
 			w = ow
@@ -108,6 +112,8 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		fit()
 	case "liquid":
 		liquid()
+	case "crop":
+		crop()
 	default:
 		resize()
 	}
