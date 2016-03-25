@@ -1,9 +1,0 @@
-sudo apt-get install libssl-dev
-sudo apt-get install python-pip
-sudo apt-get install libcurl4-openssl-dev
-
-# Version is important to ensure graphicsmagick working"
-pip2 install 'thumbor==5.2.1'
-sudo apt-get install libgraphicsmagick++1-dev libboost-python-dev
-pip install graphicsmagick-engine
-

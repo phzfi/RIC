@@ -30,8 +30,8 @@ CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
 echo "Waiting 10s for ric to boot"
-sh server/do_run.sh
-sleeps 10s
+sh ../scripts/start_ric_stop_rest.sh
+sleep 10s
 
 #RIC SIEGE
 RAW_FILE=./raw/ric_$(date +%Y-%m-%d_%H-%M-%S).txt
