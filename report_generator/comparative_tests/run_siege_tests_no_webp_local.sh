@@ -70,4 +70,3 @@ rm $URLS_FILE
 rm $TURLS_FILE
 rm $JURLS_FILE
 python csv_to_html.py $RIC_OUT_FILE $TUMBOR_OUT_FILE $CIB_OUT_FILE
-
