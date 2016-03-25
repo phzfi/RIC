@@ -76,7 +76,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	crop := func() {
 		cropx, _ := args.GetUint("cropx")
 		cropy, _ := args.GetUint("cropy")
-		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+		operations = append(operations, ops.Crop{w, h, cropx, cropy, false})
+	}
+
+	cropmid := func() {
+		operations = append(operations, ops.Crop{w, h, 0, 0, true})
 	}
 
 	fit := func() {
@@ -116,6 +120,8 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		liquid()
 	case "crop":
 		crop()
+	case "cropmid":
+		cropmid()
 	default:
 		resize()
 	}
