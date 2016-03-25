@@ -1,6 +1,9 @@
 #!/bin/bash
+
 ssh phzfi@ric.phz.fi << EOF
   cd;
   cd go/src/github.com/phzfi/RIC/scripts;
-  sh stop_thumbor_start_ric.sh;
+  sh start_cib_stop_rest.sh;
 EOF
+echo "Waiting 20s for cib to boot"
+sleep 20s
