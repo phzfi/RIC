@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
@@ -31,11 +31,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	operations = []ops.Operation{source.LoadImageOp(filename)}
 
 	adjustWidth := func() {
-		w = int(float32(h*ow)/float32(oh) + 0.5)
+		w = roundedIntegerDivision(h*ow, oh)
 	}
 
 	adjustHeight := func() {
-		h = int(float32(w*oh)/float32(ow) + 0.5)
+		h = roundedIntegerDivision(w*oh, ow)
 	}
 
 	adjustSize := func() {
@@ -49,13 +49,15 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	denyUpscale := func() {
+		h0 := h
+		w0 := w
 		if w > ow {
+			h = roundedIntegerDivision(ow*h0, w0)
 			w = ow
-			adjustHeight()
 		}
-		if h > oh {
+		if h > oh || h > h0 {
+			w = roundedIntegerDivision(oh*w0, h0)
 			h = oh
-			adjustWidth()
 		}
 	}
 
@@ -72,8 +74,13 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	fit := func() {
+		if w > ow {
+			w = ow
+		}
+		if h > oh {
+			h = oh
+		}
 		if werr == nil && herr == nil {
-			denyUpscale()
 			if ow*h > w*oh {
 				adjustHeight()
 			} else {
@@ -112,4 +119,12 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	return
+}
+
+func roundedIntegerDivision(n, m int) int {
+	if (n < 0) == (m < 0) {
+		return (n + m/2) / m
+	} else { // -5 / 6 should round to -1
+		return (n - m/2) / m
+	}
 }

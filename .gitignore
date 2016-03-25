@@ -3,6 +3,7 @@
 *~
 .vagrant
 /server/server
+/server/server.exe
 /server/testresults/*/*
 !/**/placeholder
 /competing_product/debug.log

@@ -59,6 +59,8 @@ func TestOperator(t *testing.T) {
 }
 
 func TestDenyIdenticalOperations(t *testing.T) {
+	testutils.RemoveContents(cacheFolder)
+
 	var log []int
 
 	// Many identical operations
@@ -76,17 +78,17 @@ func TestDenyIdenticalOperations(t *testing.T) {
 	c := make(chan bool, len(operations))
 
 	// Launch operations simultaneously
-	for i := 0; i < len(operations); i++ {
-		opers := operations[i]
+	for i := range operations {
+		ops := operations[i]
 		go func() {
-			_, _ = operator.GetBlob(opers...)
+			_, _ = operator.GetBlob(ops...)
 			c <- true
 		}()
 	}
 
 	// Wait for the operations to finish
 	for i := 0; i < len(operations); i++ {
-		_ = <-c
+		<-c
 	}
 
 	// Only 2 operations should've been done - others found from cache
