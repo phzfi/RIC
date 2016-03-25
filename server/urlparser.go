@@ -49,13 +49,15 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	denyUpscale := func() {
+		h0 := h
+		w0 := w
 		if w > ow {
+			h = roundedIntegerDivision(ow*h0, w0)
 			w = ow
-			adjustHeight()
 		}
-		if h > oh {
+		if h > oh || h > h0 {
+			w = roundedIntegerDivision(oh*w0, h0)
 			h = oh
-			adjustWidth()
 		}
 	}
 
@@ -72,8 +74,13 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	fit := func() {
+		if w > ow {
+			w = ow
+		}
+		if h > oh {
+			h = oh
+		}
 		if werr == nil && herr == nil {
-			denyUpscale()
 			if ow*h > w*oh {
 				adjustHeight()
 			} else {
