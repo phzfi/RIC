@@ -15,6 +15,18 @@ func (c Crop) Marshal() string {
 }
 
 func (c Crop) Apply(img images.Image) error {
-	logging.Debug("Crop image to: %v, %v with offset: %v, %v", c.Width, c.Height, c.X, c.Y)
+  if c.X < 0 {
+    c.X = 0
+  }
+  if c.Y < 0 {
+    c.Y = 0
+  }
+  if c.Width < 0 {
+    c.Width = img.GetWidth()
+  }
+  if c.Height < 0 {
+    c.Height = img.GetHeight()
+  }
+	logging.Debugf("Crop image to: %d, %d with offset: %d, %d", c.Width, c.Height, c.X, c.Y)
 	return img.Crop(c.Width, c.Height, c.X, c.Y)
 }
