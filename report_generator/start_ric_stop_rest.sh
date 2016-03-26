@@ -1,5 +1,5 @@
 #!/bin/bash
-ssh phzfi@ric.phz.fi << EOF
+ssh -t phzfi@ric.phz.fi << EOF
   cd;
   cd go/src/github.com/phzfi/RIC/scripts;
   sh start_ric_stop_rest.sh;
