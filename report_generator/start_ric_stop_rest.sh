@@ -1,8 +1,4 @@
 #!/bin/bash
-ssh -t phzfi@ric.phz.fi << EOF
-  cd;
-  cd go/src/github.com/phzfi/RIC/scripts;
-  sh start_ric_stop_rest.sh;
-EOF
+ssh -t phzfi@ric.phz.fi 'sh ~/go/src/github.com/phzfi/RIC/scripts/start_ric_stop_rest.sh'
 echo "Waiting 10s for ric to boot"
 sleep 10s

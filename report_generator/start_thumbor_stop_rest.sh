@@ -1,8 +1,4 @@
 #!/bin/bash
-ssh -t phzfi@ric.phz.fi << EOF
-  cd;
-  cd go/src/github.com/phzfi/RIC/scripts;
-  sh start_thumbor_stop_rest.sh;
-EOF
+ssh -t phzfi@ric.phz.fi 'sh ~/go/src/github.com/phzfi/RIC/scripts/start_thumbor_stop_rest.sh'
 echo "Waiting 10s for thumbor to boot"
 sleep 10s

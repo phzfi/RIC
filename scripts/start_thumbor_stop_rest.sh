@@ -12,7 +12,7 @@ echo "Clearing thumbor temp files"
 sudo rm -r /tmp/thumbor
 
 echo "Clearing cache"
-sudo sh -c 'sync && echo 3 >/proc/sys/vm/drop_caches'
+sudo -c 'sync && echo 3 >/proc/sys/vm/drop_caches'
 
 #Starts thumbor in a new screen
 sh thumbor_do_run.sh
