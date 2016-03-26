@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Created on 18 Dec 2015
 
@@ -7,10 +8,11 @@ Created on 18 Dec 2015
 """
 import csv
 import codecs
-import traceback
-import sys
+import datetime
 import logging
 import os
+import sys
+import traceback
 
 """
 Different formatted csvs made with the csv_formatter are used to
