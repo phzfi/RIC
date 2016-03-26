@@ -18,7 +18,7 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/jurls_local.txt
+URLS_FILE=siege_url_files/turls_local.txt
 SEED=$1
 python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
 URLS_FILE="${URLS_FILE%.*}"_temp.txt
@@ -30,9 +30,9 @@ CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
 
-#CIB SIEGE
-RAW_FILE=./raw/cib_$(date +%Y-%m-%d_%H-%M-%S).txt
-CIB_OUT_FILE=./results/cib_CRL_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
+#THUMBOR SIEGE
+RAW_FILE=./raw/thumbor_$(date +%Y-%m-%d_%H-%M-%S).txt
+THUMBOR_OUT_FILE=./results/thumbor_CRL_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
@@ -41,9 +41,9 @@ siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUES
 cat $TMP >> $RAW_FILE
 rm $TMP
 
-python3 csv_formatter.py $RAW_FILE $CIB_OUT_FILE
+python3 csv_formatter.py $RAW_FILE $THUMBOR_OUT_FILE
 
 # Formatter
 rm $URLS_FILE
 
-python3 csv_to_html.py html_tables/cibConstantRequestsResultsLocal.html $CIB_OUT_FILE
+python3 csv_to_html.py html_tables/thumborConstantRequestsResultsLocal.html $THUMBOR_OUT_FILE

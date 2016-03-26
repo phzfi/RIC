@@ -18,7 +18,7 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/jurls_local.txt
+URLS_FILE=siege_url_files/turls_local.txt
 SEED=$1
 python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
 URLS_FILE="${URLS_FILE%.*}"_temp.txt
@@ -29,15 +29,15 @@ SIEGE_CONF=./.siegerc
 CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
-echo "Waiting 10s for cib to boot"
-sh ../scripts/start_cib_stop_rest.sh
+echo "Waiting 10s for thumbor to boot"
+sh ../scripts/start_thumbor_stop_rest.sh
 sleep 10s
 
-#CIB SIEGE
-RAW_FILE_BEFORE=./raw/cib-before_$(date +%Y-%m-%d_%H-%M-%S).txt
-RAW_FILE_AFTER=./raw/cib-after_$(date +%Y-%m-%d_%H-%M-%S).txt
-CIB_OUT_FILE_BEFORE=./results/cib-before_CRLA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
-CIB_OUT_FILE_AFTER=./results/cib-after_CRLA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
+#THUMBOR SIEGE
+RAW_FILE_BEFORE=./raw/thumbor-before_$(date +%Y-%m-%d_%H-%M-%S).txt
+RAW_FILE_AFTER=./raw/thumbor-after_$(date +%Y-%m-%d_%H-%M-%S).txt
+THUMBOR_OUT_FILE_BEFORE=./results/thumbor-before_CRLA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
+THUMBOR_OUT_FILE_AFTER=./results/thumbor-after_CRLA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 
@@ -55,11 +55,11 @@ siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUES
 cat $TMP >> $RAW_FILE_AFTER
 rm $TMP
 
-python3 csv_formatter.py $RAW_FILE_BEFORE $CIB_OUT_FILE_BEFORE
+python3 csv_formatter.py $RAW_FILE_BEFORE $THUMBOR_OUT_FILE_BEFORE
 
-python3 csv_formatter.py $RAW_FILE_AFTER $CIB_OUT_FILE_AFTER
+python3 csv_formatter.py $RAW_FILE_AFTER $THUMBOR_OUT_FILE_AFTER
 
 # Formatter
 rm $URLS_FILE
 
-python3 csv_to_html.py html_tables/cibConstantRequestsResultsLocalAuto.html $CIB_OUT_FILE_BEFORE $CIB_OUT_FILE_AFTER
+python3 csv_to_html.py html_tables/thumborConstantRequestsResultsLocalAuto.html $THUMBOR_OUT_FILE_BEFORE $THUMBOR_OUT_FILE_AFTER
