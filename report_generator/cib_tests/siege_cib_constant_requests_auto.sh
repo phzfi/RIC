@@ -29,23 +29,35 @@ SIEGE_CONF=./.siegerc
 CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
-
-#CIB SIEGE
-RAW_FILE=./raw/cib_$(date +%Y-%m-%d_%H-%M-%S).txt
-CIB_OUT_FILE=./results/cib_CRLA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
-TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
-
 sh start_cib_stop_rest.sh
 
-# Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUESTS_PER_USER --log=$RAW_FILE --file=$URLS_FILE |
+#CIB SIEGE
+RAW_FILE_BEFORE=./raw/cib-before_$(date +%Y-%m-%d_%H-%M-%S).txt
+RAW_FILE_AFTER=./raw/cib-after_$(date +%Y-%m-%d_%H-%M-%S).txt
+CIB_OUT_FILE_BEFORE=./results/cib-before_CRA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
+CIB_OUT_FILE_AFTER=./results/cib-after_CRA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
+TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
+
+
+# Siege Before
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUESTS_PER_USER --log=$RAW_FILE_BEFORE --file=$URLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
-cat $TMP >> $RAW_FILE
+cat $TMP >> $RAW_FILE_BEFORE
 rm $TMP
 
-python3 csv_formatter.py $RAW_FILE $CIB_OUT_FILE
+TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
+
+# Siege After
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUESTS_PER_USER --log=$RAW_FILE_AFTER --file=$URLS_FILE |
+	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
+cat $TMP >> $RAW_FILE_AFTER
+rm $TMP
+
+python3 csv_formatter.py $RAW_FILE_BEFORE $CIB_OUT_FILE_BEFORE
+
+python3 csv_formatter.py $RAW_FILE_AFTER $CIB_OUT_FILE_AFTER
 
 # Formatter
 rm $URLS_FILE
 
-python3 csv_to_html.py html_tables/cibConstantRequestsResults.html $CIB_OUT_FILE
+python3 csv_to_html.py html_tables/cibConstantRequestsResultsAuto.html $CIB_OUT_FILE_BEFORE $CIB_OUT_FILE_AFTER

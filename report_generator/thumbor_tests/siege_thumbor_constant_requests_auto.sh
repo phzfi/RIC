@@ -18,7 +18,7 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/turls.txt
+URLS_FILE=siege_url_files/jurls.txt
 SEED=$1
 python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
 URLS_FILE="${URLS_FILE%.*}"_temp.txt
@@ -29,24 +29,35 @@ SIEGE_CONF=./.siegerc
 CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
+sh start_ric_stop_rest.sh
 
-#THUMBOR SIEGE
-RAW_FILE=./raw/thumbor_$(date +%Y-%m-%d_%H-%M-%S).txt
-THUMBOR_OUT_FILE=./results/thumbor_CRLA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
+#RIC SIEGE
+RAW_FILE_BEFORE=./raw/ric-before_$(date +%Y-%m-%d_%H-%M-%S).txt
+RAW_FILE_AFTER=./raw/ric-after_$(date +%Y-%m-%d_%H-%M-%S).txt
+RIC_OUT_FILE_BEFORE=./results/ric-before_CRA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
+RIC_OUT_FILE_AFTER=./results/ric-after_CRA_"$SEED"_"$CONCURRENT"_"$REQUESTS_PER_USER"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
-echo "Waiting 10s for thumbor to boot"
-sh start_thumbor_stop_rest.sh
 
-# Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUESTS_PER_USER --log=$RAW_FILE --file=$URLS_FILE |
+# Siege Before
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUESTS_PER_USER --log=$RAW_FILE_BEFORE --file=$URLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
-cat $TMP >> $RAW_FILE
+cat $TMP >> $RAW_FILE_BEFORE
 rm $TMP
 
-python3 csv_formatter.py $RAW_FILE $THUMBOR_OUT_FILE
+TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
+
+# Siege After
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY -r$REQUESTS_PER_USER --log=$RAW_FILE_AFTER --file=$URLS_FILE |
+	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
+cat $TMP >> $RAW_FILE_AFTER
+rm $TMP
+
+python3 csv_formatter.py $RAW_FILE_BEFORE $RIC_OUT_FILE_BEFORE
+
+python3 csv_formatter.py $RAW_FILE_AFTER $RIC_OUT_FILE_AFTER
 
 # Formatter
 rm $URLS_FILE
 
-python3 csv_to_html.py html_tables/thumborConstantRequestsResults.html $THUMBOR_OUT_FILE
+python3 csv_to_html.py html_tables/ricConstantRequestsResultsAuto.html $RIC_OUT_FILE_BEFORE $RIC_OUT_FILE_AFTER

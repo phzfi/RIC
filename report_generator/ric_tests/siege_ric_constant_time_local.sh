@@ -18,7 +18,7 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/urls_local.txt
+URLS_FILE=siege_url_files/jurls_local.txt
 SEED=$1
 python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
 URLS_FILE="${URLS_FILE%.*}"_temp.txt
@@ -30,9 +30,9 @@ CONCURRENT=$2
 TIME=$3"s"
 
 
-#RIC SIEGE
-RAW_FILE=./raw/ric_$(date +%Y-%m-%d_%H-%M-%S).txt
-RIC_OUT_FILE=./results/ric_CTL_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H-%M-%S).csv
+#CIB SIEGE
+RAW_FILE=./raw/cib_$(date +%Y-%m-%d_%H-%M-%S).txt
+CIB_OUT_FILE=./results/cib_CTL_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
@@ -41,9 +41,9 @@ siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$T
 cat $TMP >> $RAW_FILE
 rm $TMP
 
-python3 csv_formatter.py $RAW_FILE $RIC_OUT_FILE
+python3 csv_formatter.py $RAW_FILE $CIB_OUT_FILE
 
 # Formatter
 rm $URLS_FILE
 
-python3 csv_to_html.py html_tables/ricConstantTimeResultsLocal.html $RIC_OUT_FILE
+python3 csv_to_html.py html_tables/cibConstantTimeResultsLocal.html $CIB_OUT_FILE

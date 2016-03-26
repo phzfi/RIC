@@ -18,7 +18,7 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/turls_local.txt
+URLS_FILE=siege_url_files/jurls_local.txt
 SEED=$1
 python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
 URLS_FILE="${URLS_FILE%.*}"_temp.txt
@@ -30,24 +30,36 @@ CONCURRENT=$2
 TIME=$3"s"
 
 
-echo "Waiting 10s for thumbor to boot"
-sh ../scripts/start_thumbor_stop_rest.sh
+echo "Waiting 10s for cib to boot"
+sh ../scripts/start_cib_stop_rest.sh
 sleep 10s
 
-#THUMBOR SIEGE
-RAW_FILE=./raw/thumbor_$(date +%Y-%m-%d_%H-%M-%S).txt
-THUMBOR_OUT_FILE=./results/thumbor_CTLA_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H-%M-%S).csv
+#CIB SIEGE
+RAW_FILE_BEFORE=./raw/cib-before_$(date +%Y-%m-%d_%H-%M-%S).txt
+RAW_FILE_AFTER=./raw/cib-after_$(date +%Y-%m-%d_%H-%M-%S).txt
+CIB_OUT_FILE_BEFORE=./results/cib-before_CTLA_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H-%M-%S).csv
+CIB_OUT_FILE_AFTER=./results/cib-after_CTLA_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H-%M-%S).csv
+TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
+
+sh start_cib_stop_rest.sh
+
+# Siege
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE_BEFORE --file=$URLS_FILE |
+	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
+cat $TMP >> $RAW_FILE_BEFORE
+rm $TMP
+
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$URLS_FILE |
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE_AFTER --file=$URLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
-cat $TMP >> $RAW_FILE
+cat $TMP >> $RAW_FILE_AFTER
 rm $TMP
 
-python3 csv_formatter.py $RAW_FILE $THUMBOR_OUT_FILE
-
+python3 csv_formatter.py $RAW_FILE_BEFORE $CIB_OUT_FILE_BEFORE
+python3 csv_formatter.py $RAW_FILE_AFTER $CIB_OUT_FILE_AFTER
 # Formatter
 rm $URLS_FILE
 
-python3 csv_to_html.py html_tables/thumborConstantTimeResultsLocal.html $THUMBOR_OUT_FILE
+python3 csv_to_html.py html_tables/cibConstantTimeResultsAuto.html $CIB_OUT_FILE_BEFORE $CIB_OUT_FILE_AFTER
