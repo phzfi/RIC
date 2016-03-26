@@ -10,4 +10,4 @@ echo "Clearing RIC temp files"
 rm -r /tmp/RICdiskcache
 
 echo "Clearing cache"
-sudo sh -c 'sync && echo 3 >/proc/sys/vm/drop_caches'
+sh -c 'sync && echo 3 >/proc/sys/vm/drop_caches'
