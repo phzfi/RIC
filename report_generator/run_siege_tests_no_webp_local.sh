@@ -28,6 +28,8 @@ RIC_OUT_FILE=./results/ric_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
+rm -f /tmp/RICdiskcache/*
+sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
 siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$URLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
@@ -43,6 +45,8 @@ TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 
 # Siege
+rm -rf /tmp/thumbor/storage/*
+sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
 siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$TURLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
@@ -57,6 +61,7 @@ CIB_OUT_FILE=./results/competitor_$(date +%Y-%m-%d_%H-%M-%S).csv
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
+sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'
 siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$JURLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
