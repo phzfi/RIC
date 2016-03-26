@@ -12,3 +12,5 @@ graph.html
 !temp/empty.txt
 urls.txt_temp.txt
 turls.txt_temp.txt
+html_tables/*
+!html_tables/tablestyle.css
