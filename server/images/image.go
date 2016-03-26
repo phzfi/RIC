@@ -2,13 +2,14 @@ package images
 
 import (
 	"errors"
-	"gopkg.in/gographics/imagick.v2/imagick"
+	"https://github.com/fubla/imagick/imagick"
 	"strings"
 )
 
 
 func init() {
 	imagick.Initialize()
+    imagick.InitializeOpenCL()
 }
 
 // ImageBlob is just an image file dumped, byte by byte to an byte array.
