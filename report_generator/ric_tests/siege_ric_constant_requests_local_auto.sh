@@ -29,6 +29,7 @@ SIEGE_CONF=./.siegerc
 CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
+
 echo "Waiting 10s for ric to boot"
 sh ../scripts/start_ric_stop_rest.sh
 sleep 10s

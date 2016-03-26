@@ -9,3 +9,4 @@
 /competing_product/debug.log
 /competing_product/.gradle/
 /competing_product/build/
+/report_generator/siege_url_files/*temp.txt

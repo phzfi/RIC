@@ -29,6 +29,7 @@ SIEGE_CONF=./.siegerc
 CONCURRENT=$2
 TIME=$3"s"
 
+
 echo "Waiting 20s for cib to boot"
 sh ../scripts/start_cib_stop_rest.sh
 sleep 20s

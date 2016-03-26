@@ -29,6 +29,7 @@ SIEGE_CONF=./.siegerc
 CONCURRENT=$2
 REQUESTS_PER_USER=$3
 
+
 echo "Waiting 10s for thumbor to boot"
 sh ../scripts/start_thumbor_stop_rest.sh
 sleep 10s
