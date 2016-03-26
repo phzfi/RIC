@@ -48,15 +48,28 @@ public class WebApplicationConfiguration {
 
 	public Long getMaxMemory() {
 		final Properties prop = getProperties();
-		String maxmem = prop.getProperty("memory.maxsize", "1024").toUpperCase();
-		Long memoryConstraint = null;
+		final String maxMemory = prop.getProperty("memory.maxsize", "1024").toUpperCase();
+		final Long memoryConstraint;
 		try {
-			memoryConstraint = Long.parseLong(maxmem) * MEGABYTE;
+			memoryConstraint = Long.parseLong(maxMemory) * MEGABYTE;
 		} catch (NumberFormatException e) {
 			logger.error(e.getMessage(), e);
-			return null;
+			return 1024L;
 		}
 		return memoryConstraint;
+	}
+
+	public Integer getMaxConcurrentResizes() {
+		final Properties prop = getProperties();
+		final String maxResizes = prop.getProperty("imagick.maxresizes", "10");
+		final Integer resizeConstraint;
+		try {
+			resizeConstraint = Integer.parseInt(maxResizes);
+		} catch (NumberFormatException e) {
+			logger.error(e.getMessage(), e);
+			return 10;
+		}
+		return resizeConstraint;
 	}
 
 	public String getRoot() {
@@ -66,9 +79,9 @@ public class WebApplicationConfiguration {
 
 	@Bean
 	public GuavaCacheManager getCacheManager() {
-		GuavaCacheManager gcm = new GuavaCacheManager();
+		final GuavaCacheManager gcm = new GuavaCacheManager();
+		final CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
 		gcm.setAllowNullValues(false);
-		CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder();
 		builder.concurrencyLevel(16);
 		builder.expireAfterAccess(15, TimeUnit.MINUTES);
 		builder.initialCapacity(256);
@@ -80,8 +93,9 @@ public class WebApplicationConfiguration {
 
 	@Bean
 	public ImageHandler getImageHandler() {
-		ImageHandler h = new ImageHandler();
+		final ImageHandler h = new ImageHandler();
 		h.setRoot(getRoot());
+		h.setConcurrentResizeLimit(getMaxConcurrentResizes());
 		return h;
 	}
 	
