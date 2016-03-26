@@ -18,10 +18,10 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/turls_local.txt
+TURLS_FILE=siege_url_files/turls_local.txt
 SEED=$1
-python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
-URLS_FILE="${URLS_FILE%.*}"_temp.txt
+python3 siege_url_files/urls_randomizer.py "$TURLS_FILE" $SEED
+TURLS_FILE="${TURLS_FILE%.*}"_temp.txt
 
 # Siege settings
 DELAY=1
@@ -36,7 +36,7 @@ THUMBOR_OUT_FILE=./results/thumbor_CTL_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$URLS_FILE |
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$TURLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
 rm $TMP
@@ -44,6 +44,6 @@ rm $TMP
 python3 csv_formatter.py $RAW_FILE $THUMBOR_OUT_FILE
 
 # Formatter
-rm $URLS_FILE
+rm $TURLS_FILE
 
 python3 csv_to_html.py html_tables/thumborConstantTimeResultsLocal.html $THUMBOR_OUT_FILE

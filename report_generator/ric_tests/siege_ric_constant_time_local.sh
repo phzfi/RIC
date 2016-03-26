@@ -18,10 +18,10 @@ cd "$DIR"
 cd ..
 
 # URLS randomiser
-URLS_FILE=siege_url_files/urls_local.txt
+RURLS_FILE=siege_url_files/urls_local.txt
 SEED=$1
-python3 siege_url_files/urls_randomizer.py "$URLS_FILE" $SEED
-URLS_FILE="${URLS_FILE%.*}"_temp.txt
+python3 siege_url_files/urls_randomizer.py "$RURLS_FILE" $SEED
+RURLS_FILE="${RURLS_FILE%.*}"_temp.txt
 
 # Siege settings
 DELAY=1
@@ -36,7 +36,7 @@ RIC_OUT_FILE=./results/ric_CTL_"$SEED"_"$CONCURRENT"_"$TIME"_$(date +%Y-%m-%d_%H
 TMP=./temp/$(date +%Y-%m-%d_%H-%M-%S).tmp
 
 # Siege
-siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$URLS_FILE |
+siege -R $SIEGE_CONF --verbose --concurrent=$CONCURRENT --delay=$DELAY --time=$TIME --log=$RAW_FILE --file=$RURLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
 cat $TMP >> $RAW_FILE
 rm $TMP
@@ -44,6 +44,6 @@ rm $TMP
 python3 csv_formatter.py $RAW_FILE $RIC_OUT_FILE
 
 # Formatter
-rm $URLS_FILE
+rm $RURLS_FILE
 
 python3 csv_to_html.py html_tables/ricConstantTimeResultsLocal.html $RIC_OUT_FILE
