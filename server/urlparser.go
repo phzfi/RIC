@@ -74,13 +74,35 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	crop := func() {
-		cropx, _ := args.GetUint("cropx")
-		cropy, _ := args.GetUint("cropy")
-		operations = append(operations, ops.Crop{w, h, cropx, cropy, false})
+		cropx, xerr := args.GetUint("cropx")
+		cropy, yerr := args.GetUint("cropy")
+		if xerr != nil {
+	    cropx = 0
+	  }
+	  if yerr != nil {
+	    cropy = 0
+	  }
+	  if werr != nil {
+	    w = ow
+	  }
+	  if herr != nil {
+	    h = oh
+	  }
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
 	}
 
 	cropmid := func() {
-		operations = append(operations, ops.Crop{w, h, 0, 0, true})
+		if werr != nil {
+	    w = ow
+	  }
+	  if herr != nil {
+	    h = oh
+	  }
+	  midW := roundedIntegerDivision(ow, 2)
+	  midH := roundedIntegerDivision(oh, 2)
+	  cropx := midW - roundedIntegerDivision(w, 2)
+	  cropy := midH - roundedIntegerDivision(h, 2)
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
 	}
 
 	fit := func() {
