@@ -5,8 +5,11 @@ screen -ls | awk -vFS='\t|[.]' '/RIC/ {system("screen -S "$2" -X quit")}'
 screen -ls | awk -vFS='\t|[.]' '/CIB/ {system("screen -S "$2" -X quit")}'
 screen -ls | awk -vFS='\t|[.]' '/Thumbor/ {system("screen -S "$2" -X quit")}'
 
-cd ~/go/src/github.com/phzfi/RIC/competing_product/
+cd ~/go/src/github.com/phzfi/RIC/scripts
 
 sudo sh clear_cache.sh
+
+cd ~/go/src/github.com/phzfi/RIC/competing_product/
+
 
 sh cib_do_run.sh
