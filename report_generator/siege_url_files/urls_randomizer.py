@@ -24,7 +24,6 @@ def main():
         print(mess)
         sys.exit(1)
     urls_file = sys.argv[1]
-    print(urls_file)
     temp_file = '{:s}_temp.txt'.format(path.splitext(urls_file)[0])
     seed = sys.argv[2]
     try:
