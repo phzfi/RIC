@@ -6,6 +6,8 @@ if [ -z $BASH_VERSION ]; then
 	exit $?
 fi
 
+echo "Use the -h flag for help."
+
 SEED=5
 CONCURRENT="-c20"
 REQUESTS_OR_TIME="-r40"
@@ -149,11 +151,19 @@ if [ "$THUMBOR" == true ]; then
 fi
 
 
-
-
 HTML=$SOFT"$SETTINGS".html
-
 python3 csv_to_html.py html_tables/$HTML $OUTPUT_FILES
+echo "Siege Complete and results can be found in file $HTML"
 
 
-echo "end"
+#If auto is true, then reboot RIC
+if [ "$AUTO" == true ]; then
+	echo "Because AUTO was set to true, RIC is being rebooted"
+  if [ "$LOCAL" == true ]; then
+      echo "Waiting 10s for ric to boot"
+      sh ../scripts/start_ric_stop_rest.sh
+      sleep 10s
+  else
+    sh start_ric_stop_rest.sh
+  fi
+fi

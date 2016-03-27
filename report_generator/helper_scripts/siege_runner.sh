@@ -12,16 +12,7 @@ DELAY="$7"
 SOFTWARE="$8"
 RAW_FILE="$9"
 OUT_FILE=${10}
-echo $1
-echo $2
-echo $3
-echo $4
-echo $5
-echo $6
-echo $7
-echo $8
-echo $9
-echo $OUT_FILE
+
 
 
 # URL FILE RANDOMIZING
