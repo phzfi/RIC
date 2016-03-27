@@ -46,6 +46,8 @@ if [ "$AUTO" == true ]; then
   fi
 fi
 
+echo "Running $SOFTWARE Siege!"
+
 #Running Siege
 siege -R $SIEGE_CONF --verbose $CONCURRENT $DELAY $REQUESTS_OR_TIME --log=$RAW_FILE --file=$URLS_FILE |
 	 sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" > $TMP
