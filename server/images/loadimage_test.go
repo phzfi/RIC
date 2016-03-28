@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"gopkg.in/gographics/imagick.v2/imagick"
+	"github.com/fubla/imagick/imagick"
 	"path/filepath"
 	"testing"
 )

@@ -9,7 +9,7 @@ import (
 	"github.com/phzfi/RIC/server/operator"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
-	"gopkg.in/gographics/imagick.v2/imagick"
+	"github.com/fubla/imagick/imagick"
 	"log"
 	"net"
 	"strconv"
