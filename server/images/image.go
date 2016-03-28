@@ -2,7 +2,7 @@ package images
 
 import (
 	"errors"
-	"https://github.com/fubla/imagick/imagick"
+	"github.com/fubla/imagick/imagick"
 	"strings"
 )
 
