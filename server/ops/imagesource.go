@@ -35,9 +35,8 @@ func (i ImageSource) searchRoots(fn string, img images.Image) (err error) {
 	return i.searchRootsCustomTrialFunc(fn, img.FromFile)
 }
 
-
 // Searches root for an image. Calls the given trialFunc with the given fn for every root until trialFunc does not return an error. Returns if trialFunc succeeds. returns with error if no trialFunc succeeds.
-func (i ImageSource) searchRootsCustomTrialFunc(fn string, trialFunc func (fn string) (err error)) (err error) {
+func (i ImageSource) searchRootsCustomTrialFunc(fn string, trialFunc func(fn string) (err error)) (err error) {
 	if len(i.roots) == 0 {
 		logging.Debug("No roots")
 		err = os.ErrNotExist
