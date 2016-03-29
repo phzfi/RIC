@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/phzfi/RIC/server/config"
-	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/operator"
 	"github.com/phzfi/RIC/server/ops"
@@ -59,13 +58,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			ctx.NotFound()
 			logging.Debug(err)
 		} else {
-			// ping blob to avoid reading whole image into memory
-			// and set right content-type response header
-			img := images.NewImage()
-			img.PingImageBlob(blob)
-			ctx.SetContentType("image/" + img.GetImageFormat())
-			img.Destroy()
-
+			ctx.SetContentType("image/" + operations[len(operations)-1].(ops.Convert).Format)
 			ctx.Write(blob)
 			logging.Debug("Blob returned")
 		}
@@ -76,7 +69,6 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		logging.Debug("Post request received")
 	}
 }
-
 
 // Respond to POST message by saying Hello
 func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
