@@ -1,6 +1,5 @@
 #!/bin/bash
 screen -ls | awk -vFS='\t|[.]' '/RIC/ {system("screen -S "$2" -X quit")}'
-export GOPATH=/home/vagrant/go
 sudo sh ~/go/src/github.com/phzfi/RIC/scripts/clear_cache.sh
 cd ~/go/src/github.com/phzfi/RIC/server
 echo "Building server"
