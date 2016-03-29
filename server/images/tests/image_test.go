@@ -1,19 +1,21 @@
-package images
+package tests
 
 import (
-  "testing"
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/testutils"
+	"testing"
 )
 
 func TestImageWatermark(t *testing.T) {
 
-	testfolder := "../testimages/watermark/"
+	testfolder := "../../testimages/watermark/"
 	testimage := testfolder + "towatermark.jpg"
-	resfolder := "../testresults/images/"
+	resfolder := "../../testresults/images/"
 	tolerance := 0.002
 
-	wmimage := NewImage()
+	wmimage := images.NewImage()
 	defer wmimage.Destroy()
-	err := wmimage.FromFile("../watermark.png")
+	err := wmimage.FromFile(testfolder + "watermark.png")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +23,7 @@ func TestImageWatermark(t *testing.T) {
 	horizontal := 0.0
 	vertical := 0.0
 
-	cases := []TestCase{
+	cases := []testutils.TestCase{
 		{testimage, testfolder + "marked1.jpg", resfolder + "marked1.jpg"},
 		{testimage, testfolder + "marked2.jpg", resfolder + "marked2.jpg"},
 		{testimage, testfolder + "marked3.jpg", resfolder + "marked3.jpg"},
@@ -29,7 +31,7 @@ func TestImageWatermark(t *testing.T) {
 
 	for _, c := range cases {
 
-		img := NewImage()
+		img := images.NewImage()
 		defer img.Destroy()
 		err := img.FromFile(c.Testfn)
 		if err != nil {
@@ -43,7 +45,7 @@ func TestImageWatermark(t *testing.T) {
 		blob := img.Blob()
 		horizontal = horizontal + 0.5
 		vertical = vertical + 0.5
-		err = CheckDistortion(blob, c.Reffn, tolerance, c.Resfn)
+		err = testutils.CheckDistortion(blob, c.Reffn, tolerance, c.Resfn)
 		if err != nil {
 			t.Fatal(err)
 		}
