@@ -1,6 +1,7 @@
 package fi.phz.cib;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 import org.apache.log4j.Logger;
 import org.springframework.cache.annotation.CacheConfig;
@@ -17,7 +18,7 @@ public class ImageHandler {
 
 	static Magick magick = new Magick();
 	private static Logger logger = Logger.getLogger(ImageHandler.class);
-
+	
 	public static class ExtraInfo extends ImageInfo {
 		
 		Integer width;
@@ -50,6 +51,7 @@ public class ImageHandler {
 
 	private String root;
 	private ConcurrentHashMap<String, ExtraInfo> infos;
+	private Semaphore resizeOperations;
 	
 	public ImageHandler() {
 		this.infos = new ConcurrentHashMap<String, ExtraInfo>();
@@ -63,15 +65,20 @@ public class ImageHandler {
 		}
 	}
 
+	public void setConcurrentResizeLimit(int limit) {
+		this.resizeOperations = new Semaphore(limit);
+	}
+
 	public ExtraInfo getInfo(String imageId) {
 		ExtraInfo info = infos.get(imageId);
 		if (info != null) {
 			return info;
 		}
+
 		final String target = root + imageId + ".jpg";
 		try {
 			info = new ExtraInfo(target);
-			MagickImage image = new MagickImage(info, true);
+			final MagickImage image = new MagickImage(info, true);
 			info.setWidth(image.getDimension().width);
 			info.setHeight(image.getDimension().height);
 		} catch (MagickException e) {
@@ -83,7 +90,7 @@ public class ImageHandler {
 	}
 
 	protected MagickImage toMagick(final ExtraInfo info) {
-		MagickImage image = new MagickImage();
+		final MagickImage image = new MagickImage();
 		try {
 			image.readImage(info);
 			info.setWidth(image.getDimension().width);
@@ -97,11 +104,12 @@ public class ImageHandler {
 
 	@Cacheable(cacheNames={"images"}, key="#a0")
 	public byte[] loadOriginal(final String imageId) {
-		ExtraInfo info = getInfo(imageId);
+		final ExtraInfo info = getInfo(imageId);
 		if (info == null) {
 			return null;
 		}
-		MagickImage img = toMagick(info);
+
+		final MagickImage img = toMagick(info);
 		if (img == null) {
 			return null;
 		}
@@ -110,20 +118,32 @@ public class ImageHandler {
 
 	@Cacheable(cacheNames={"images"}, key="#a1+'-'+#a2+'-'+#a3")
 	public byte[] loadResized(String imageId, int width, int height) {
-		ExtraInfo info = getInfo(imageId);
+		final ExtraInfo info = getInfo(imageId);
 		if (info == null) {
 			return null;
 		}
+
 		MagickImage img = toMagick(info);
 		if (img == null) {
 			return null;
 		}
+
+		try {
+			resizeOperations.acquire();
+		} catch (InterruptedException e) {
+			logger.error("Interrupted", e);
+			return null;
+		}
+
 		try {
 			img = img.scaleImage(width, height);
 		} catch (MagickException e) {
 			logger.error(e.getMessage(), e);
 			return null;
+		} finally {
+			resizeOperations.release();
 		}
+
 		return img.imageToBlob(info);
 	}
 }

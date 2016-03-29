@@ -93,7 +93,8 @@ func TestDenyIdenticalOperations(t *testing.T) {
 	c := make(chan bool, len(operations))
 
 	// Launch operations simultaneously
-	for _, ops := range operations {
+	for i := range operations {
+		ops := operations[i]
 		go func() {
 			_, _ = operator.GetBlob(ops...)
 			c <- true

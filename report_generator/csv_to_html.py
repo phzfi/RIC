@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Created on 18 Dec 2015
 
@@ -7,10 +8,11 @@ Created on 18 Dec 2015
 """
 import csv
 import codecs
-import traceback
-import sys
+import datetime
 import logging
 import os
+import sys
+import traceback
 
 """
 Different formatted csvs made with the csv_formatter are used to
@@ -21,6 +23,7 @@ make html tables. The different formatted csv paths are given as parameters.
 
 HIGHLIGHT_HIGHER = (1, 3, 5, 6, 8)
 HIGHLIGHT_LOWER = (2, 4, 9)
+
 HTML_DOC = '''
 <!DOCTYPE html>
 <html>
@@ -44,8 +47,10 @@ logging.basicConfig(
 
 def main(args):
     if len(args) < 3:
-        logging.critical('Wrong number of arguments.\n' +
-                         'Usage: "python csv_to_html.py htmlTable testData*"')
+        mess = ('Wrong number of arguments.\n' +
+                'Usage: "python csv_to_html.py htmlTable testData*"')
+        logging.critical(mess)
+        print(mess)
         sys.exit(1)
     software = []
     titles = None
@@ -56,15 +61,17 @@ def main(args):
             titles = read_csv_row(csv, 0)
         data = read_csv_row(csv, 1)
         software.append({'name': name, 'data': data})
-    html = buildHTML(software, titles)
+    html = buildHTML(software, titles, len(args) != 3)
     sys.exit(save_to_html(html, args[1]))
 
 
-def get_picker(i):
+def get_picker(i, colors):
     """
     Checks if the current row in the table should be highlited or not.
 
     """
+    if not colors:
+        return None
     if i in HIGHLIGHT_HIGHER:
         return max
     if i in HIGHLIGHT_LOWER:
@@ -102,7 +109,7 @@ def build_row(row_data, picker):
     ])
 
 
-def buildHTML(software, titles):
+def buildHTML(software, titles, colors=True):
     """
     Builds the html to display the given data in a table.
 
@@ -116,7 +123,7 @@ def buildHTML(software, titles):
 
     for i, title in enumerate(titles):
         row_data = [app['data'][i] for app in software]
-        picker = get_picker(i)
+        picker = get_picker(i, colors)
         row_head = column.format(title)
         row_content = build_row(row_data, picker)
         html_table += row.format(row_head + row_content)
@@ -129,7 +136,7 @@ def read_csv_row(from_path, row_number=None):
     Reads a row in a csv file formatted with the csv_formatter script.
 
     """
-    forms = [int, float, int, float, float, float, float, int, int]
+    forms = [str, int, float, int, float, float, float, float, int, int]
     try:
         with codecs.open(from_path, 'r', 'utf-8') as inp:
             reader = csv.reader(inp, dialect='excel', lineterminator='\n')
@@ -139,7 +146,7 @@ def read_csv_row(from_path, row_number=None):
                 return next(reader)
             f = lambda x: x[1] if (x[0] == row_number) else None
             iterated = map(f, enumerate(reader))
-            row = filter(lambda x: x is not None, iterated)[0]
+            row = next(filter(lambda x: x is not None, iterated))
             return [a(b.strip()) for (a, b) in zip(forms, row)]
     except Exception as excp:
         print(excp)

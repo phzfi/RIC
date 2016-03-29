@@ -1,0 +1,9 @@
+
+# Runs with sudo. Make sure to run ./gradlew run once, before using the program.
+# Run these commands on old version on staging/old linux which does not find openjdk-8
+
+add-apt-repository ppa:openjdk-r/ppa
+apt-get update
+apt-get install openjdk-8-jdk
+apt-get install Jmagick
+update-ca-certificates -f

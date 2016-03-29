@@ -78,3 +78,8 @@ sourceSets {
 	}
 }
 
+run {
+	jvmArgs=['-Xmx2g']
+}
+
+
