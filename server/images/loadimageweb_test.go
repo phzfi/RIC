@@ -25,7 +25,7 @@ func HandleTest(ctx *fasthttp.RequestCtx) {
 
 	buffer := bytes.NewBuffer([]byte{})
 	buffer.ReadFrom(reader)
-	blob := ImageBlob(buffer.Bytes())
+	blob := buffer.Bytes()
 
 	ctx.Write(blob)
 }

@@ -2,10 +2,6 @@ package cache
 
 import "sync"
 
-func NewLRU(mm uint64) *Cache {
-	return NewCache(NewLRUPolicy(), mm)
-}
-
 type LRU struct {
 	sync.Mutex
 
@@ -13,7 +9,7 @@ type LRU struct {
 	head, tail list
 }
 
-func NewLRUPolicy() *LRU {
+func NewLRU() *LRU {
 
 	lru := new(LRU)
 
@@ -28,7 +24,7 @@ func (lru *LRU) Push(id string) {
 
 	l := list{id: id}
 
-	prev := lru.tail.prev
+	prev := lru.last()
 	l.prev = prev
 	prev.next = &l
 

@@ -2,7 +2,6 @@ package cache
 
 import (
 	"encoding/base64"
-	"github.com/phzfi/RIC/server/images"
 	"io/ioutil"
 	"log"
 	"os"
@@ -47,17 +46,24 @@ func NewDiskCache(folder string, mm uint64, policy Policy) *Cache {
 	return c
 }
 
+func fileSize(path string) uint64 {
+	f, err := os.Open(path)
+	if err != nil {
+		log.Println("Unable to open file to get its size:", err)
+		return 0
+	}
+	stat, err := f.Stat()
+	if err != nil {
+		log.Println("Unable to get file stats:", err)
+		return 0
+	}
+	return uint64(stat.Size())
+}
+
 var encoder = base64.RawURLEncoding
 
 func stringToBase64(k string) string {
 	return encoder.EncodeToString([]byte(k))
-}
-
-type stringToEntry map[string]entry
-
-type entry struct {
-	Path string
-	Size uint64
 }
 
 type DiskStore struct {
@@ -67,6 +73,13 @@ type DiskStore struct {
 	folder string
 }
 
+type stringToEntry map[string]entry
+
+type entry struct {
+	Path string
+	Size uint64
+}
+
 func NewDiskStore(folder string) *DiskStore {
 	return &DiskStore{
 		entries: make(stringToEntry),
@@ -74,7 +87,7 @@ func NewDiskStore(folder string) *DiskStore {
 	}
 }
 
-func (d *DiskStore) Load(string string) (blob images.ImageBlob, ok bool) {
+func (d *DiskStore) Load(string string) (blob []byte, ok bool) {
 	d.RLock()
 	entry, ok := d.entries[string]
 	d.RUnlock()
@@ -90,7 +103,7 @@ func (d *DiskStore) Load(string string) (blob images.ImageBlob, ok bool) {
 	return
 }
 
-func (d *DiskStore) Store(string string, blob images.ImageBlob) {
+func (d *DiskStore) Store(string string, blob []byte) {
 	filename := stringToBase64(string)
 	path := filepath.Join(filepath.FromSlash(d.folder), filename)
 
@@ -127,18 +140,4 @@ func (d *DiskStore) Delete(string string) uint64 {
 		}
 	}()
 	return entry.Size
-}
-
-func fileSize(path string) uint64 {
-	f, err := os.Open(path)
-	if err != nil {
-		log.Println("Unable to open file to get its size:", err)
-		return 0
-	}
-	stat, err := f.Stat()
-	if err != nil {
-		log.Println("Unable to get file stats:", err)
-		return 0
-	}
-	return uint64(stat.Size())
 }

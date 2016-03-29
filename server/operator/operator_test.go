@@ -1,35 +1,53 @@
 package operator
 
 import (
-	"fmt"
+	"errors"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/testutils"
-	"sync"
 	"testing"
-	"time"
 )
 
 const cacheFolder = "/tmp/operatortests"
 
-type DummyOperation struct {
-	log  *[]int
-	name int
+func prepare() Operator {
+	testutils.RemoveContents(cacheFolder)
+	return MakeDefault(1000, cacheFolder)
 }
 
-func (o *DummyOperation) Marshal() string {
-	return fmt.Sprintf("test%v", o.name)
+func TestAlreadyCached(t *testing.T) {
+	var log, log2 []int
+
+	operator := prepare()
+
+	operator.GetBlob(
+		&DummyOperation{&log, 9},
+		&DummyOperation{&log, 3},
+	)
+	operator.GetBlob(
+		&DummyOperation{&log2, 9},
+		&DummyOperation{&log2, 3},
+	)
+
+	if len(log2) != 0 {
+		t.Fatal("Operator did not use a cached result, instead running the operations again.")
+	}
 }
 
-var logMutex *sync.Mutex = &sync.Mutex{}
+func TestPartiallyCached(t *testing.T) {
+	var log, log2 []int
 
-func (o *DummyOperation) Apply(img images.Image) error {
-	// Take some time for simult opers. tests
-	time.Sleep(200 * time.Millisecond)
-	logMutex.Lock()
-	*(o.log) = append(*(o.log), o.name)
-	logMutex.Unlock()
-	return nil
+	operator := prepare()
+
+	operator.GetBlob(&DummyOperation{&log, 9})
+	operator.GetBlob(
+		&DummyOperation{&log2, 9},
+		&DummyOperation{&log2, 3},
+	)
+
+	if len(log2) != 1 {
+		t.Fatalf("Operator ran %d operations instead of 1.", len(log2))
+	}
 }
 
 func TestOperator(t *testing.T) {
@@ -40,8 +58,7 @@ func TestOperator(t *testing.T) {
 		&DummyOperation{&log, 2},
 	}
 
-	testutils.RemoveContents(cacheFolder)
-	operator := MakeDefault(512*1024*1024, cacheFolder)
+	operator := prepare()
 
 	_, err := operator.GetBlob(operations...)
 	if err != nil {
@@ -59,8 +76,6 @@ func TestOperator(t *testing.T) {
 }
 
 func TestDenyIdenticalOperations(t *testing.T) {
-	testutils.RemoveContents(cacheFolder)
-
 	var log []int
 
 	// Many identical operations
@@ -72,7 +87,7 @@ func TestDenyIdenticalOperations(t *testing.T) {
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 	}
-	operator := MakeDefault(512*1024*1024, cacheFolder)
+	operator := prepare()
 
 	// Channel to track amount of completed operations
 	c := make(chan bool, len(operations))
@@ -93,6 +108,24 @@ func TestDenyIdenticalOperations(t *testing.T) {
 
 	// Only 2 operations should've been done - others found from cache
 	if len(log) != 2 {
-		t.Fatal(fmt.Sprintf("%v operations done. Expected 2", len(log)))
+		t.Fatalf("%v operations done. Expected 2", len(log))
+	}
+}
+
+type BrokenOperation struct{}
+
+func (BrokenOperation) Marshal() string {
+	return "broken"
+}
+
+func (BrokenOperation) Apply(image images.Image) error {
+	return errors.New("This operation is broken")
+}
+
+func TestBrokenOperation(t *testing.T) {
+	operator := prepare()
+	_, err := operator.GetBlob(BrokenOperation{})
+	if err == nil {
+		t.Fatal("Broken operation did not return error")
 	}
 }
