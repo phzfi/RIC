@@ -53,7 +53,12 @@ func TestKeyCollision(t *testing.T) {
 	lru.Push("asd")
 	lru.Push("asd")
 
-	lru.Pop()
+	defer func() {
+		if recover() == nil {
+			t.Fatal("No panic occurred.")
+		}
+	}()
 
-	lru.Visit("asd")
+	lru.Pop()
+	lru.Pop()
 }
