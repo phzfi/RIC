@@ -46,3 +46,14 @@ func TestUnderflow(t *testing.T) {
 
 	lru.Pop()
 }
+
+func TestKeyCollision(t *testing.T) {
+	lru := NewLRU()
+
+	lru.Push("asd")
+	lru.Push("asd")
+
+	lru.Pop()
+
+	lru.Visit("asd")
+}
