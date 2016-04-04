@@ -9,7 +9,7 @@ import (
 
 func init() {
 	imagick.Initialize()
-    imagick.InitializeOpenCL()
+    	imagick.InitializeOpenCL()
 }
 
 // ImageBlob is just an image file dumped, byte by byte to an byte array.
