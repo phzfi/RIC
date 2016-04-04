@@ -97,29 +97,25 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 
 	minHeight, err := conf.GetInt("watermark", "minheight")
 	if err != nil {
-		log.Println("Error reading config size minimum height restriction,
-        defaulting to 200")
+		log.Println("Error reading config size minimum height restriction, defaulting to 200")
         minHeight = 200
 	}
 
 	minWidth, err := conf.GetInt("watermark", "minwidth")
 	if err != nil {
-		log.Println("Error reading config size minimum width restriction,
-        defaulting to 200")
+		log.Println("Error reading config size minimum width restriction, defaulting to 200")
         minWidth = 200
 	}
 
 	maxHeight, err := conf.GetInt("watermark", "maxheight")
 	if err != nil {
-		log.Println("Error reading config size maximum height restriction,
-        defaulting to 5000")
+		log.Println("Error reading config size maximum height restriction, defaulting to 5000")
         maxHeight = 5000
 	}
 
 	maxWidth, err := conf.GetInt("watermark", "maxwidth")
 	if err != nil {
-		log.Println("Error reading config size maximum width restriction,
-        defaulting to 5000")
+		log.Println("Error reading config size maximum width restriction, defaulting to 5000")
         maxWidth = 5000
 	}
 
@@ -131,8 +127,7 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 
 	imgpath, err := conf.GetString("watermark", "path")
 	if err != nil && addMark == true {
-		log.Println("Error reading path for watermark image, disabling
-        watermarking")
+		log.Println("Error reading path for watermark image, disabling watermarking")
         imgpath = ""
         addMark = false
 	}
@@ -145,15 +140,13 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 
 	ver, err := conf.GetFloat64("watermark", "vertical")
 	if err != nil {
-        log.Println("Error reading config vertical alignment, defaulting to
-        0.5")
+        log.Println("Error reading config vertical alignment, defaulting to 0.5")
         ver = 0.5
 	}
 
 	hor, err := conf.GetFloat64("watermark", "horizontal")
 	if err != nil {
-		log.Println("Error reading config horizontal alignment, defaulting to
-        0.5")
+		log.Println("Error reading config horizontal alignment, defaulting to 0.5")
         hor = 0.5
 	}
 
