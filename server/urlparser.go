@@ -14,6 +14,9 @@ func ExtToFormat(ext string) string {
 	if ext == "JPG" {
 		return "JPEG"
 	}
+	if ext == "TIF" {
+		return "TIFF"
+	}
 	return ext
 }
 
