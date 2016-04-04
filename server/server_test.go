@@ -143,7 +143,7 @@ func TestMIMEtype(t *testing.T) {
 	defer stopServer(s, ln, srverr)
 	response := fasthttp.AcquireResponse()
 	request := fasthttp.AcquireRequest()
-	cases := []string{"01.jpg", "01.png", "01.webp", "01.tiff", "01.bmp", "01.gif"}
+	cases := []string{"01", "01.jpg", "01.png", "01.webp", "01.tiff", "01.tif", "01.bmp", "01.gif"}
 	folder := "testimages/server/"
 
 	for _, c := range cases {
