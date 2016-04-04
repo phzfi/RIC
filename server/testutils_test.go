@@ -16,6 +16,8 @@ import (
 // Port will be incremented for each server created in the test
 var port = 8022
 
+var tokens = 3
+
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
 	// Start the server
@@ -51,7 +53,7 @@ func stopServer(server *fasthttp.Server, ln net.Listener, srverr chan error) err
 // uses the cache and ImageSource operation with current working dir as root.
 // Returns the operator and the source operation.
 func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
-	o = operator.MakeDefault(512*1024*1024, "/tmp/RIC_testimagecache")
+	o = operator.MakeDefault(512*1024*1024, "/tmp/RIC_testimagecache", tokens)
 	src = ops.MakeImageSource()
 	src.AddRoot("./")
 	return

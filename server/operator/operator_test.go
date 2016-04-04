@@ -9,10 +9,11 @@ import (
 )
 
 const cacheFolder = "/tmp/operatortests"
+var tokens = 3
 
 func prepare() Operator {
 	testutils.RemoveContents(cacheFolder)
-	return MakeDefault(1000, cacheFolder)
+	return MakeDefault(1000, cacheFolder, tokens)
 }
 
 func TestAlreadyCached(t *testing.T) {

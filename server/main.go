@@ -125,6 +125,8 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 		log.Fatal("Error reading config addmark value. " + err.Error())
 	}
 
+    tokens, err := conf.GetInt("server", "concurrency")
+
 	ver, err := conf.GetFloat64("watermark", "vertical")
 	if err != nil {
 		log.Fatal("Error reading config vertical alignment. " + err.Error())
@@ -147,7 +149,7 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 		requests:    0,
 		config:      conf,
 		imageSource: imageSource,
-		operator:    operator.MakeDefault(maxMemory, "/tmp/RICdiskcache"),
+		operator:    operator.MakeDefault(maxMemory, "/tmp/RICdiskcache", tokens),
 		watermarker: watermarker,
 	}
 

@@ -25,19 +25,19 @@ type Cacher interface {
 	AddBlob(string, []byte)
 }
 
-func Make(cache Cacher) Operator {
+func Make(cache Cacher, tokens int) Operator {
 	return Operator{
 		cache:      cache,
 		inProgress: make(map[string]*Progress),
-		tokens:     MakeTokenPool(2),
+		tokens:     MakeTokenPool(tokens),
 	}
 }
 
-func MakeDefault(mm uint64, cacheFolder string) Operator {
+func MakeDefault(mm uint64, cacheFolder string, tokens int) Operator {
 	return Make(cache.HybridCache{
 		cache.NewCache(cache.NewLRU(), mm),
 		cache.NewDiskCache(cacheFolder, 1024*1024*1024*4, cache.NewLRU()),
-	})
+	}, tokens)
 }
 
 func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error) {
