@@ -58,7 +58,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			ctx.NotFound()
 			logging.Debug(err)
 		} else {
-			ctx.SetContentType("image/" + extension[1:])
+                        ctx.SetContentType("image/" + ExtToFormat(extension))
 			ctx.Write(blob)
 			logging.Debug("Blob returned")
 		}
