@@ -1,22 +1,23 @@
-package images
+package testutils
 
 import (
 	"errors"
 	"fmt"
+	"github.com/phzfi/RIC/server/images"
 	"gopkg.in/gographics/imagick.v2/imagick"
 	"path/filepath"
 )
 
-func CheckDistortion(blob ImageBlob, reffn string, tol float64, resfn string) (err error) {
+func CheckDistortion(blob []byte, reffn string, tol float64, resfn string) (err error) {
 
-	ref := NewImage()
+	ref := images.NewImage()
 	defer ref.Destroy()
 	err = ref.FromFile(reffn)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Could not load ref image: %v Err: %v", reffn, err))
 	}
 
-	img := NewImage()
+	img := images.NewImage()
 	defer img.Destroy()
 	err = img.FromBlob(blob)
 	if err != nil {
@@ -58,8 +59,8 @@ type TestCaseAll struct {
 	W, H   int
 }
 
-func CheckImage(blob ImageBlob, c TestCase, tol float64, f func(Image) error) (err error) {
-	img := NewImage()
+func CheckImage(blob []byte, c TestCase, tol float64, f func(images.Image) error) (err error) {
+	img := images.NewImage()
 	defer img.Destroy()
 	img.FromBlob(blob)
 
@@ -76,8 +77,8 @@ func CheckImage(blob ImageBlob, c TestCase, tol float64, f func(Image) error) (e
 	return
 }
 
-func CheckFormatFunc(c FormatTestCase) func(Image) error {
-	return func(img Image) error {
+func CheckFormatFunc(c FormatTestCase) func(images.Image) error {
+	return func(img images.Image) error {
 		f := img.GetImageFormat()
 		if f != c.Format {
 			return errors.New(fmt.Sprintf("Bad image format. Requested %v, Got %v", c.Format, f))
@@ -86,8 +87,8 @@ func CheckFormatFunc(c FormatTestCase) func(Image) error {
 	}
 }
 
-func CheckSizeFunc(c SizeTestCase) func(Image) error {
-	return func(img Image) error {
+func CheckSizeFunc(c SizeTestCase) func(images.Image) error {
+	return func(img images.Image) error {
 		w := img.GetWidth()
 		h := img.GetHeight()
 		if w != c.W || h != c.H {
@@ -97,8 +98,8 @@ func CheckSizeFunc(c SizeTestCase) func(Image) error {
 	}
 }
 
-func CheckAllFunc(c TestCaseAll) func(Image) error {
-	return func(img Image) error {
+func CheckAllFunc(c TestCaseAll) func(images.Image) error {
+	return func(img images.Image) error {
 		w := img.GetWidth()
 		h := img.GetHeight()
 		if w != c.W || h != c.H {
@@ -112,14 +113,14 @@ func CheckAllFunc(c TestCaseAll) func(Image) error {
 	}
 }
 
-func FormatTest(c FormatTestCase, blob ImageBlob, tolerance float64) error {
+func FormatTest(c FormatTestCase, blob []byte, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckFormatFunc(c))
 }
 
-func SizeTest(c SizeTestCase, blob ImageBlob, tolerance float64) error {
+func SizeTest(c SizeTestCase, blob []byte, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckSizeFunc(c))
 }
 
-func TestAll(c TestCaseAll, blob ImageBlob, tolerance float64) error {
+func TestAll(c TestCaseAll, blob []byte, tolerance float64) error {
 	return CheckImage(blob, c.TestCase, tolerance, CheckAllFunc(c))
 }

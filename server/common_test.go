@@ -2,28 +2,28 @@ package main
 
 import (
 	"fmt"
-	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/testutils"
 	"testing"
 )
 
 type CommonTestCase struct {
-	test images.TestCaseAll
-	op ops.Operation
+	test testutils.TestCaseAll
+	op   ops.Operation
 }
 
-type CommonTest func (CommonTestCase) (error)
+type CommonTest func(CommonTestCase) error
 
 func threadedTesting(cases []CommonTestCase, test CommonTest) (err error) {
 	sem := make(chan error, len(cases))
 	for _, c := range cases {
-		go func (tc CommonTestCase) {
+		go func(tc CommonTestCase) {
 			sem <- test(tc)
-		} (c)
+		}(c)
 	}
 	for range cases {
-		var verr = <- sem
+		var verr = <-sem
 		if verr != nil && err == nil {
 			// Pick the first error but wait for termination
 			err = verr
@@ -44,9 +44,9 @@ func TestOperatorConvert(t *testing.T) {
 	resfolder := "testresults/common/"
 	tolerance := 0.002
 
-	var conv = func (a, b, c, d string) CommonTestCase {
-		va := images.TestCase{a, testfolder + b, resfolder + c}
-		vb := images.TestCaseAll{va, d, -1, -1}
+	var conv = func(a, b, c, d string) CommonTestCase {
+		va := testutils.TestCase{a, testfolder + b, resfolder + c}
+		vb := testutils.TestCaseAll{va, d, -1, -1}
 		return CommonTestCase{vb, ops.Convert{d}}
 	}
 
@@ -65,7 +65,7 @@ func TestOperatorConvert(t *testing.T) {
 		conv(testimage4, "converted4.webp", "converted4.webp", "WEBP"),
 	}
 
-	var test = func (c CommonTestCase) (err error) {
+	var test = func(c CommonTestCase) (err error) {
 		var vt = c.test
 		var vo = c.op.(ops.Convert)
 		logging.Debug(fmt.Sprintf("Testing convert: %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.Format, vt.Resfn))
@@ -75,8 +75,8 @@ func TestOperatorConvert(t *testing.T) {
 			return
 		}
 
-		var ft = images.FormatTestCase{images.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.Format}
-		err = images.FormatTest(ft, blob, tolerance)
+		var ft = testutils.FormatTestCase{testutils.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.Format}
+		err = testutils.FormatTest(ft, blob, tolerance)
 		return
 	}
 
@@ -98,9 +98,9 @@ func TestOperatorResize(t *testing.T) {
 	resfolder := "testresults/common/"
 	tolerance := 0.002
 
-	var res = func (a, b, c string, d, e int) CommonTestCase {
-		va := images.TestCase{a, testfolder + b, resfolder + c}
-		vb := images.TestCaseAll{va, "Whatever", d, e}
+	var res = func(a, b, c string, d, e int) CommonTestCase {
+		va := testutils.TestCase{a, testfolder + b, resfolder + c}
+		vb := testutils.TestCaseAll{va, "Whatever", d, e}
 		return CommonTestCase{vb, ops.Resize{d, e}}
 	}
 
@@ -119,8 +119,7 @@ func TestOperatorResize(t *testing.T) {
 		res(testimage4, "4_200x200.jpg", "4_200x200.jpg", 200, 200),
 	}
 
-
-	var test = func (c CommonTestCase) (err error) {
+	var test = func(c CommonTestCase) (err error) {
 		var vt = c.test
 		var vo = c.op.(ops.Resize)
 		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.W, vt.H, vt.Resfn))
@@ -130,8 +129,8 @@ func TestOperatorResize(t *testing.T) {
 			return
 		}
 
-		var rt = images.SizeTestCase{images.TestCase{ vt.Testfn, vt.Reffn, vt.Resfn }, vt.W, vt.H}
-		err = images.SizeTest(rt, blob, tolerance)
+		var rt = testutils.SizeTestCase{testutils.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.W, vt.H}
+		err = testutils.SizeTest(rt, blob, tolerance)
 		return
 	}
 
@@ -151,9 +150,9 @@ func TestOperatorLiquidRescale(t *testing.T) {
 	resfolder := "testresults/common/"
 	tolerance := 0.05
 
-	var res = func (a, b, c string, d, e int) CommonTestCase {
-		va := images.TestCase{a, testfolder + b, resfolder + c}
-		vb := images.TestCaseAll{va, "Whatever", d, e}
+	var res = func(a, b, c string, d, e int) CommonTestCase {
+		va := testutils.TestCase{a, testfolder + b, resfolder + c}
+		vb := testutils.TestCaseAll{va, "Whatever", d, e}
 		return CommonTestCase{vb, ops.LiquidRescale{d, e}}
 	}
 
@@ -163,7 +162,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 		res(testimage2, "liquid2_200x200.jpg", "liquid2_200x200.jpg", 200, 200),
 	}
 
-	var test = func (c CommonTestCase) (err error) {
+	var test = func(c CommonTestCase) (err error) {
 		var vt = c.test
 		var vo = c.op.(ops.LiquidRescale)
 		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.W, vt.H, vt.Resfn))
@@ -173,8 +172,8 @@ func TestOperatorLiquidRescale(t *testing.T) {
 			return
 		}
 
-		var rt = images.SizeTestCase{images.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.W, vt.H}
-		err = images.SizeTest(rt, blob, tolerance)
+		var rt = testutils.SizeTestCase{testutils.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.W, vt.H}
+		err = testutils.SizeTest(rt, blob, tolerance)
 		return
 	}
 

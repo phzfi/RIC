@@ -7,27 +7,55 @@ import (
 	"time"
 )
 
-const cachefolder = "/tmp/cachetests"
+const (
+	cachefolder = "/tmp/cachetests"
+	cacheSize   = 100
+)
 
 func TestMemCache(t *testing.T) {
 	allTests(t, setupMemcache)
 }
 
 func TestDiskCache(t *testing.T) {
-	allTests(t, func() (*DummyPolicy, *Cache) {
+	allTests(t, func() (*DummyPolicy, Cacher) {
 		testutils.RemoveContents(cachefolder)
 		return setupDiskCache()
 	})
 }
 
+func TestHybridCache(t *testing.T) {
+	allTests(t, func() (*DummyPolicy, Cacher) {
+		dp, cache := setupMemcache()
+		return dp, HybridCache{cache}
+	})
+}
+
+func TestHybridSecondary(t *testing.T) {
+	allTests(t, func() (*DummyPolicy, Cacher) {
+		dp, cache := setupMemcache()
+		return dp, HybridCache{
+			AmnesiaCache{},
+			AmnesiaCache{},
+			cache,
+		}
+	})
+}
+
+type AmnesiaCache struct{}
+
+func (AmnesiaCache) GetBlob(_ string) ([]byte, bool) {
+	return nil, false
+}
+func (AmnesiaCache) AddBlob(_ string, _ []byte) {}
+
 func TestDiskCachePersistence(t *testing.T) {
-	id := string("testdiskpersist")
+	id := "testdiskpersist"
 	data := []byte{1, 2, 3, 4, 7}
 
 	_, cache := setupDiskCache()
 	cache.AddBlob(id, data)
 
-	time.Sleep(100)
+	time.Sleep(100 * time.Millisecond)
 
 	_, cache = setupDiskCache()
 	recovered, ok := cache.GetBlob(id)
@@ -41,9 +69,17 @@ func TestDiskCachePersistence(t *testing.T) {
 	}
 }
 
-func setupDiskCache() (dp *DummyPolicy, cache *Cache) {
-	dp = NewDummyPolicy(make(Log))
-	cache = NewDiskCache(cachefolder, 100, dp)
+type setupFunc func() (dp *DummyPolicy, cache Cacher)
+
+func setupDiskCache() (dp *DummyPolicy, cache Cacher) {
+	dp = NewDummyPolicy()
+	cache = NewDiskCache(cachefolder, cacheSize, dp)
+	return
+}
+
+func setupMemcache() (dp *DummyPolicy, cache Cacher) {
+	dp = NewDummyPolicy()
+	cache = NewCache(dp, cacheSize)
 	return
 }
 
@@ -52,54 +88,8 @@ func allTests(t *testing.T, f setupFunc) {
 	testCacheExit(t, f)
 }
 
-const (
-	Visit = iota
-	Push
-	Pop
-)
-
-type Log map[string][]uint
-
-type DummyPolicy struct {
-	fifo Policy
-
-	loki Log
-	pops int
-}
-
-func (d DummyPolicy) Visit(k string) {
-	d.log(k, Visit)
-	d.fifo.Visit(k)
-}
-
-func (d DummyPolicy) log(k string, t uint) {
-	d.loki[k] = append(d.loki[k], t)
-}
-
-func (d DummyPolicy) Push(k string) {
-	d.log(k, Push)
-	d.fifo.Push(k)
-}
-
-func (d *DummyPolicy) Pop() string {
-	d.pops += 1
-	return d.fifo.Pop()
-}
-
-func NewDummyPolicy(log Log) *DummyPolicy {
-	return &DummyPolicy{fifo: &FIFO{}, loki: log}
-}
-
-func setupMemcache() (dp *DummyPolicy, cache *Cache) {
-	dp = NewDummyPolicy(make(Log))
-	cache = NewCache(dp, 100)
-	return
-}
-
-type setupFunc func() (dp *DummyPolicy, cache *Cache)
-
 func testCache(t *testing.T, setup setupFunc) {
-	id := string("testcache")
+	id := "testcache"
 	dp, cache := setup()
 
 	found := func() bool {
@@ -130,9 +120,9 @@ func testCache(t *testing.T, setup setupFunc) {
 
 func testCacheExit(t *testing.T, setup setupFunc) {
 	var (
-		id1 = string("cacheexit1")
-		id2 = string("cacheexit2")
-		id3 = string("cacheexit3")
+		id1 = "cacheexit1"
+		id2 = "cacheexit2"
+		id3 = "cacheexit3"
 	)
 	dp, cache := setup()
 
@@ -142,5 +132,15 @@ func testCacheExit(t *testing.T, setup setupFunc) {
 
 	if dp.pops != 1 {
 		t.Fatal("Wrong amount of blobs removed from cache")
+	}
+}
+
+func TestTooBig(t *testing.T) {
+	dp, cache := setupMemcache()
+	const id = "string"
+	cache.AddBlob(id, make([]byte, cacheSize+1))
+
+	if len(dp.loki[id]) != 0 {
+		t.Fatalf("Despite being too big, resource was cached. %#v", dp.loki[id])
 	}
 }

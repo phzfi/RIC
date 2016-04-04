@@ -1,14 +1,15 @@
 package cache
 
-import (
-	"github.com/phzfi/RIC/server/images"
-)
-
 // Cache that looks in the first cache first etc.
 // Images are stored in every cache
-type HybridCache []*Cache
+type HybridCache []Cacher
 
-func (caches HybridCache) GetBlob(string string) (images.ImageBlob, bool) {
+type Cacher interface {
+	GetBlob(string) ([]byte, bool)
+	AddBlob(string, []byte)
+}
+
+func (caches HybridCache) GetBlob(string string) ([]byte, bool) {
 	for i, cache := range caches {
 		if blob, found := cache.GetBlob(string); found {
 			for j := 0; j < i; j++ {
@@ -20,7 +21,7 @@ func (caches HybridCache) GetBlob(string string) (images.ImageBlob, bool) {
 	return nil, false
 }
 
-func (caches HybridCache) AddBlob(string string, blob images.ImageBlob) {
+func (caches HybridCache) AddBlob(string string, blob []byte) {
 	for _, cache := range caches {
 		cache.AddBlob(string, blob)
 	}
