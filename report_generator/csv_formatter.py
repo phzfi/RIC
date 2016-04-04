@@ -22,10 +22,13 @@ logging.basicConfig(filename='log/error.log',
                     level=logging.ERROR,
                     format='%(asctime)s: %(levelname)s: %(message)s')
 
+
 def main():
     if len(sys.argv) != 3:
-        logging.critical('Wrong number of arguments.',
-                          'Usage: "python csv_formatter.py RAW_FILE OUT_FILE"')
+        mess = ('Wrong number of arguments.\n' +
+                'Usage: "python csv_formatter.py RAW_FILE OUT_FILE"')
+        logging.critical(mess)
+        print(mess)
         sys.exit(1)
     raw_file = sys.argv[1]
     out_file = sys.argv[2]

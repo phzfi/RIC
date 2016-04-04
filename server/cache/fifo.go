@@ -1,9 +1,5 @@
 package cache
 
-func NewFIFO(mm uint64) *Cache {
-	return NewCache(&FIFO{}, mm)
-}
-
 type FIFO struct {
 	data       []string
 	head, tail int

@@ -6,14 +6,10 @@ import (
 	"strings"
 )
 
-
 func init() {
 	imagick.Initialize()
     	imagick.InitializeOpenCL()
 }
-
-// ImageBlob is just an image file dumped, byte by byte to an byte array.
-type ImageBlob []byte
 
 // Image is an uncompressed image that must be convertd to blob before serving to a client.
 type Image struct {
@@ -58,8 +54,8 @@ func (img Image) GetExtension() (ext string) {
 	return
 }
 
-// Method for converting Image to ImageBlob.
-func (img Image) Blob() ImageBlob {
+// Method for converting Image to blob.
+func (img Image) Blob() []byte {
 	return img.GetImageBlob()
 }
 

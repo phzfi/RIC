@@ -17,7 +17,7 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, err error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, ext string, err error) {
 	args := uri.QueryArgs()
 	filename := string(uri.Path())
 	w, werr := args.GetUint("width")
@@ -113,10 +113,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 	watermark()
 
-	ext := filepath.Ext(filename)
-	if ext != "" {
-		operations = append(operations, ops.Convert{ExtToFormat(ext)})
+	ext = filepath.Ext(filename)
+	if ext == "" {
+		ext = ".jpg"
 	}
+	operations = append(operations, ops.Convert{ExtToFormat(ext)})
 
 	return
 }
