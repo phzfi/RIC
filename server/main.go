@@ -95,49 +95,66 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	}
 	logging.Debug("Reading watermarker config")
 
-	imgpath, err := conf.GetString("watermark", "path")
-	if err != nil {
-		log.Fatal("Error reading path for watermark image. " + err.Error())
-	}
-
 	minHeight, err := conf.GetInt("watermark", "minheight")
 	if err != nil {
-		log.Fatal("Error reading config size minimum height restriction. " + err.Error())
+		log.Println("Error reading config size minimum height restriction,
+        defaulting to 200")
+        minHeight = 200
 	}
 
 	minWidth, err := conf.GetInt("watermark", "minwidth")
 	if err != nil {
-		log.Fatal("Error reading config size minimum width restriction. " + err.Error())
+		log.Println("Error reading config size minimum width restriction,
+        defaulting to 200")
+        minWidth = 200
 	}
 
 	maxHeight, err := conf.GetInt("watermark", "maxheight")
 	if err != nil {
-		log.Fatal("Error reading config size maximum height restriction. " + err.Error())
+		log.Println("Error reading config size maximum height restriction,
+        defaulting to 5000")
+        maxHeight = 5000
 	}
 
 	maxWidth, err := conf.GetInt("watermark", "maxwidth")
 	if err != nil {
-		log.Fatal("Error reading config size maximum width restriction. " + err.Error())
+		log.Println("Error reading config size maximum width restriction,
+        defaulting to 5000")
+        maxWidth = 5000
 	}
 
 	addMark, err := conf.GetBool("watermark", "addmark")
 	if err != nil {
-		log.Fatal("Error reading config addmark value. " + err.Error())
+        log.Println("Error reading config addmark value, defaulting to false")
+	    addMark = false
+    }
+
+	imgpath, err := conf.GetString("watermark", "path")
+	if err != nil && addMark == true {
+		log.Println("Error reading path for watermark image, disabling
+        watermarking")
+        imgpath = ""
+        addMark = false
 	}
 
     tokens, err := conf.GetInt("server", "concurrency")
     if err != nil {
-        log.Fatal("Error reading config concurrency value. " + err.Error())        
+        log.Println("Error reading config concurrency value, defaulting to 1")
+        tokens = 1
     }
 
 	ver, err := conf.GetFloat64("watermark", "vertical")
 	if err != nil {
-		log.Fatal("Error reading config vertical alignment. " + err.Error())
+        log.Println("Error reading config vertical alignment, defaulting to
+        0.5")
+        ver = 0.5
 	}
 
 	hor, err := conf.GetFloat64("watermark", "horizontal")
 	if err != nil {
-		log.Fatal("Error reading config horizontal alignment. " + err.Error())
+		log.Println("Error reading config horizontal alignment, defaulting to
+        0.5")
+        hor = 0.5
 	}
 
 	watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
