@@ -126,6 +126,9 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	}
 
     tokens, err := conf.GetInt("server", "concurrency")
+    if err != nil {
+        log.Fatal("Error reading config concurrency value. " + err.Error())        
+    }
 
 	ver, err := conf.GetFloat64("watermark", "vertical")
 	if err != nil {
