@@ -190,4 +190,6 @@ func TestInvalidParams(t *testing.T) {
 		request.Reset()
 		response.Reset()
 	}
+	fasthttp.ReleaseRequest(request)
+	fasthttp.ReleaseResponse(response)
 }
