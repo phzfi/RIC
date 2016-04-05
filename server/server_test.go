@@ -142,15 +142,15 @@ func TestGetCrop(t *testing.T) {
 	testfolder := "testimages/server/"
 	resfolder := "testresults/server/"
 
-	cases := []images.TestCaseAll{
-		{images.TestCase{testfolder + "02.jpg?width=200&height=100&mode=crop", testfolder + "crop_200x100.jpg", resfolder + "crop_200x100.jpg"}, "JPEG", 200, 100},
-		{images.TestCase{testfolder + "02.jpg?width=200&height=200&mode=crop&cropx=100", testfolder + "crop_200x200_offset100x0y.jpg", resfolder + "crop_200x200_offset100x0y.jpg"}, "JPEG", 200, 200},
-		{images.TestCase{testfolder + "02.jpg?width=200&height=200&mode=crop&cropx=100&cropy=100", testfolder + "crop_200x200_offset100x100y.jpg", resfolder + "crop_200x200_offset100x100y.jpg"}, "JPEG", 200, 200},
-		{images.TestCase{testfolder + "02.jpg?width=300&mode=crop", testfolder + "crop_w300.jpg", resfolder + "crop_w300.jpg"}, "JPEG", 300, 900},
-		{images.TestCase{testfolder + "02.jpg?height=300&mode=crop", testfolder + "crop_h300.jpg", resfolder + "crop_h300.jpg"}, "JPEG", 1200, 300},
-		{images.TestCase{testfolder + "02.jpg?width=200&height=200&mode=cropmid", testfolder + "cropmid_200x200.jpg", resfolder + "cropmid_200x200.jpg"}, "JPEG", 200, 200},
-		{images.TestCase{testfolder + "02.jpg?width=300&mode=cropmid", testfolder + "cropmid_w300.jpg", resfolder + "cropmid_w300.jpg"}, "JPEG", 300, 900},
-		{images.TestCase{testfolder + "02.jpg?height=300&mode=cropmid", testfolder + "cropmid_h300.jpg", resfolder + "cropmid_h300.jpg"}, "JPEG", 1200, 300},
+	cases := []testutils.TestCaseAll{
+		{testutils.TestCase{testfolder + "02.jpg?width=200&height=100&mode=crop", testfolder + "crop_200x100.jpg", resfolder + "crop_200x100.jpg"}, "JPEG", 200, 100},
+		{testutils.TestCase{testfolder + "02.jpg?width=200&height=200&mode=crop&cropx=100", testfolder + "crop_200x200_offset100x0y.jpg", resfolder + "crop_200x200_offset100x0y.jpg"}, "JPEG", 200, 200},
+		{testutils.TestCase{testfolder + "02.jpg?width=200&height=200&mode=crop&cropx=100&cropy=100", testfolder + "crop_200x200_offset100x100y.jpg", resfolder + "crop_200x200_offset100x100y.jpg"}, "JPEG", 200, 200},
+		{testutils.TestCase{testfolder + "02.jpg?width=300&mode=crop", testfolder + "crop_w300.jpg", resfolder + "crop_w300.jpg"}, "JPEG", 300, 900},
+		{testutils.TestCase{testfolder + "02.jpg?height=300&mode=crop", testfolder + "crop_h300.jpg", resfolder + "crop_h300.jpg"}, "JPEG", 1200, 300},
+		{testutils.TestCase{testfolder + "02.jpg?width=200&height=200&mode=cropmid", testfolder + "cropmid_200x200.jpg", resfolder + "cropmid_200x200.jpg"}, "JPEG", 200, 200},
+		{testutils.TestCase{testfolder + "02.jpg?width=300&mode=cropmid", testfolder + "cropmid_w300.jpg", resfolder + "cropmid_w300.jpg"}, "JPEG", 300, 900},
+		{testutils.TestCase{testfolder + "02.jpg?height=300&mode=cropmid", testfolder + "cropmid_h300.jpg", resfolder + "cropmid_h300.jpg"}, "JPEG", 1200, 300},
 	}
 
 	err := testGetImages(cases)
