@@ -167,7 +167,7 @@ func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
 	a.Del("height")
 	a.Del("mode")
 	if a.Len() != 0 {
-		e = errors.New("Invalid parameters!")
+		e = errors.New("Invalid parameter " + a.String())
 		return
 	}
 	return
