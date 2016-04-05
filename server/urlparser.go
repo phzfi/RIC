@@ -140,6 +140,12 @@ func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
 	w = a.GetUintOrZero("width")
 	h = a.GetUintOrZero("height")
 	mode = string(a.Peek("mode"))
+	modes := map[string]bool {
+		"": true,
+		"fit": true,
+		"crop": true,
+		"liquid": true,
+	}
 
 	if strings.Contains(a.String(), "%") {
 		e = errors.New("Invalid characters in request!")
@@ -151,6 +157,10 @@ func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
 	}
 	if h == 0 && a.Has("height") {
 		e = errors.New("Invalid height!")
+		return
+	}
+	if !modes[mode] {
+		e = errors.New("Invalid mode!")
 		return
 	}
 	a.Del("width")
