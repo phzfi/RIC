@@ -7,6 +7,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
+	"errors"
 )
 
 func ExtToFormat(ext string) string {
@@ -20,16 +21,16 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, ext string, err error) {
-	args := uri.QueryArgs()
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, ext string, err, invalid error) {
 	filename := string(uri.Path())
-	w, werr := args.GetUint("width")
-	h, herr := args.GetUint("height")
+	w, h, mode, invalid := getParams(uri.QueryArgs())
 	ow, oh, err := source.ImageSize(filename)
+	if invalid != nil {
+		return
+	}
 	if err != nil {
 		return
 	}
-	mode := string(args.Peek("mode"))
 
 	operations = []ops.Operation{source.LoadImageOp(filename)}
 
@@ -42,11 +43,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	adjustSize := func() {
-		if herr != nil && werr == nil {
+		if h == 0 && w != 0 {
 			adjustHeight()
-		} else if herr == nil && werr != nil {
+		} else if h != 0 && w == 0 {
 			adjustWidth()
-		} else if werr != nil && herr != nil {
+		} else if w == 0 && h == 0 {
 			w, h = ow, oh
 		}
 	}
@@ -83,7 +84,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		if h > oh {
 			h = oh
 		}
-		if werr == nil && herr == nil {
+		if w != 0 && h != 0 {
 			if ow*h > w*oh {
 				adjustHeight()
 			} else {
@@ -131,4 +132,43 @@ func roundedIntegerDivision(n, m int) int {
 	} else { // -5 / 6 should round to -1
 		return (n - m/2) / m
 	}
+}
+
+
+// returns validated parameters from request and error if invalid
+func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
+	w = a.GetUintOrZero("width")
+	h = a.GetUintOrZero("height")
+	mode = string(a.Peek("mode"))
+	modes := map[string]bool {
+		"": true,
+		"fit": true,
+		"crop": true,
+		"liquid": true,
+	}
+
+	if strings.Contains(a.String(), "%") {
+		e = errors.New("Invalid characters in request!")
+		return
+	}
+	if w == 0 && a.Has("width") {
+		e = errors.New("Invalid width!")
+		return
+	}
+	if h == 0 && a.Has("height") {
+		e = errors.New("Invalid height!")
+		return
+	}
+	if !modes[mode] {
+		e = errors.New("Invalid mode!")
+		return
+	}
+	a.Del("width")
+	a.Del("height")
+	a.Del("mode")
+	if a.Len() != 0 {
+		e = errors.New("Invalid parameter " + a.String())
+		return
+	}
+	return
 }
