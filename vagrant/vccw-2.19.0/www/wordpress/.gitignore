@@ -1,7 +1,0 @@
-.htaccess
-sitemap.xml.gz
-/wp-content/backup-db/
-/wp-content/backups/
-/wp-content/blogs.dir/
-/wp-content/cache/
-/wp-content/upgrade/
