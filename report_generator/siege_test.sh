@@ -54,8 +54,7 @@ while getopts ":RCTlhaus:c:r:d:t:" OPTION; do
 			;;
 		r)
 			echo "The value of requests per user is $OPTARG"
-			REQUESTS_PER_USER="-r"$OPTARG
-			TIME=false
+			REQUESTS_OR_TIME="-r"$OPTARG
 			;;
 		a)
 		  echo "Tests run automatically with cache clearing and program restarts"

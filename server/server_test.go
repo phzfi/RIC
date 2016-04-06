@@ -143,7 +143,7 @@ func TestMIMEtype(t *testing.T) {
 	defer stopServer(s, ln, srverr)
 	response := fasthttp.AcquireResponse()
 	request := fasthttp.AcquireRequest()
-	cases := []string{"01.jpg", "01.png", "01.webp", "01.tiff", "01.bmp", "01.gif"}
+	cases := []string{"01", "01.jpg", "01.png", "01.webp", "01.tiff", "01.tif", "01.bmp", "01.gif"}
 	folder := "testimages/server/"
 
 	for _, c := range cases {
@@ -161,6 +161,34 @@ func TestMIMEtype(t *testing.T) {
 		request.Reset()
 		response.Reset()
 		img.Destroy()
+	}
+	fasthttp.ReleaseRequest(request)
+	fasthttp.ReleaseResponse(response)
+}
+
+
+func TestInvalidParams(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+	response := fasthttp.AcquireResponse()
+	request := fasthttp.AcquireRequest()
+	base := fmt.Sprintf("http://localhost:%d/", port) + "testimages/server/01.jpg"
+	cases := []string{
+		"?width=abc&height=200",
+		"?width=200&height=abc",
+		"?width=200?height=200",
+		"?width=200&height=200&mode=fit&something=x",
+		"?width=200&height=200&mode=y"}
+
+	for _, c := range cases {
+		uri := base + c
+		request.SetRequestURI(uri)
+		fasthttp.Do(request, response)
+		if response.Header.StatusCode() != 400 {
+			t.Fatal("Server did not return 400 to request: " + uri)
+		}
+		request.Reset()
+		response.Reset()
 	}
 	fasthttp.ReleaseRequest(request)
 	fasthttp.ReleaseResponse(response)
