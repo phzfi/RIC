@@ -11,6 +11,18 @@ type Conf struct{
   conf ini.Config
 }
 
+type DefaultConf struct{
+   minHeight int
+   minWidth int
+   maxHeight int
+   maxWidth int
+   addMark bool
+   imgpath string
+   tokens int
+   vertical float64
+   horizontal float64
+}
+
 func ReadConfig(path string) (config Conf, err error) {
   conf, err := ini.LoadFile(path)
   if err != nil {

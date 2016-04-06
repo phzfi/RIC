@@ -33,6 +33,18 @@ type MyHandler struct {
 	watermarker ops.Watermarker
 }
 
+var defaults config.DefaultConf {
+    minHeight: 200,
+    minWidth: 200,
+    maxHeight: 5000,
+    maxWidth: 5000,
+    addMark: false,
+    imgpath: "",
+    tokens: 1,
+    vertical: 0.0,
+    horizontal: 1.0
+}
+
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
 func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
@@ -76,7 +88,7 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		log.Println(err)
 	}
-}
+}§
 
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
@@ -97,45 +109,48 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 
 	minHeight, err := conf.GetInt("watermark", "minheight")
 	if err != nil {
-		log.Println("Error reading config size minimum height restriction, defaulting to 200")
-        minHeight = 200
+		log.Println("Error reading config size minimum height restriction,
+        defaulting to " + defaults.minHeight)
+        minHeight = defaults.minHeight
 	}
 
 	minWidth, err := conf.GetInt("watermark", "minwidth")
 	if err != nil {
-		log.Println("Error reading config size minimum width restriction, defaulting to 200")
-        minWidth = 200
+		log.Println("Error reading config size minimum width restriction,
+        defaulting to " + defaults.minWidth)
+        minWidth = defaults.minWidth
 	}
 
 	maxHeight, err := conf.GetInt("watermark", "maxheight")
 	if err != nil {
-		log.Println("Error reading config size maximum height restriction, defaulting to 5000")
-        maxHeight = 5000
+		log.Println("Error reading config size maximum height restriction,
+        defaulting to " + defaults.maxHeight)
+        maxHeight = defaults.maxHeight
 	}
 
 	maxWidth, err := conf.GetInt("watermark", "maxwidth")
 	if err != nil {
-		log.Println("Error reading config size maximum width restriction, defaulting to 5000")
-        maxWidth = 5000
+		log.Println("Error reading config size maximum width restriction,
+        defaulting to " + defaults.maxWidth)
+        maxWidth = defaults.maxWidth
 	}
 
 	addMark, err := conf.GetBool("watermark", "addmark")
 	if err != nil {
         log.Println("Error reading config addmark value, defaulting to false")
-	    addMark = false
     }
 
 	imgpath, err := conf.GetString("watermark", "path")
 	if err != nil && addMark == true {
 		log.Println("Error reading path for watermark image, disabling watermarking")
-        imgpath = ""
         addMark = false
 	}
 
     tokens, err := conf.GetInt("server", "concurrency")
     if err != nil {
-        log.Println("Error reading config concurrency value, defaulting to 1")
-        tokens = 1
+        log.Println("Error reading config concurrency value, defaulting to " +
+        defaults.tokens)
+        tokens = defaults.tokens
     }
 
 	ver, err := conf.GetFloat64("watermark", "vertical")
@@ -150,11 +165,13 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
         hor = 0.5
 	}
 
-	watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
+    if addMark == true {
+	    watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
 
-	if err != nil {
-		log.Fatal("Error creating watermarker:" + err.Error())
-	}
+	    if err != nil {
+	    	log.Fatal("Error creating watermarker:" + err.Error())
+	    }
+    }
 
 	// Configure handler
 	logging.Debug("Configuring handler")
@@ -188,7 +205,8 @@ func main() {
 
 	conf, err := config.ReadConfig(*cpath)
 	if err != nil {
-		log.Fatal("Error while reading config at " + *cpath + ": " + err.Error())
+		log.Println("Error while reading config at " + *cpath + ": " +
+        err.Error() + ", using default values)
 	}
 
 	def, err := conf.GetUint64("server", "memory")
