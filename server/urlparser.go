@@ -112,8 +112,6 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		fit()
 	case liquidMode:
 		liquid()
-	default:
-		resize()
 	}
 	watermark()
 
@@ -136,6 +134,7 @@ func roundedIntegerDivision(n, m int) int {
 
 var stringToMode = map[string]mode{
 	"":       resizeMode,
+	"resize": resizeMode,
 	"fit":    fitMode,
 	"crop":   cropMode,
 	"liquid": liquidMode,
