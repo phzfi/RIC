@@ -43,11 +43,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	adjustSize := func() {
-		if h == 0 && w != 0 {
+		if h == -1 && w != -1 {
 			adjustHeight()
-		} else if h != 0 && w == 0 {
+		} else if h != -1 && w == -1 {
 			adjustWidth()
-		} else if w == 0 && h == 0 {
+		} else if w == -1 && h == -1 {
 			w, h = ow, oh
 		}
 	}
@@ -84,7 +84,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		if h > oh {
 			h = oh
 		}
-		if w != 0 && h != 0 {
+		if w != -1 && h != -1 {
 			if ow*h > w*oh {
 				adjustHeight()
 			} else {
@@ -179,6 +179,8 @@ func getParams(a *fasthttp.Args) (w int, h int, mode mode, err error) {
 		err = errors.New("Invalid parameter " + a.String())
 		return
 	}
+
+	err = nil
 	return
 }
 
