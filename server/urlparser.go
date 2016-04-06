@@ -11,11 +11,13 @@ import (
 
 func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, format string, err, invalid error) {
 	filename := string(uri.Path())
-	w, h, mode, format, invalid := getParams(uri.QueryArgs())
-	ow, oh, err := source.ImageSize(filename)
+
+	w, h, cropx, cropy, mode, format, invalid := getParams(uri.QueryArgs())
 	if invalid != nil {
 		return
 	}
+
+	ow, oh, err := source.ImageSize(filename)
 	if err != nil {
 		return
 	}
@@ -31,11 +33,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	adjustSize := func() {
-		if h == -1 && w != -1 {
+		if h == 0 && w != 0 {
 			adjustHeight()
-		} else if h != -1 && w == -1 {
+		} else if h != 0 && w == 0 {
 			adjustWidth()
-		} else if w == -1 && h == -1 {
+		} else if w == 0 && h == 0 {
 			w, h = ow, oh
 		}
 	}
@@ -65,6 +67,30 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		operations = append(operations, ops.LiquidRescale{w, h})
 	}
 
+	crop := func() {
+		if w == 0 {
+			w = ow
+		}
+		if h == 0 {
+			h = oh
+		}
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+	}
+
+	cropmid := func() {
+		if w == 0 || w > ow {
+			w = ow
+		}
+		if h == 0 || h > oh {
+			h = oh
+		}
+		midW := roundedIntegerDivision(ow, 2)
+		midH := roundedIntegerDivision(oh, 2)
+		cropx := midW - roundedIntegerDivision(w, 2)
+		cropy := midH - roundedIntegerDivision(h, 2)
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+	}
+
 	fit := func() {
 		if w > ow {
 			w = ow
@@ -72,7 +98,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		if h > oh {
 			h = oh
 		}
-		if w != -1 && h != -1 {
+		if w != 0 && h != 0 {
 			if ow*h > w*oh {
 				adjustHeight()
 			} else {
@@ -100,6 +126,10 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		fit()
 	case liquidMode:
 		liquid()
+	case cropMode:
+		crop()
+	case cropmidMode:
+		cropmid()
 	}
 	watermark()
 
@@ -117,11 +147,12 @@ func roundedIntegerDivision(n, m int) int {
 }
 
 var stringToMode = map[string]mode{
-	"":       resizeMode,
-	"resize": resizeMode,
-	"fit":    fitMode,
-	"crop":   cropMode,
-	"liquid": liquidMode,
+	"":        resizeMode,
+	"resize":  resizeMode,
+	"fit":     fitMode,
+	"crop":    cropMode,
+	"cropmid": cropmidMode,
+	"liquid":  liquidMode,
 }
 
 type mode int
@@ -129,6 +160,7 @@ type mode int
 const (
 	fitMode = mode(1 + iota)
 	cropMode
+	cropmidMode
 	liquidMode
 	resizeMode
 
@@ -136,24 +168,28 @@ const (
 	heightParam = "height"
 	modeParam   = "mode"
 	formatParam = "format"
+	cropxParam  = "cropx"
+	cropyParam  = "cropy"
 )
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (w int, h int, mode mode, format string, err error) {
+func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format string, err error) {
 	if strings.Contains(a.String(), "%") {
 		err = errors.New("Invalid characters in request!")
 		return
 	}
 
-	w, err = a.GetUint(widthParam)
-	if isParseError(err) {
-		return
-	}
+	defer func() {
+		if msg := recover(); msg != nil {
+			err = msg.(error)
+		}
+	}()
 
-	h, err = a.GetUint(heightParam)
-	if isParseError(err) {
-		return
-	}
+	w = getUint(a, widthParam)
+	h = getUint(a, heightParam)
+
+	cropx = getUint(a, cropxParam)
+	cropy = getUint(a, cropyParam)
 
 	mode = stringToMode[string(a.Peek(modeParam))]
 	if mode == 0 {
@@ -172,6 +208,8 @@ func getParams(a *fasthttp.Args) (w int, h int, mode mode, format string, err er
 	a.Del(heightParam)
 	a.Del(modeParam)
 	a.Del(formatParam)
+	a.Del(cropxParam)
+	a.Del(cropyParam)
 	if a.Len() != 0 {
 		err = errors.New("Invalid parameter " + a.String())
 		return
@@ -179,6 +217,17 @@ func getParams(a *fasthttp.Args) (w int, h int, mode mode, format string, err er
 
 	err = nil
 	return
+}
+
+func getUint(a *fasthttp.Args, param string) int {
+	v, err := a.GetUint(param)
+	if isParseError(err) {
+		panic(err)
+	}
+	if v == -1 {
+		v = 0
+	}
+	return v
 }
 
 func isParseError(err error) bool {
