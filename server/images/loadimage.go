@@ -38,7 +38,7 @@ func (img *Image) FromWeb(url string) error {
 	}
 
 	if statuscode != 200 {
-		return errors.New(fmt.Sprintf("Couldn't load image. Server returned %i", statuscode))
+		return errors.New(fmt.Sprintf("Couldn't load image. Server returned %d", statuscode))
 	}
 
 	return img.FromBlob(body)
