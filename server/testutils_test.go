@@ -62,7 +62,7 @@ func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
 func getBlobFromServer(getname string) (blob []byte, err error) {
 	statuscode, blob, err := fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
 	if statuscode != 200 {
-		return nil, errors.New("Server returned " + string(statuscode))
+		return nil, errors.New(fmt.Sprintf("Server returned %d", statuscode))
 	}
 	if err != nil {
 		return
