@@ -46,3 +46,19 @@ func TestUnderflow(t *testing.T) {
 
 	lru.Pop()
 }
+
+func TestKeyCollision(t *testing.T) {
+	lru := NewLRU()
+
+	lru.Push("asd")
+	lru.Push("asd")
+
+	defer func() {
+		if recover() == nil {
+			t.Fatal("No panic occurred.")
+		}
+	}()
+
+	lru.Pop()
+	lru.Pop()
+}
