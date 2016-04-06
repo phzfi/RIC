@@ -7,21 +7,24 @@ import (
 
 type token struct{}
 
-type imageProcessor chan images.Image
+type imageProcessor chan token
 
 func makeImageProcessor(size int) (t imageProcessor) {
 	t = make(imageProcessor, size)
 
 	for i := 0; i < size; i++ {
-		t <- images.NewImage()
+		t <- token{}
 	}
 
 	return
 }
 
-func (p imageProcessor) makeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
-	img := p.borrow()
-	defer p.giveBack(img)
+func (p imageProcessor) MakeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
+	p.borrow()
+	defer p.giveBack()
+
+	img := images.NewImage()
+	defer img.Destroy()
 
 	if startBlob != nil {
 		img.FromBlob(startBlob)
@@ -37,10 +40,10 @@ func (p imageProcessor) makeBlob(startBlob []byte, operations []ops.Operation) (
 	return img.Blob(), nil
 }
 
-func (p imageProcessor) borrow() images.Image {
-	return <-p
+func (p imageProcessor) borrow() {
+	<-p
 }
 
-func (p imageProcessor) giveBack(img images.Image) {
-	p <- img
+func (p imageProcessor) giveBack() {
+	p <- token{}
 }

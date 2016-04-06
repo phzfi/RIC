@@ -76,7 +76,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error)
 		var found bool
 		blob, found = o.cache.GetBlob(key)
 		if !found {
-			blob, err = o.processor.makeBlob(startimage, operations[start:])
+			blob, err = o.processor.MakeBlob(startimage, operations[start:])
 			if err != nil {
 				return nil, err
 			}
