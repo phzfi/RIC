@@ -6,24 +6,12 @@ import (
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
-	"path/filepath"
 	"strings"
 )
 
-func ExtToFormat(ext string) string {
-	ext = strings.ToUpper(strings.TrimLeft(ext, "."))
-	if ext == "JPG" {
-		return "JPEG"
-	}
-	if ext == "TIF" {
-		return "TIFF"
-	}
-	return ext
-}
-
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, ext string, err, invalid error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, format string, err, invalid error) {
 	filename := string(uri.Path())
-	w, h, mode, invalid := getParams(uri.QueryArgs())
+	w, h, mode, format, invalid := getParams(uri.QueryArgs())
 	ow, oh, err := source.ImageSize(filename)
 	if invalid != nil {
 		return
@@ -115,11 +103,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 	watermark()
 
-	ext = filepath.Ext(filename)
-	if ext == "" {
-		ext = ".jpg"
-	}
-	operations = append(operations, ops.Convert{ExtToFormat(ext)})
+	operations = append(operations, ops.Convert{format})
 
 	return
 }
@@ -147,34 +131,47 @@ const (
 	cropMode
 	liquidMode
 	resizeMode
+
+	widthParam  = "width"
+	heightParam = "height"
+	modeParam   = "mode"
+	formatParam = "format"
 )
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (w int, h int, mode mode, err error) {
+func getParams(a *fasthttp.Args) (w int, h int, mode mode, format string, err error) {
 	if strings.Contains(a.String(), "%") {
 		err = errors.New("Invalid characters in request!")
 		return
 	}
 
-	w, err = a.GetUint("width")
+	w, err = a.GetUint(widthParam)
 	if isParseError(err) {
 		return
 	}
 
-	h, err = a.GetUint("height")
+	h, err = a.GetUint(heightParam)
 	if isParseError(err) {
 		return
 	}
 
-	mode = stringToMode[string(a.Peek("mode"))]
+	mode = stringToMode[string(a.Peek(modeParam))]
 	if mode == 0 {
 		err = errors.New("Invalid mode!")
 		return
 	}
 
-	a.Del("width")
-	a.Del("height")
-	a.Del("mode")
+	format = strings.ToLower(string(a.Peek(formatParam)))
+	if format == "" {
+		format = "jpeg"
+	}
+	// TODO: verify that the format is one we support.
+	// We do not want to support TXT, for instance
+
+	a.Del(widthParam)
+	a.Del(heightParam)
+	a.Del(modeParam)
+	a.Del(formatParam)
 	if a.Len() != 0 {
 		err = errors.New("Invalid parameter " + a.String())
 		return

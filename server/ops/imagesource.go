@@ -34,17 +34,13 @@ func (i ImageSource) searchRoots(fn string, img images.Image) error {
 	return i.searchRootsInternal(fn, img.FromFile, img.FromWeb)
 }
 
-func (i ImageSource) searchRootsInternal(fn string, visitPath, visitURL func(string) error) (err error) {
+func (i ImageSource) searchRootsInternal(filename string, visitPath, visitURL func(string) error) (err error) {
 	if len(i.roots) == 0 && len(i.webroots) == 0 {
 		logging.Debug("No roots")
 		err = os.ErrNotExist
 		return
 	}
-	// Extract requested type/extension and id from filename
-	ext := strings.TrimLeft(filepath.Ext(fn), ".")
-	id := strings.TrimRight(fn[0:len(fn)-len(ext)], ".")
-	// Assume image is stored as .jpg -> change extension to .jpg
-	filename := id + ".jpg"
+
 	// Search requested image from all roots by trial and error
 	for _, root := range i.roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
