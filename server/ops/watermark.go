@@ -13,7 +13,7 @@ type watermark struct {
 }
 
 func (w watermark) Marshal() string {
-	return string(watemarkID) + float64ToString(w.vertical) + float64ToString(w.horizontal)
+	return string(watermarkID) + float64ToString(w.vertical) + float64ToString(w.horizontal)
 }
 
 func (w watermark) Apply(img images.Image) (err error) {

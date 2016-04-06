@@ -23,7 +23,7 @@ func ExtToFormat(ext string) string {
 
 func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, ext string, err, invalid error) {
 	filename := string(uri.Path())
-	w, h, mode, invalid := getParams(uri.QueryArgs())
+	w, h, cropx, cropy, mode, invalid := getParams(uri.QueryArgs())
 	ow, oh, err := source.ImageSize(filename)
 	if invalid != nil {
 		return
@@ -77,6 +77,30 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		operations = append(operations, ops.LiquidRescale{w, h})
 	}
 
+	crop := func() {
+	  if w == 0 {
+	    w = ow
+	  }
+	  if h == 0 {
+	    h = oh
+	  }
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+	}
+
+	cropmid := func() {
+		if w == 0 || w > ow {
+	    w = ow
+	  }
+	  if h == 0 || h > oh {
+	    h = oh
+	  }
+	  midW := roundedIntegerDivision(ow, 2)
+	  midH := roundedIntegerDivision(oh, 2)
+	  cropx := midW - roundedIntegerDivision(w, 2)
+	  cropy := midH - roundedIntegerDivision(h, 2)
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+	}
+
 	fit := func() {
 		if w > ow {
 			w = ow
@@ -112,6 +136,10 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		fit()
 	case "liquid":
 		liquid()
+	case "crop":
+		crop()
+	case "cropmid":
+		cropmid()
 	default:
 		resize()
 	}
@@ -136,14 +164,17 @@ func roundedIntegerDivision(n, m int) int {
 
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
+func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode string, e error) {
 	w = a.GetUintOrZero("width")
 	h = a.GetUintOrZero("height")
+	cropx = a.GetUintOrZero("cropx")
+	cropy = a.GetUintOrZero("cropy")
 	mode = string(a.Peek("mode"))
 	modes := map[string]bool {
 		"": true,
 		"fit": true,
 		"crop": true,
+		"cropmid": true,
 		"liquid": true,
 	}
 
@@ -159,6 +190,14 @@ func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
 		e = errors.New("Invalid height!")
 		return
 	}
+	if cropx == 0 && a.Has("cropx") {
+		e = errors.New("Invalid cropx!")
+		return
+	}
+	if cropy == 0 && a.Has("cropy") {
+		e = errors.New("Invalid cropy!")
+		return
+	}
 	if !modes[mode] {
 		e = errors.New("Invalid mode!")
 		return
@@ -166,6 +205,8 @@ func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
 	a.Del("width")
 	a.Del("height")
 	a.Del("mode")
+	a.Del("cropx")
+	a.Del("cropy")
 	if a.Len() != 0 {
 		e = errors.New("Invalid parameter " + a.String())
 		return
