@@ -1,7 +1,6 @@
 package ops
 
 import (
-	"errors"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"os"
@@ -31,7 +30,11 @@ func (i ImageSource) LoadImageOp(id string) Operation {
 }
 
 // Searches root for an image. If found loads the image to img. Otherwise does nothing and returns an error.
-func (i ImageSource) searchRoots(fn string, img images.Image) (err error) {
+func (i ImageSource) searchRoots(fn string, img images.Image) error {
+	return i.searchRootsInternal(fn, img.FromFile, img.FromWeb)
+}
+
+func (i ImageSource) searchRootsInternal(fn string, visitPath, visitURL func(string) error) (err error) {
 	if len(i.roots) == 0 && len(i.webroots) == 0 {
 		logging.Debug("No roots")
 		err = os.ErrNotExist
@@ -45,7 +48,7 @@ func (i ImageSource) searchRoots(fn string, img images.Image) (err error) {
 	// Search requested image from all roots by trial and error
 	for _, root := range i.roots {
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
-		err = img.FromFile(filepath.Join(root, filename))
+		err = visitPath(filepath.Join(root, filename))
 		if err == nil {
 			break
 		}
@@ -53,12 +56,17 @@ func (i ImageSource) searchRoots(fn string, img images.Image) (err error) {
 
 	for _, root := range i.webroots {
 		logging.Debugf("Attempting to load %s", root+filename)
-		err = img.FromWeb(root + filename)
+		err = visitURL(root + filename)
 		if err == nil {
 			break
 		}
 	}
 	return
+}
+
+// Searches root for an image. If found, loads only the image metadata to img. Otherwise does nothing and returns an error.
+func (i ImageSource) pingRoots(fn string, img images.Image) (err error) {
+	return i.searchRootsInternal(fn, img.PingImage, img.FromWeb)
 }
 
 // Get image size
@@ -89,11 +97,6 @@ func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 	return
 }
 
-// Searches root for an image. If found, loads only the image metadata to img. Otherwise does nothing and returns an error.
-func (i ImageSource) pingRoots(fn string, img images.Image) (err error) {
-	return i.searchRoots(fn, img)
-}
-
 func isWebroot(root string) bool {
 	return strings.HasPrefix(root, "http:") || strings.HasPrefix(root, "https:")
 }
@@ -122,34 +125,4 @@ func (is *ImageSource) RemoveRoot(root string) error {
 		return err
 	}
 	return is.roots.Remove(abspath)
-}
-
-var (
-	ErrRootNotFound     = errors.New("Root not found")
-	ErrRootAlreadyAdded = errors.New("Root is already served")
-)
-
-type roots []string
-
-func (roots *roots) Add(n string) error {
-	logging.Debug("Adding root: " + n)
-	for _, path := range *roots {
-		if path == n {
-			return ErrRootAlreadyAdded
-		}
-	}
-
-	*roots = append(*roots, n)
-	return nil
-}
-
-func (roots *roots) Remove(r string) error {
-	for i, path := range *roots {
-		if path == r {
-			*roots = append((*roots)[:i], (*roots)[i+1:]...)
-			return nil
-		}
-	}
-
-	return ErrRootNotFound
 }

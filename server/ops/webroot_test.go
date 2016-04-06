@@ -12,7 +12,7 @@ func TestWebroot(t *testing.T) {
 	i := images.NewImage()
 	defer i.Destroy()
 
-	err := s.LoadImageOp("9/95/1.Andra_Hanuman.JPG").Apply(i)
+	err := s.LoadImageOp("b/b4/JPEG_example_JPG_RIP_100.jpg").Apply(i)
 
 	if err != nil {
 		t.Fatalf("Error loading image from web: %s", err)
