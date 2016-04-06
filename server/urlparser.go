@@ -1,13 +1,13 @@
 package main
 
 import (
+	"errors"
 	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
-	"errors"
 )
 
 func ExtToFormat(ext string) string {
@@ -106,11 +106,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	switch mode {
-	case "resize":
+	case resizeMode:
 		resize()
-	case "fit":
+	case fitMode:
 		fit()
-	case "liquid":
+	case liquidMode:
 		liquid()
 	default:
 		resize()
@@ -134,41 +134,55 @@ func roundedIntegerDivision(n, m int) int {
 	}
 }
 
+var stringToMode = map[string]mode{
+	"":       resizeMode,
+	"fit":    fitMode,
+	"crop":   cropMode,
+	"liquid": liquidMode,
+}
+
+type mode int
+
+const (
+	fitMode = mode(1 + iota)
+	cropMode
+	liquidMode
+	resizeMode
+)
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (w int, h int, mode string, e error) {
-	w = a.GetUintOrZero("width")
-	h = a.GetUintOrZero("height")
-	mode = string(a.Peek("mode"))
-	modes := map[string]bool {
-		"": true,
-		"fit": true,
-		"crop": true,
-		"liquid": true,
+func getParams(a *fasthttp.Args) (w int, h int, mode mode, err error) {
+	if strings.Contains(a.String(), "%") {
+		err = errors.New("Invalid characters in request!")
+		return
 	}
 
-	if strings.Contains(a.String(), "%") {
-		e = errors.New("Invalid characters in request!")
+	w, err = a.GetUint("width")
+	if isParseError(err) {
 		return
 	}
-	if w == 0 && a.Has("width") {
-		e = errors.New("Invalid width!")
+
+	h, err = a.GetUint("height")
+	if isParseError(err) {
 		return
 	}
-	if h == 0 && a.Has("height") {
-		e = errors.New("Invalid height!")
+
+	mode = stringToMode[string(a.Peek("mode"))]
+	if mode == 0 {
+		err = errors.New("Invalid mode!")
 		return
 	}
-	if !modes[mode] {
-		e = errors.New("Invalid mode!")
-		return
-	}
+
 	a.Del("width")
 	a.Del("height")
 	a.Del("mode")
 	if a.Len() != 0 {
-		e = errors.New("Invalid parameter " + a.String())
+		err = errors.New("Invalid parameter " + a.String())
 		return
 	}
 	return
+}
+
+func isParseError(err error) bool {
+	return err != nil && err != fasthttp.ErrNoArgValue
 }
