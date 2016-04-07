@@ -7,9 +7,9 @@ import (
 
 type token struct{}
 
-type imageProcessor chan token
+type ImageProcessor chan token
 
-func makeImageProcessor(size int) (t imageProcessor) {
+func MakeImageProcessor(size int) (t imageProcessor) {
 	t = make(imageProcessor, size)
 
 	for i := 0; i < size; i++ {
@@ -19,6 +19,8 @@ func makeImageProcessor(size int) (t imageProcessor) {
 	return
 }
 
+// Takes an image as a blob and applies the given operations to it
+// startBlob can be nil, in which case operations should start with an image loading operation
 func (p imageProcessor) MakeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
 	p.borrow()
 	defer p.giveBack()
