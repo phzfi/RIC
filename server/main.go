@@ -33,17 +33,19 @@ type MyHandler struct {
 	watermarker ops.Watermarker
 }
 
-var defaults config.DefaultConf {
-    minHeight: 200,
-    minWidth: 200,
-    maxHeight: 5000,
-    maxWidth: 5000,
-    addMark: false,
-    imgpath: "",
-    tokens: 1,
-    vertical: 0.0,
-    horizontal: 1.0
+var defaults = config.ConfValues{
+	MinHeight:  200,
+	MinWidth:   200,
+	MaxHeight:  5000,
+	MaxWidth:   5000,
+	AddMark:    false,
+	Imgpath:    "",
+	Tokens:     1,
+	Vertical:   0.0,
+	Horizontal: 1.0,
 }
+
+var confPresent bool
 
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
@@ -74,7 +76,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			ctx.NotFound()
 			logging.Debug(err)
 		} else {
-      ctx.SetContentType("image/" + ExtToFormat(extension))
+			ctx.SetContentType("image/" + ExtToFormat(extension))
 			ctx.Write(blob)
 			logging.Debug("Blob returned")
 		}
@@ -92,7 +94,7 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		log.Println(err)
 	}
-}§
+}
 
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
@@ -109,76 +111,81 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	if imageSource.AddRoot(".") != nil {
 		log.Println("Root not added .")
 	}
-	logging.Debug("Reading watermarker config")
+	logging.Debug("Reading server config")
+	//setting default values
+//	def := defaults.Mem
+//	minHeight := defaults.MinHeight
+//	minWidth := defaults.MinWidth
+//	maxHeight := defaults.MaxHeight
+//	maxWidth := defaults.MaxWidth
+//	addMark := defaults.AddMark
+//	imgpath := defaults.Imgpath
+//	tokens := defaults.Tokens
+//	ver := defaults.Vertical
+//	hor := defaults.Horizontal
+
 
 	minHeight, err := conf.GetInt("watermark", "minheight")
 	if err != nil {
-		log.Println("Error reading config size minimum height restriction,
-        defaulting to " + defaults.minHeight)
-        minHeight = defaults.minHeight
+		log.Printf("Error reading config size minimum height restriction, defaulting to %v\n", defaults.MinHeight)
+		minHeight = defaults.MinHeight
 	}
 
 	minWidth, err := conf.GetInt("watermark", "minwidth")
 	if err != nil {
-		log.Println("Error reading config size minimum width restriction,
-        defaulting to " + defaults.minWidth)
-        minWidth = defaults.minWidth
+		log.Printf("Error reading config size minimum width restriction, defaulting to %v\n", defaults.MinWidth)
+		minWidth = defaults.MinWidth
 	}
 
 	maxHeight, err := conf.GetInt("watermark", "maxheight")
 	if err != nil {
-		log.Println("Error reading config size maximum height restriction,
-        defaulting to " + defaults.maxHeight)
-        maxHeight = defaults.maxHeight
+		log.Printf("Error reading config size maximum height restriction, defaulting to %v\n", defaults.MaxHeight)
+		maxHeight = defaults.MaxHeight
 	}
 
 	maxWidth, err := conf.GetInt("watermark", "maxwidth")
 	if err != nil {
-		log.Println("Error reading config size maximum width restriction,
-        defaulting to " + defaults.maxWidth)
-        maxWidth = defaults.maxWidth
+		log.Printf("Error reading config size maximum width restriction, defaulting to %v\n", defaults.MaxWidth)
+		maxWidth = defaults.MaxWidth
 	}
 
 	addMark, err := conf.GetBool("watermark", "addmark")
 	if err != nil {
-        log.Println("Error reading config addmark value, defaulting to false")
-    }
+		log.Println("Error reading config addmark value, defaulting to false")
+	}
 
 	imgpath, err := conf.GetString("watermark", "path")
 	if err != nil && addMark == true {
 		log.Println("Error reading path for watermark image, disabling watermarking")
-        addMark = false
+		addMark = false
 	}
 
-    tokens, err := conf.GetInt("server", "concurrency")
-    if err != nil {
-        log.Println("Error reading config concurrency value, defaulting to " +
-        defaults.tokens)
-        tokens = defaults.tokens
-    }
+	tokens, err := conf.GetInt("server", "concurrency")
+	if err != nil {
+		log.Printf("Error reading config concurrency value, defaulting to %v\n", defaults.Tokens)
+		tokens = defaults.Tokens
+	}
 
 	ver, err := conf.GetFloat64("watermark", "vertical")
 	if err != nil {
-        log.Println("Error reading config vertical alignment, defaulting to 0.5")
-        ver = 0.5
+		log.Printf("Error reading config vertical alignment, defaulting to %v\n", defaults.Vertical)
+		ver = defaults.Vertical
 	}
 
 	hor, err := conf.GetFloat64("watermark", "horizontal")
 	if err != nil {
-		log.Println("Error reading config horizontal alignment, defaulting to 0.5")
-        hor = 0.5
+		log.Printf("Error reading config horizontal alignment, defaulting to %v\n", defaults.Horizontal)
+		hor = defaults.Horizontal
 	}
 
-    if addMark == true {
-	    watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
-
-	    if err != nil {
-	    	log.Fatal("Error creating watermarker:" + err.Error())
-	    }
-    }
+	watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
+	if err != nil {
+		log.Printf("Error creating watermarker: %v\n", err.Error())
+	}
 
 	// Configure handler
 	logging.Debug("Configuring handler")
+	log.Println("Configuring handler")
 	handler := &MyHandler{
 		requests:    0,
 		config:      conf,
@@ -193,11 +200,13 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	}
 
 	logging.Debug("Beginning to listen")
+	log.Println("Beginning to listen")
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal("Error creating listener:" + err.Error())
 	}
 	logging.Debug("Server ready")
+	log.Println("Server ready")
 	return server, handler, ln
 }
 
@@ -209,22 +218,20 @@ func main() {
 
 	conf, err := config.ReadConfig(*cpath)
 	if err != nil {
-		log.Println("Error while reading config at " + *cpath + ": " +
-        err.Error() + ", using default values)
+		log.Printf("Error while reading config at %v: %v, using default values\n", *cpath, err.Error())
 	}
-
 	def, err := conf.GetUint64("server", "memory")
 	if err != nil {
-		def = 512 * 1024 * 1024
+		log.Printf("Error reading config memory value, defaulting to %v\n", defaults.Mem)
+		def = defaults.Mem
 	}
 	mem := flag.Uint64("m", def, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
-	flag.Parse()
-
 	imagick.Initialize()
 	defer imagick.Terminate()
 
 	log.Println("Server starting...")
 	logging.Debug("Debug enabled")
+	log.Println("Debug enabled")
 
 	server, handler, ln := NewServer(8005, *mem, conf)
 	handler.started = time.Now()
