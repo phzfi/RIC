@@ -37,10 +37,10 @@ func TestOperatorConvert(t *testing.T) {
 	operator, src := SetupOperatorSource()
 
 	testfolder := "testimages/convert/"
-	testimage := testfolder + "toconvert"
-	testimage2 := testfolder + "toconvert2"
-	testimage3 := testfolder + "toconvert3"
-	testimage4 := testfolder + "toconvert4"
+	testimage := testfolder + "toconvert.jpg"
+	testimage2 := testfolder + "toconvert2.jpg"
+	testimage3 := testfolder + "toconvert3.jpg"
+	testimage4 := testfolder + "toconvert4.jpg"
 	resfolder := "testresults/common/"
 	tolerance := 0.002
 
@@ -91,10 +91,10 @@ func TestOperatorResize(t *testing.T) {
 	operator, src := SetupOperatorSource()
 
 	testfolder := "testimages/resize/"
-	testimage := testfolder + "toresize"
-	testimage2 := testfolder + "toresize2"
-	testimage3 := testfolder + "toresize3"
-	testimage4 := testfolder + "toresize4"
+	testimage := testfolder + "toresize.jpg"
+	testimage2 := testfolder + "toresize2.jpg"
+	testimage3 := testfolder + "toresize3.jpg"
+	testimage4 := testfolder + "toresize4.jpg"
 	resfolder := "testresults/common/"
 	tolerance := 0.002
 
@@ -145,8 +145,8 @@ func TestOperatorLiquidRescale(t *testing.T) {
 	operator, src := SetupOperatorSource()
 
 	testfolder := "testimages/resize/"
-	testimage := testfolder + "toresize"
-	testimage2 := testfolder + "toresize2"
+	testimage := testfolder + "toresize.jpg"
+	testimage2 := testfolder + "toresize2.jpg"
 	resfolder := "testresults/common/"
 	tolerance := 0.05
 
