@@ -9,8 +9,8 @@ type token struct{}
 
 type ImageProcessor chan token
 
-func MakeImageProcessor(size int) (t imageProcessor) {
-	t = make(imageProcessor, size)
+func MakeImageProcessor(size int) (t ImageProcessor) {
+	t = make(ImageProcessor, size)
 
 	for i := 0; i < size; i++ {
 		t <- token{}
@@ -21,7 +21,7 @@ func MakeImageProcessor(size int) (t imageProcessor) {
 
 // Takes an image as a blob and applies the given operations to it
 // startBlob can be nil, in which case operations should start with an image loading operation
-func (p imageProcessor) MakeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
+func (p ImageProcessor) MakeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
 	p.borrow()
 	defer p.giveBack()
 
@@ -42,10 +42,10 @@ func (p imageProcessor) MakeBlob(startBlob []byte, operations []ops.Operation) (
 	return img.Blob(), nil
 }
 
-func (p imageProcessor) borrow() {
+func (p ImageProcessor) borrow() {
 	<-p
 }
 
-func (p imageProcessor) giveBack() {
+func (p ImageProcessor) giveBack() {
 	p <- token{}
 }

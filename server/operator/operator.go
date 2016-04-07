@@ -12,7 +12,7 @@ type Operator struct {
 	sync.Mutex
 	inProgress map[string]*Progress
 
-	processor imageProcessor
+	processor ImageProcessor
 }
 
 type Progress struct {
@@ -29,7 +29,7 @@ func Make(cache Cacher, tokens int) Operator {
 	return Operator{
 		cache:      cache,
 		inProgress: make(map[string]*Progress),
-		processor:  makeImageProcessor(tokens),
+		processor:  MakeImageProcessor(tokens),
 	}
 }
 
