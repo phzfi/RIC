@@ -7,8 +7,10 @@ import (
 
 type token struct{}
 
+// ImageProcessor provides a method for applying operations, limiting the number of operations being applied at once.
 type ImageProcessor chan token
 
+// Makes a new image processor, taking the allowed number of simultaneous operations as an argument.
 func MakeImageProcessor(size int) (t imageProcessor) {
 	t = make(imageProcessor, size)
 
