@@ -113,17 +113,6 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	}
 	logging.Debug("Reading server config")
 	//setting default values
-//	def := defaults.Mem
-//	minHeight := defaults.MinHeight
-//	minWidth := defaults.MinWidth
-//	maxHeight := defaults.MaxHeight
-//	maxWidth := defaults.MaxWidth
-//	addMark := defaults.AddMark
-//	imgpath := defaults.Imgpath
-//	tokens := defaults.Tokens
-//	ver := defaults.Vertical
-//	hor := defaults.Horizontal
-
 
 	minHeight, err := conf.GetInt("watermark", "minheight")
 	if err != nil {
@@ -160,12 +149,6 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 		addMark = false
 	}
 
-	tokens, err := conf.GetInt("server", "concurrency")
-	if err != nil {
-		log.Printf("Error reading config concurrency value, defaulting to %v\n", defaults.Tokens)
-		tokens = defaults.Tokens
-	}
-
 	ver, err := conf.GetFloat64("watermark", "vertical")
 	if err != nil {
 		log.Printf("Error reading config vertical alignment, defaulting to %v\n", defaults.Vertical)
@@ -176,6 +159,12 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	if err != nil {
 		log.Printf("Error reading config horizontal alignment, defaulting to %v\n", defaults.Horizontal)
 		hor = defaults.Horizontal
+	}
+
+	tokens, err := conf.GetInt("server", "concurrency")
+	if err != nil {
+		log.Printf("Error reading config concurrency value, defaulting to %v\n", defaults.Tokens)
+		tokens = defaults.Tokens
 	}
 
 	watermarker, err := ops.MakeWatermarker(imgpath, hor, ver, maxWidth, minWidth, maxHeight, minHeight, addMark)
