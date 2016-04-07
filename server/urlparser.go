@@ -1,13 +1,12 @@
 package main
 
 import (
-	"github.com/phzfi/RIC/server/config"
+	"errors"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"path/filepath"
 	"strings"
-	"errors"
 )
 
 func ExtToFormat(ext string) string {
@@ -21,7 +20,7 @@ func ExtToFormat(ext string) string {
 	return ext
 }
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, ext string, err, invalid error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, ext string, err, invalid error) {
 	filename := string(uri.Path())
 	w, h, cropx, cropy, mode, invalid := getParams(uri.QueryArgs())
 	ow, oh, err := source.ImageSize(filename)
@@ -78,26 +77,26 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	crop := func() {
-	  if w == 0 {
-	    w = ow
-	  }
-	  if h == 0 {
-	    h = oh
-	  }
+		if w == 0 {
+			w = ow
+		}
+		if h == 0 {
+			h = oh
+		}
 		operations = append(operations, ops.Crop{w, h, cropx, cropy})
 	}
 
 	cropmid := func() {
 		if w == 0 || w > ow {
-	    w = ow
-	  }
-	  if h == 0 || h > oh {
-	    h = oh
-	  }
-	  midW := roundedIntegerDivision(ow, 2)
-	  midH := roundedIntegerDivision(oh, 2)
-	  cropx := midW - roundedIntegerDivision(w, 2)
-	  cropy := midH - roundedIntegerDivision(h, 2)
+			w = ow
+		}
+		if h == 0 || h > oh {
+			h = oh
+		}
+		midW := roundedIntegerDivision(ow, 2)
+		midH := roundedIntegerDivision(oh, 2)
+		cropx := midW - roundedIntegerDivision(w, 2)
+		cropy := midH - roundedIntegerDivision(h, 2)
 		operations = append(operations, ops.Crop{w, h, cropx, cropy})
 	}
 
@@ -162,7 +161,6 @@ func roundedIntegerDivision(n, m int) int {
 	}
 }
 
-
 // returns validated parameters from request and error if invalid
 func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode string, e error) {
 	w = a.GetUintOrZero("width")
@@ -170,12 +168,12 @@ func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode string, e error) 
 	cropx = a.GetUintOrZero("cropx")
 	cropy = a.GetUintOrZero("cropy")
 	mode = string(a.Peek("mode"))
-	modes := map[string]bool {
-		"": true,
-		"fit": true,
-		"crop": true,
+	modes := map[string]bool{
+		"":        true,
+		"fit":     true,
+		"crop":    true,
 		"cropmid": true,
-		"liquid": true,
+		"liquid":  true,
 	}
 
 	if strings.Contains(a.String(), "%") {
