@@ -5,6 +5,7 @@ import (
 	"github.com/phzfi/RIC/server/logging"
 )
 
+// Operation for resizing image to Width and Height with liquid rescale method
 type LiquidRescale struct {
 	Width, Height int
 }

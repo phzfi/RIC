@@ -6,6 +6,7 @@ import (
 	"github.com/phzfi/RIC/server/logging"
 )
 
+// Operation for converting image to given format
 type Convert struct {
 	Format string
 }

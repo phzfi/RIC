@@ -5,6 +5,8 @@ import (
 	"github.com/phzfi/RIC/server/logging"
 )
 
+// Operation for extracting region of an image by Width and Height
+// with offsets X and Y.
 type Crop struct {
 	Width, Height, X, Y int
 }

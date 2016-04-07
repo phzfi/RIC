@@ -5,6 +5,7 @@ import (
 	"github.com/phzfi/RIC/server/logging"
 )
 
+// Operation for loading image to cache
 type loadImageOp struct {
 	is *ImageSource
 	id string

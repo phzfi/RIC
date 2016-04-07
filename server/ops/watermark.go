@@ -6,6 +6,8 @@ import (
 	"math"
 )
 
+// Operation for adding watermark stamp to actual image by specifying horizontal
+// and vertical position of the watermark.
 type watermark struct {
 	stamp      images.Image
 	horizontal float64

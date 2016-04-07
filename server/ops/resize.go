@@ -5,6 +5,7 @@ import (
 	"github.com/phzfi/RIC/server/logging"
 )
 
+// Operation for resizing image to Width and Height
 type Resize struct {
 	Width, Height int
 }
