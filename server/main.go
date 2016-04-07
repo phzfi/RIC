@@ -47,7 +47,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
-		operations, extension, err, invalid := ParseURI(url, h.imageSource, h.watermarker, h.config)
+		operations, format, err, invalid := ParseURI(url, h.imageSource, h.watermarker, h.config)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -62,7 +62,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			ctx.NotFound()
 			logging.Debug(err)
 		} else {
-      ctx.SetContentType("image/" + ExtToFormat(extension))
+			ctx.SetContentType("image/" + format)
 			ctx.Write(blob)
 			logging.Debug("Blob returned")
 		}
