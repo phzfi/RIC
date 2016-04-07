@@ -7,9 +7,11 @@ import (
 
 type token struct{}
 
-type imageProcessor chan token
+// ImageProcessor provides a method for applying operations, limiting the number of operations being applied at once.
+type ImageProcessor chan token
 
-func makeImageProcessor(size int) (t imageProcessor) {
+// Makes a new image processor, taking the allowed number of simultaneous operations as an argument.
+func MakeImageProcessor(size int) (t imageProcessor) {
 	t = make(imageProcessor, size)
 
 	for i := 0; i < size; i++ {
@@ -19,6 +21,8 @@ func makeImageProcessor(size int) (t imageProcessor) {
 	return
 }
 
+// Takes an image as a blob and applies the given operations to it
+// startBlob can be nil, in which case operations should start with an image loading operation
 func (p imageProcessor) MakeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
 	p.borrow()
 	defer p.giveBack()
