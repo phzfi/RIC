@@ -2,7 +2,6 @@ package operator
 
 import (
 	"github.com/phzfi/RIC/server/cache"
-	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
 	"sync"
 )
@@ -12,7 +11,8 @@ type Operator struct {
 
 	sync.Mutex
 	inProgress map[string]*Progress
-	tokens     TokenPool
+
+	processor ImageProcessor
 }
 
 type Progress struct {
@@ -25,19 +25,19 @@ type Cacher interface {
 	AddBlob(string, []byte)
 }
 
-func Make(cache Cacher) Operator {
+func Make(cache Cacher, tokens int) Operator {
 	return Operator{
 		cache:      cache,
 		inProgress: make(map[string]*Progress),
-		tokens:     MakeTokenPool(2),
+		processor:  MakeImageProcessor(tokens),
 	}
 }
 
-func MakeDefault(mm uint64, cacheFolder string) Operator {
+func MakeDefault(mm uint64, cacheFolder string, tokens int) Operator {
 	return Make(cache.HybridCache{
 		cache.NewCache(cache.NewLRU(), mm),
 		cache.NewDiskCache(cacheFolder, 1024*1024*1024*4, cache.NewLRU()),
-	})
+	}, tokens)
 }
 
 func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error) {
@@ -76,7 +76,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error)
 		var found bool
 		blob, found = o.cache.GetBlob(key)
 		if !found {
-			blob, err = o.makeBlob(startimage, operations[start:])
+			blob, err = o.processor.MakeBlob(startimage, operations[start:])
 			if err != nil {
 				return nil, err
 			}
@@ -101,25 +101,4 @@ func (o *Operator) addInProgress(key string) *Progress {
 
 	o.inProgress[key] = p
 	return p
-}
-
-func (o *Operator) makeBlob(startBlob []byte, operations []ops.Operation) ([]byte, error) {
-	o.tokens.Borrow()
-	defer o.tokens.Return()
-
-	img := images.NewImage()
-	defer img.Destroy()
-
-	if startBlob != nil {
-		img.FromBlob(startBlob)
-	}
-
-	for _, op := range operations {
-		err := op.Apply(img)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return img.Blob(), nil
 }

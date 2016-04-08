@@ -30,18 +30,18 @@ type Cache struct {
 }
 
 // Gets an image blob of requested dimensions
-func (c *Cache) GetBlob(string string) (blob []byte, found bool) {
+func (c *Cache) GetBlob(key string) (blob []byte, found bool) {
 
-	b64 := stringToBase64(string)
-	logging.Debugf("Cache get with string: %v", b64)
+	b64 := stringToBase64(key)
+	logging.Debugf("Cache get with key: %v", b64)
 
 	c.RLock()
-	blob, found = c.storer.Load(string)
+	blob, found = c.storer.Load(key)
 	c.RUnlock()
 
 	if found {
 		logging.Debugf("Cache found: %v", b64)
-		c.policy.Visit(string)
+		c.policy.Visit(key)
 	} else {
 		logging.Debugf("Cache not found: %v", b64)
 	}
@@ -49,26 +49,26 @@ func (c *Cache) GetBlob(string string) (blob []byte, found bool) {
 	return
 }
 
-func (c *Cache) AddBlob(string string, blob []byte) {
+func (c *Cache) AddBlob(key string, blob []byte) {
 
-	// This is the only point where the cache is mutated.
-	// While this runs the there can be no reads from the storer.
 	size := uint64(len(blob))
 
 	if size > c.maxMemory {
 		return
 	}
 
-	logging.Debugf("Cache add: %v", stringToBase64(string))
+	logging.Debugf("Cache add: %v", stringToBase64(key))
 
+	// This is the only point where the cache is mutated.
+	// While this runs the there can be no reads from the storer.
 	c.Lock()
 	defer c.Unlock()
 	for c.currentMemory+size > c.maxMemory {
 		c.deleteOne()
 	}
-	c.policy.Push(string)
+	c.policy.Push(key)
 	c.currentMemory += uint64(len(blob))
-	c.storer.Store(string, blob)
+	c.storer.Store(key, blob)
 }
 
 func (c *Cache) deleteOne() {

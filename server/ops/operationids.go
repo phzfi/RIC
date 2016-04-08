@@ -5,5 +5,6 @@ const (
 	liquidRescaleID
 	loadID
 	convertID
-	watemarkID
+	watermarkID
+	cropID
 )

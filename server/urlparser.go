@@ -1,32 +1,26 @@
 package main
 
 import (
+	"errors"
 	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
-	"path/filepath"
 	"strings"
 )
 
-func ExtToFormat(ext string) string {
-	ext = strings.ToUpper(strings.TrimLeft(ext, "."))
-	if ext == "JPG" {
-		return "JPEG"
-	}
-	return ext
-}
-
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, ext string, err error) {
-	args := uri.QueryArgs()
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, format string, err, invalid error) {
 	filename := string(uri.Path())
-	w, werr := args.GetUint("width")
-	h, herr := args.GetUint("height")
+
+	w, h, cropx, cropy, mode, format, invalid := getParams(uri.QueryArgs())
+	if invalid != nil {
+		return
+	}
+
 	ow, oh, err := source.ImageSize(filename)
 	if err != nil {
 		return
 	}
-	mode := string(args.Peek("mode"))
 
 	operations = []ops.Operation{source.LoadImageOp(filename)}
 
@@ -39,11 +33,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	adjustSize := func() {
-		if herr != nil && werr == nil {
+		if h == 0 && w != 0 {
 			adjustHeight()
-		} else if herr == nil && werr != nil {
+		} else if h != 0 && w == 0 {
 			adjustWidth()
-		} else if werr != nil && herr != nil {
+		} else if w == 0 && h == 0 {
 			w, h = ow, oh
 		}
 	}
@@ -73,6 +67,30 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		operations = append(operations, ops.LiquidRescale{w, h})
 	}
 
+	crop := func() {
+		if w == 0 {
+			w = ow
+		}
+		if h == 0 {
+			h = oh
+		}
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+	}
+
+	cropmid := func() {
+		if w == 0 || w > ow {
+			w = ow
+		}
+		if h == 0 || h > oh {
+			h = oh
+		}
+		midW := roundedIntegerDivision(ow, 2)
+		midH := roundedIntegerDivision(oh, 2)
+		cropx := midW - roundedIntegerDivision(w, 2)
+		cropy := midH - roundedIntegerDivision(h, 2)
+		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+	}
+
 	fit := func() {
 		if w > ow {
 			w = ow
@@ -80,7 +98,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 		if h > oh {
 			h = oh
 		}
-		if werr == nil && herr == nil {
+		if w != 0 && h != 0 {
 			if ow*h > w*oh {
 				adjustHeight()
 			} else {
@@ -102,22 +120,20 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	switch mode {
-	case "resize":
+	case resizeMode:
 		resize()
-	case "fit":
+	case fitMode:
 		fit()
-	case "liquid":
+	case liquidMode:
 		liquid()
-	default:
-		resize()
+	case cropMode:
+		crop()
+	case cropmidMode:
+		cropmid()
 	}
 	watermark()
 
-	ext = filepath.Ext(filename)
-	if ext == "" {
-		ext = ".jpg"
-	}
-	operations = append(operations, ops.Convert{ExtToFormat(ext)})
+	operations = append(operations, ops.Convert{format})
 
 	return
 }
@@ -128,4 +144,92 @@ func roundedIntegerDivision(n, m int) int {
 	} else { // -5 / 6 should round to -1
 		return (n - m/2) / m
 	}
+}
+
+var stringToMode = map[string]mode{
+	"":        resizeMode,
+	"resize":  resizeMode,
+	"fit":     fitMode,
+	"crop":    cropMode,
+	"cropmid": cropmidMode,
+	"liquid":  liquidMode,
+}
+
+type mode int
+
+const (
+	fitMode = mode(1 + iota)
+	cropMode
+	cropmidMode
+	liquidMode
+	resizeMode
+
+	widthParam  = "width"
+	heightParam = "height"
+	modeParam   = "mode"
+	formatParam = "format"
+	cropxParam  = "cropx"
+	cropyParam  = "cropy"
+)
+
+// returns validated parameters from request and error if invalid
+func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format string, err error) {
+	if strings.Contains(a.String(), "%") {
+		err = errors.New("Invalid characters in request!")
+		return
+	}
+
+	defer func() {
+		if msg := recover(); msg != nil {
+			err = msg.(error)
+		}
+	}()
+
+	w = getUint(a, widthParam)
+	h = getUint(a, heightParam)
+
+	cropx = getUint(a, cropxParam)
+	cropy = getUint(a, cropyParam)
+
+	mode = stringToMode[string(a.Peek(modeParam))]
+	if mode == 0 {
+		err = errors.New("Invalid mode!")
+		return
+	}
+
+	format = strings.ToLower(string(a.Peek(formatParam)))
+	if format == "" {
+		format = "jpeg"
+	}
+	// TODO: verify that the format is one we support.
+	// We do not want to support TXT, for instance
+
+	a.Del(widthParam)
+	a.Del(heightParam)
+	a.Del(modeParam)
+	a.Del(formatParam)
+	a.Del(cropxParam)
+	a.Del(cropyParam)
+	if a.Len() != 0 {
+		err = errors.New("Invalid parameter " + a.String())
+		return
+	}
+
+	err = nil
+	return
+}
+
+func getUint(a *fasthttp.Args, param string) int {
+	v, err := a.GetUint(param)
+	if isParseError(err) {
+		panic(err)
+	}
+	if v == -1 {
+		v = 0
+	}
+	return v
+}
+
+func isParseError(err error) bool {
+	return err != nil && err != fasthttp.ErrNoArgValue
 }

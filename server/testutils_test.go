@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
@@ -15,6 +16,8 @@ import (
 
 // Port will be incremented for each server created in the test
 var port = 8022
+
+var tokens = 3
 
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
@@ -51,7 +54,7 @@ func stopServer(server *fasthttp.Server, ln net.Listener, srverr chan error) err
 // uses the cache and ImageSource operation with current working dir as root.
 // Returns the operator and the source operation.
 func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
-	o = operator.MakeDefault(512*1024*1024, "/tmp/RIC_testimagecache")
+	o = operator.MakeDefault(512*1024*1024, "/tmp/RIC_testimagecache", tokens)
 	src = ops.MakeImageSource()
 	src.AddRoot("./")
 	return
@@ -59,7 +62,10 @@ func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
 
 // Gets blob from server. package variable port is used as port and localhost as address
 func getBlobFromServer(getname string) (blob []byte, err error) {
-	_, blob, err = fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
+	statuscode, blob, err := fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
+	if statuscode != 200 {
+		return nil, errors.New(fmt.Sprintf("Server returned %d", statuscode))
+	}
 	if err != nil {
 		return
 	}

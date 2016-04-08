@@ -22,6 +22,14 @@ func NewLRU() *LRU {
 
 func (lru *LRU) Push(id string) {
 
+	if _, ok := lru.toList[id]; ok {
+		return
+	}
+
+	lru.push(id)
+}
+
+func (lru *LRU) push(id string) {
 	l := list{id: id}
 
 	prev := lru.last()
@@ -40,7 +48,7 @@ func (lru *LRU) Visit(id string) {
 	defer lru.Unlock()
 
 	lru.toList[id].remove()
-	lru.Push(id)
+	lru.push(id)
 }
 
 func (lru *LRU) Pop() (id string) {
