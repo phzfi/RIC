@@ -4,11 +4,22 @@ import (
 	"errors"
 	"github.com/fubla/imagick/imagick"
 	"strings"
+    "log"
 )
+
+var isOpenCL bool
 
 func init() {
 	imagick.Initialize()
-    	imagick.InitializeOpenCL()
+   	
+    ok, device := imagick.InitializeOpenCL(
+    if ok != imagick.MagickTrue {
+        log.Println("OpenCL initialization failed")
+        isOpenCL = false
+    } else {
+        log.Printf("Using device: %v\n", device)
+        isOpenCL = true
+    }
 }
 
 // Image is an uncompressed image that must be convertd to blob before serving to a client.
