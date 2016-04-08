@@ -11,6 +11,19 @@ type Conf struct{
   conf ini.Config
 }
 
+type ConfValues struct{
+   MinHeight int
+   MinWidth int
+   MaxHeight int
+   MaxWidth int
+   AddMark bool
+   Imgpath string
+   Tokens int
+   Vertical float64
+   Horizontal float64
+   Mem uint64
+}
+
 func ReadConfig(path string) (config Conf, err error) {
   conf, err := ini.LoadFile(path)
   if err != nil {
@@ -22,7 +35,6 @@ func ReadConfig(path string) (config Conf, err error) {
   }
   return
 }
-
 
 func (conf Conf) GetString(section, key string) (value string, err error) {
   value, success := conf.conf.Get(section, key)
