@@ -45,7 +45,6 @@ var defaults = config.ConfValues{
 	Horizontal: 1.0,
 }
 
-var confPresent bool
 
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
