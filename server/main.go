@@ -174,7 +174,6 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 
 	// Configure handler
 	logging.Debug("Configuring handler")
-	log.Println("Configuring handler")
 	handler := &MyHandler{
 		requests:    0,
 		config:      conf,
@@ -189,13 +188,11 @@ func NewServer(port int, maxMemory uint64, conf config.Conf) (*fasthttp.Server, 
 	}
 
 	logging.Debug("Beginning to listen")
-	log.Println("Beginning to listen")
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal("Error creating listener:" + err.Error())
 	}
 	logging.Debug("Server ready")
-	log.Println("Server ready")
 	return server, handler, ln
 }
 
@@ -220,7 +217,6 @@ func main() {
 
 	log.Println("Server starting...")
 	logging.Debug("Debug enabled")
-	log.Println("Debug enabled")
 
 	server, handler, ln := NewServer(8005, *mem, conf)
 	handler.started = time.Now()
