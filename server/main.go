@@ -101,7 +101,7 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 	logging.Debug("Reading server config")
 	//setting default values
 
-	watermarker, err := ops.MakeWatermarker(conf.Watermark.Imgpath, conf.Watermark.Horizontal, conf.Watermark.Vertical, conf.Watermark.MaxWidth, conf.Watermark.MinWidth, conf.Watermark.MaxHeight, conf.Watermark.MinHeight, conf.Watermark.AddMark)
+	watermarker, err := ops.MakeWatermarker(conf.Watermark)
 	if err != nil {
 		log.Printf("Error creating watermarker: %v\n", err.Error())
 	}

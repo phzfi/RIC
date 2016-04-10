@@ -13,7 +13,7 @@ type Conf struct {
 }
 
 type ConfValues struct {
-	Watermark watermark
+	Watermark Watermark
 	Server    server
 }
 
@@ -22,25 +22,25 @@ type server struct {
 	Memory uint64
 }
 
-type watermark struct {
-	MinHeight  int
+type Watermark struct {
+	ImagePath  string `ini:"path"`
+	Horizontal float64
+	Vertical   float64
+	MaxWidth   int
 	MinWidth   int
 	MaxHeight  int
-	MaxWidth   int
+	MinHeight  int
 	AddMark    bool
-	Imgpath    string `ini:"path"`
-	Vertical   float64
-	Horizontal float64
 }
 
 var defaults = ConfValues{
-	watermark{
+	Watermark{
 		MinHeight:  200,
 		MinWidth:   200,
 		MaxHeight:  5000,
 		MaxWidth:   5000,
 		AddMark:    false,
-		Imgpath:    "",
+		ImagePath:  "",
 		Vertical:   0.0,
 		Horizontal: 1.0,
 	},

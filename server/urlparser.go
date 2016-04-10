@@ -120,8 +120,8 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	}
 
 	watermark := func() {
-		heightOK := h > marker.Minheight && h < marker.Maxheight
-		widthOK := w > marker.Minwidth && w < marker.Maxwidth
+		heightOK := h > marker.MinHeight && h < marker.MaxHeight
+		widthOK := w > marker.MinWidth && w < marker.MaxWidth
 		if marker.AddMark && heightOK && widthOK {
 			logging.Debug("Adding watermarkOp")
 			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))
