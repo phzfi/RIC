@@ -32,8 +32,6 @@ type MyHandler struct {
 	watermarker ops.Watermarker
 }
 
-var confPresent bool
-
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
 func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
@@ -48,7 +46,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
-		operations, extension, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
+		operations, format, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -63,7 +61,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			ctx.NotFound()
 			logging.Debug(err)
 		} else {
-			ctx.SetContentType("image/" + ExtToFormat(extension))
+			ctx.SetContentType("image/" + format)
 			ctx.Write(blob)
 			logging.Debug("Blob returned")
 		}

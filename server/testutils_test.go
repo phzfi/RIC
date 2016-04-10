@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
@@ -55,7 +56,10 @@ func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
 
 // Gets blob from server. package variable port is used as port and localhost as address
 func getBlobFromServer(getname string) (blob []byte, err error) {
-	_, blob, err = fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
+	statuscode, blob, err := fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/", port)+getname)
+	if statuscode != 200 {
+		return nil, errors.New(fmt.Sprintf("Server returned %d", statuscode))
+	}
 	if err != nil {
 		return
 	}

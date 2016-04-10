@@ -52,6 +52,8 @@ func fileSize(path string) uint64 {
 		log.Println("Unable to open file to get its size:", err)
 		return 0
 	}
+	defer f.Close()
+
 	stat, err := f.Stat()
 	if err != nil {
 		log.Println("Unable to get file stats:", err)
