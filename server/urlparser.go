@@ -2,14 +2,13 @@ package main
 
 import (
 	"errors"
-	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"strings"
 )
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker, conf config.Conf) (operations []ops.Operation, format string, err, invalid error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
 	filename := string(uri.Path())
 
 	w, h, cropx, cropy, mode, format, invalid := getParams(uri.QueryArgs())
@@ -111,8 +110,8 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker,
 	}
 
 	watermark := func() {
-		heightOK := h > marker.Minheight && h < marker.Maxheight
-		widthOK := w > marker.Minwidth && w < marker.Maxwidth
+		heightOK := h > marker.MinHeight && h < marker.MaxHeight
+		widthOK := w > marker.MinWidth && w < marker.MaxWidth
 		if marker.AddMark && heightOK && widthOK {
 			logging.Debug("Adding watermarkOp")
 			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))

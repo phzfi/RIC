@@ -1,82 +1,93 @@
 package config
 
 import (
-  "bitbucket.org/classroomsystems/ini"
-  "github.com/phzfi/RIC/server/logging"
-  "strconv"
-  "errors"
+	"bitbucket.org/classroomsystems/ini"
+	"fmt"
+	"log"
+	"reflect"
+	"strings"
 )
 
-type Conf struct{
-  conf ini.Config
+type Conf struct {
+	conf ini.Config
 }
 
-type ConfValues struct{
-   MinHeight int
-   MinWidth int
-   MaxHeight int
-   MaxWidth int
-   AddMark bool
-   Imgpath string
-   Tokens int
-   Vertical float64
-   Horizontal float64
-   Mem uint64
+type ConfValues struct {
+	Watermark Watermark
+	Server    server
 }
 
-func ReadConfig(path string) (config Conf, err error) {
-  conf, err := ini.LoadFile(path)
-  if err != nil {
-    logging.Debug("Error reading config " + err.Error())
-    return
-  }
-  config = Conf {
-    conf: conf,
-  }
-  return
+type server struct {
+	Tokens int `ini:"concurrency"`
+	Memory uint64
 }
 
-func (conf Conf) GetString(section, key string) (value string, err error) {
-  value, success := conf.conf.Get(section, key)
-  if (success) {
-    return
-  } else {
-    return "", errors.New("Value not found for "+ key +" in "+ section)
-  }
+type Watermark struct {
+	ImagePath  string `ini:"path"`
+	Horizontal float64
+	Vertical   float64
+	MaxWidth   int
+	MinWidth   int
+	MaxHeight  int
+	MinHeight  int
+	AddMark    bool
 }
 
-func (conf Conf) GetInt(section, key string) (value int, err error) {
-  str, success := conf.conf.Get(section, key)
-  if success {
-    return strconv.Atoi(str)
-  } else {
-    return 0, errors.New("Value not found for "+ key +" in "+ section)
-  }
+var defaults = ConfValues{
+	Watermark{
+		MinHeight:  200,
+		MinWidth:   200,
+		MaxHeight:  5000,
+		MaxWidth:   5000,
+		AddMark:    false,
+		ImagePath:  "",
+		Vertical:   0.0,
+		Horizontal: 1.0,
+	},
+	server{
+		Tokens: 1,
+		Memory: 2048 * 1024 * 1024,
+	},
 }
 
-func (conf Conf) GetUint64(section, key string) (value uint64, err error) {
-  str, success := conf.conf.Get(section, key)
-  if success {
-    return strconv.ParseUint(str, 10, 64)
-  } else {
-    return 0, errors.New("Value not found for "+ key +" in "+ section)
-  }
-}
+func ReadConfig(path string) (c *ConfValues) {
+	copyOfDefaults := defaults
+	c = &copyOfDefaults
 
-func (conf Conf) GetFloat64(section, key string) (value float64, err error) {
-  str, success := conf.conf.Get(section, key)
-  if (success) {
-    return strconv.ParseFloat(str, 64)
-  } else {
-    return 0.0, errors.New("Value not found for "+ key +" in "+ section)
-  }
-}
+	conf, err := ini.LoadFile(path)
+	if err != nil {
+		log.Println("Error reading config " + err.Error())
+		return
+	}
 
-func (conf Conf) GetBool(section, key string) (value bool, err error) {
-  str, success := conf.conf.Get(section, key)
-  if (success) {
-    return strconv.ParseBool(str)
-  } else {
-    return false, errors.New("Value not found for "+ key +" in "+ section)
-  }
+	whole := reflect.ValueOf(c).Elem()
+
+	for categoryNo := 0; categoryNo < whole.NumField(); categoryNo++ {
+		category := whole.Field(categoryNo)
+		categoryName := strings.ToLower(whole.Type().Field(categoryNo).Name)
+
+		for fieldNo := 0; fieldNo < category.NumField(); fieldNo++ {
+
+			fieldInfo := category.Type().Field(fieldNo)
+			key := fieldInfo.Tag.Get("ini")
+			if key == "" {
+				key = strings.ToLower(fieldInfo.Name)
+			}
+
+			field := category.Field(fieldNo)
+
+			valueAsText, found := conf.Get(categoryName, key)
+			if !found {
+				// TODO: It would be better if it would only notify if a field name if written wrong instead of complaining for each missing field.
+				log.Printf("%s not found in [%s], using default value of %#v.\n", key, categoryName, field.Interface())
+				continue
+			}
+			_, err := fmt.Sscan(valueAsText, field.Addr().Interface())
+			if err != nil {
+				log.Printf("Error parsing %s: %s\n", valueAsText, err)
+			}
+		}
+	}
+
+	return
 }
