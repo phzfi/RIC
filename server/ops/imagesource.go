@@ -57,7 +57,7 @@ func (i ImageSource) searchRootsInternal(filename string, visitPath, visitURL fu
 			return
 		}
 	}
-        return
+	return
 }
 
 // Searches root for an image. If found, loads only the image metadata to img. Otherwise does nothing and returns an error.
