@@ -7,7 +7,7 @@ import (
 func TestImageSize(t *testing.T) {
 	s := MakeImageSource()
 	s.AddRoot("https://upload.wikimedia.org/wikipedia/commons/")
-	s.AddRoot(".")
+	s.AddRoot("../")
 
         w, h, err := s.ImageSize("b/b4/JPEG_example_JPG_RIP_100.jpg")
         if err != nil {
