@@ -46,7 +46,7 @@ func (i ImageSource) searchRootsInternal(filename string, visitPath, visitURL fu
 		// TODO: Fix escape vulnerability (sanitize filename from at least ".." etc)
 		err = visitPath(filepath.Join(root, filename))
 		if err == nil {
-			break
+			return
 		}
 	}
 
@@ -54,10 +54,10 @@ func (i ImageSource) searchRootsInternal(filename string, visitPath, visitURL fu
 		logging.Debugf("Attempting to load %s", root+filename)
 		err = visitURL(root + filename)
 		if err == nil {
-			break
+			return
 		}
 	}
-	return
+        return
 }
 
 // Searches root for an image. If found, loads only the image metadata to img. Otherwise does nothing and returns an error.

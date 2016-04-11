@@ -7,13 +7,20 @@ import (
 
 func TestWebroot(t *testing.T) {
 	s := MakeImageSource()
+	s.AddRoot("../")
 	s.AddRoot("https://upload.wikimedia.org/wikipedia/commons/")
 
 	i := images.NewImage()
 	defer i.Destroy()
 
-	err := s.LoadImageOp("b/b4/JPEG_example_JPG_RIP_100.jpg").Apply(i)
+	err := s.LoadImageOp("testimages/loadimage/test.jpg").Apply(i)
+	if err != nil {
+		t.Fatalf("Error loading image from web: %s", err)
+	}
 
+	i = images.NewImage()
+	defer i.Destroy()
+	err = s.LoadImageOp("b/b4/JPEG_example_JPG_RIP_100.jpg").Apply(i)
 	if err != nil {
 		t.Fatalf("Error loading image from web: %s", err)
 	}
