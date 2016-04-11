@@ -11,3 +11,8 @@ func TestReadConfigErr(t *testing.T) {
 		t.Fatal("Expected default config")
 	}
 }
+
+// If there is a bug in the config reading, it will panic when reading a file
+func TestNoReadConfigPanic(t *testing.T) {
+	_ = ReadConfig("testconfig.ini")
+}
