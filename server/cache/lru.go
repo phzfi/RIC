@@ -2,8 +2,10 @@ package cache
 
 import "sync"
 
+
+var mutex = &sync.Mutex{}
+
 type LRU struct {
-	sync.Mutex
 
 	toList     map[string]*list
 	head, tail list
@@ -44,8 +46,8 @@ func (lru *LRU) push(id string) {
 
 func (lru *LRU) Visit(id string) {
 
-	lru.Lock()
-	defer lru.Unlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	lru.toList[id].remove()
 	lru.push(id)
