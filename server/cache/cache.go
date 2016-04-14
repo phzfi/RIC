@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+var rwmutex = &sync.RWMutex{}
+
 type Policy interface {
 	// Push and Pop do not need to be thread safe
 	Push(string)
@@ -21,7 +23,6 @@ type Storer interface {
 }
 
 type Cache struct {
-	sync.RWMutex
 
 	policy Policy
 	storer Storer
@@ -35,9 +36,9 @@ func (c *Cache) GetBlob(key string) (blob []byte, found bool) {
 	b64 := stringToBase64(key)
 	logging.Debugf("Cache get with key: %v", b64)
 
-	c.RLock()
+	rwmutex.RLock()
 	blob, found = c.storer.Load(key)
-	c.RUnlock()
+	rwmutex.RUnlock()
 
 	if found {
 		logging.Debugf("Cache found: %v", b64)
@@ -61,8 +62,8 @@ func (c *Cache) AddBlob(key string, blob []byte) {
 
 	// This is the only point where the cache is mutated.
 	// While this runs the there can be no reads from the storer.
-	c.Lock()
-	defer c.Unlock()
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
 	for c.currentMemory+size > c.maxMemory {
 		c.deleteOne()
 	}
