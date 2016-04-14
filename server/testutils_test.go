@@ -9,7 +9,6 @@ import (
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/phzfi/RIC/server/testutils"
 	"github.com/valyala/fasthttp"
-	"log"
 	"net"
 	"time"
 )
@@ -22,12 +21,7 @@ var tokens = 3
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
 	// Start the server
-	conf, err := config.ReadConfig("config/testconfig.ini")
-
-	if err != nil {
-		log.Fatal("Error while reading config" + err.Error())
-		return
-	}
+	conf := config.ReadConfig("config/testconfig.ini")
 
 	port++
 	server, _, ln = NewServer(port, 500000, conf)
