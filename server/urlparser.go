@@ -154,6 +154,18 @@ var stringToMode = map[string]mode{
 	"liquid":  liquidMode,
 }
 
+var supportedFormats = map[string]string{
+	"":					"jpeg",
+	"jpg":			"jpeg",
+	"jpeg":			"jpeg",
+	"gif":			"gif",
+	"webp":			"webp",
+	"bmp":			"bmp",
+	"png":			"png",
+	"tiff":			"tiff",
+}
+
+
 type mode int
 
 const (
@@ -196,9 +208,10 @@ func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format stri
 		return
 	}
 
-	format = strings.ToLower(string(a.Peek(formatParam)))
-	if format == "" {
-		format = "jpeg"
+	format, formatFound := supportedFormats[strings.ToLower(string(a.Peek(formatParam)))]
+	if !formatFound {
+		err = errors.New("Invalid format '" + string(a.Peek(formatParam)) + "'!")
+		return
 	}
 	// TODO: verify that the format is one we support.
 	// We do not want to support TXT, for instance

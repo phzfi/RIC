@@ -200,7 +200,8 @@ func TestInvalidParams(t *testing.T) {
 		"?width=200&height=abc",
 		"?width=200?height=200",
 		"?width=200&height=200&mode=fit&something=x",
-		"?width=200&height=200&mode=y"}
+		"?width=200&height=200&mode=y",
+		"?format=abc"}
 
 	for _, c := range cases {
 		uri := base + c
