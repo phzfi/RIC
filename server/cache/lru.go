@@ -65,11 +65,11 @@ func (lru *LRU) Pop() (id string) {
 	return
 }
 
-func (lru LRU) first() *list {
+func (lru *LRU) first() *list {
 	return lru.head.next
 }
 
-func (lru LRU) last() *list {
+func (lru *LRU) last() *list {
 	return lru.tail.prev
 }
 
@@ -82,3 +82,4 @@ func (l list) remove() {
 	l.prev.next = l.next
 	l.next.prev = l.prev
 }
+
