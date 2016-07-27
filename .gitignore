@@ -3,6 +3,7 @@
 *~
 *.out
 .vagrant
+.DS_Store
 /server/server
 /server/server.exe
 /server/testresults/*/*
@@ -12,3 +13,4 @@
 /report_generator/siege_url_files/*temp.txt
 /scripts/profiler_results/*
 !/**/placeholder
+
