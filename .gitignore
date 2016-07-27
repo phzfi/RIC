@@ -12,4 +12,5 @@
 /competing_product/build/
 /report_generator/siege_url_files/*temp.txt
 /scripts/profiler_results/*
-!/**/placeholdera
+!/**/placeholder
+
