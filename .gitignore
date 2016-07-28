@@ -14,3 +14,4 @@
 /scripts/profiler_results/*
 !/**/placeholder
 
+node_modules/

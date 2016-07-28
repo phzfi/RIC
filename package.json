@@ -1,0 +1,32 @@
+{
+  "name": "riclib",
+  "version": "1.0.0",
+  "description": "RIC client javascript library.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "serve test_site/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phzfi/RIC.git"
+  },
+  "keywords": [
+    "RIC",
+    "image",
+    "optimize",
+    "cache"
+  ],
+  "author": "Pharazon AB",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/phzfi/RIC/issues"
+  },
+  "homepage": "https://github.com/phzfi/RIC#readme",
+  "devDependencies": {
+    "serve": "^1.4.0"
+  }
+}

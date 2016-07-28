@@ -15,6 +15,7 @@ Vagrant.configure("2") do |config|
   config.ssh.forward_x11 = true
 
   # Staging / Development / Testing port
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
   config.vm.network "forwarded_port", guest: 8005, host: 8005
   config.vm.network "forwarded_port", guest: 8007, host: 8007
   config.vm.network "forwarded_port", guest: 7777, host: 7777
@@ -50,5 +51,6 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup.sh"
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup_imagemagick.sh"
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup_go.sh"
+  config.vm.provision "shell", path: "scripts/provision/vagrant_setup_node.sh"
 end
 
