@@ -3,53 +3,19 @@
 	<head>
 		<title>RIC Test site for different image use-cases</title>
 
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-		<style>
-			body {
-				padding-top: 50px;
-				padding-bottom: 50px;
-			}
-
-			hr {
-				border-color: darkblue;
-			}
-
-			.My-md {
-				margin-top: 15px;
-				margin-bottom: 15px;
-			}
-
-			.col-xs-12,
-			.col-sm-6 {
-				background-color: lightgreen;
-			}
-
-			.ric-square-image-200 {
-				width: 200px;
-				height: 200px;
-			}
-
-			.ric-fixed-size-300-100 {
-				width: 300px;
-				height: 100px;
-			}
-
-			.ric-max-width {
-				width: 555px;
-				max-width: 100%;
-			}
-
-			.ric-fill {
-				width: 100%;
-				height: 100%;
-			}
-		</style>
+		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
 		<h1>1. Full viewport width image</h1>
-		<img src="http://placehold.it/2000x500" class="img-responsive" />
-		<p>Image is intended to cover full viewport width and keep its aspect ratio. Image size changes when viewport is resized.</p>
+		<p class="well">Image is intended to cover full viewport width and keep its aspect ratio. Image size changes when viewport is resized. <mark>original: 2560px x 540px, baseline "standard" quality 9</mark></p>
+
+		<img src="img/dubai-2560x450-baseline-standard-quality-9.jpg" class="img-responsive My-md" />
 		<hr />
 
 
@@ -58,8 +24,9 @@
 
 		<div class="container">
 			<h1>2. Full container width image</h1>
-			<img src="http://placehold.it/2000x500" class="img-responsive My-md" />
-			<p>Image is intended to cover full widht of the container and keep its aspect ratio. Image size changes when container width changes. This usually occures when breakpoint changes.</p>
+			<p class="well">Image is intended to cover full widht of the container and keep its aspect ratio. Image size changes when container width changes. This usually occures when breakpoint changes. <mark>original: 1200px x 400px, baseline "standard" quality 9</mark></p>
+
+			<img src="img/bridge-1200x400-baseline-standard-quality-9.jpg" class="img-responsive My-md" />
 		</div>
 		<hr />
 
@@ -68,29 +35,13 @@
 
 		<div class="container">
 			<h1>3. Full column width images</h1>
-			<div class="row">
-				<div class="col-xs-12 col-sm-6">
-					<img src="http://placehold.it/2000x500" class="img-responsive My-md" />
-				</div>
-				<div class="col-xs-12 col-sm-6">
-					<img src="http://placehold.it/2000x500" class="img-responsive My-md" />
-				</div>
-			</div>
+			<p class="well">These work in the same way as 'Full container width image' <mark>original: 800px x 200px, baseline "standard" quality 9</mark></p>
+
 			<div class="row My-md">
-				<div class="col-xs-12 col-sm-3">
-					<img src="http://placehold.it/200x200" class="ric-square-image-200 My-md" />
-				</div>
-				<div class="col-xs-12 col-sm-3">
-					<img src="http://placehold.it/200x200" class="ric-square-image-200 My-md" />
-				</div>
-				<div class="col-xs-12 col-sm-3">
-					<img src="http://placehold.it/200x200" class="ric-square-image-200 My-md" />
-				</div>
-				<div class="col-xs-12 col-sm-3">
-					<img src="http://placehold.it/200x200" class="ric-square-image-200 My-md" />
+				<div class="col-xs-12 col-sm-6">
+					<img src="img/rock-800x200-baseline-standard-quality-9.jpg" class="img-responsive My-md" />
 				</div>
 			</div>
-			<p>These work in the same way as 'Full container width image'</p>
 		</div>
 		<hr />
 
@@ -100,24 +51,41 @@
 
 		<div class="container">
 			<h1>4. Fixed size images</h1>
+			<p class="well">These images have fixed size, but have larger container. (Except, product image)</p>
 			<div class="media">
 			  <div class="media-left">
 			    <a href="#">
-			      <img class="media-object" src="http://placehold.it/64x64" />
+			      <img class="media-object" src="img/sunset-200x200-baseline-standard-quality-9.jpg" />
 			    </a>
 			  </div>
 			  <div class="media-body">
 			    <h4 class="media-heading">Product image</h4>
 			    These images usually are 'thumbnails' and size stays the same in all devices.
+			    <br />
+			    <mark>original: 200px x 200px, baseline "standard" quality 9</mark>
 			  </div>
 			</div>
 
 			<div class="row My-md">
 				<div class="col-xs-12 col-sm-6">
-					<img src="http://placehold.it/200x200" class="ric-fixed-size-300-100 My-md" />
+					<img src="img/bubles-300x100-baseline-standard-quality-9.jpg" class="ric-fixed-size-300-100 My-md" />
+					<p class="well"><mark>original: 300px x 100px, baseline "standard" quality 9</mark></p>
 				</div>
 			</div>
-			<p>This image has fixed size, but it has larger container.</p>
+			<div class="row My-md">
+				<div class="col-xs-12 col-sm-3">
+					<img src="img/beach-600x600-baseline-standard-quality-9.jpg" class="ric-square-image-200 My-md" />
+					<p class="well"><mark>original: 600px x 600px, baseline "standard" quality 9</mark></p>
+				</div>
+				<div class="col-xs-12 col-sm-3">
+					<img src="img/sunset-200x200-baseline-standard-quality-9.jpg" class="My-md" />
+					<p class="well"><mark>original: 200px x 200px, baseline "standard" quality 9. Also no CSS class to set width/height</mark></p>
+				</div>
+				<div class="col-xs-12 col-sm-3">
+					<img src="img/sea-1200x1200-progressive-scans-4-quality-9.jpg" class="ric-square-image-200 My-md" />
+					<p class="well"><mark>original: 1200px x 1200px, progressive scans 4, quality 9</mark></p>
+				</div>
+			</div>
 		</div>
 		<hr />
 
@@ -127,12 +95,13 @@
 
 		<div class="container">
 			<h1>5. Image with fixed width, but overriding max-width to make it fluid</h1>
-			<div class="row">
+			<p class="well">Image is never overflowing the container, because max-width: 100% keeps it inside it. But it has fixed width if container has enough space. <mark>original: 800px x 200px, baseline "standard" quality 9</mark></p>
+
+			<div class="row My-md">
 				<div class="col-xs-12">
-					<img src="http://placehold.it/2000x500" class="ric-max-width My-md" />
+					<img src="img/rock-800x200-baseline-standard-quality-9.jpg" class="ric-max-width My-md" />
 				</div>
 			</div>
-			<p>Image is never overflowing the container, because max-width: 100% keeps it inside it. But it has fixed width if container has enough space.</p>
 		</div>
 		<hr />
 
@@ -141,12 +110,13 @@
 
 		<div class="container">
 			<h1>6. Image is smaller than container, but it should fill it</h1>
-			<div class="row">
+			<p class="well">This is used to make sure that layout looks consistent, event if the editor (in CMS) is using low resolution image.<mark>original: 200px x 200px, baseline "standard" quality 9</mark></p>
+
+			<div class="row My-md">
 				<div class="col-xs-12 col-sm-6">
-					<img src="http://placehold.it/200x200" class="ric-fill My-md" />
+					<img src="img/sunset-200x200-baseline-standard-quality-9.jpg" class="ric-fill My-md" />
 				</div>
 			</div>
-			<p>This is used to make sure that layout looks consistent, event if the editor (in CMS) is using low resolution image.</p>
 		</div>
 	</body>
 </html>
