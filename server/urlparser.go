@@ -185,7 +185,7 @@ const (
 	formatParam = "format"
 	cropxParam  = "cropx"
 	cropyParam  = "cropy"
-	urlParam		= "url"
+	urlParam    = "url"
 )
 
 // returns validated parameters from request and error if invalid
