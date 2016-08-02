@@ -191,7 +191,7 @@ const (
 // returns validated parameters from request and error if invalid
 func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url string, err error) {
 
-	if strings.Contains(a.String(), "%3F") {
+	if strings.Contains(a.String(), "%3F") { // %3F = ?
 		err = errors.New("Invalid characters in request!")
 		return
 	}
