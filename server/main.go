@@ -142,7 +142,7 @@ func main() {
 	log.Println("Server starting...")
 	logging.Debug("Debug enabled")
 
-	server, handler, ln := NewServer(8005, *mem, conf)
+	server, handler, ln := NewServer(conf.Server.Port, *mem, conf)
 	handler.started = time.Now()
 	err := server.Serve(ln)
 	end := time.Now()
