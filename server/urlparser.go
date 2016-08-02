@@ -11,9 +11,13 @@ import (
 func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
 	filename := string(uri.Path())
 
-	w, h, cropx, cropy, mode, format, invalid := getParams(uri.QueryArgs())
+	w, h, cropx, cropy, mode, format, url, invalid := getParams(uri.QueryArgs())
 	if invalid != nil {
 		return
+	}
+
+	if url != "" {
+		source.AddRoot(url)
 	}
 
 	ow, oh, err := source.ImageSize(filename)
@@ -181,11 +185,13 @@ const (
 	formatParam = "format"
 	cropxParam  = "cropx"
 	cropyParam  = "cropy"
+	urlParam    = "url"
 )
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format string, err error) {
-	if strings.Contains(a.String(), "%") {
+func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url string, err error) {
+
+	if strings.Contains(a.String(), "%3F") { // %3F = ?
 		err = errors.New("Invalid characters in request!")
 		return
 	}
@@ -216,12 +222,16 @@ func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format stri
 	// TODO: verify that the format is one we support.
 	// We do not want to support TXT, for instance
 
+	url = string(a.Peek(urlParam))
+
 	a.Del(widthParam)
 	a.Del(heightParam)
 	a.Del(modeParam)
 	a.Del(formatParam)
 	a.Del(cropxParam)
 	a.Del(cropyParam)
+	a.Del(urlParam)
+
 	if a.Len() != 0 {
 		err = errors.New("Invalid parameter " + a.String())
 		return
