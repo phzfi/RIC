@@ -30,3 +30,4 @@ Test that server returns test images:
 * mode: fit, liquid, crop
 * format: All that imagemagic supports
 * watermark: text
+* url: webroot url
