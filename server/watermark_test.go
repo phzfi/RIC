@@ -1,4 +1,4 @@
-package tests
+package main
 
 import (
 	"github.com/phzfi/RIC/server/images"
@@ -8,9 +8,9 @@ import (
 
 func TestImageWatermark(t *testing.T) {
 
-	testfolder := "../../testimages/watermark/"
+	testfolder := "testimages/watermark/"
 	testimage := testfolder + "towatermark.jpg"
-	resfolder := "../../testresults/images/"
+	resfolder := "testresults/images/"
 	tolerance := 0.002
 
 	wmimage := images.NewImage()
