@@ -47,10 +47,8 @@ Vagrant.configure("2") do |config|
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
 
-  # TODO: More?
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup.sh"
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup_imagemagick.sh"
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup_go.sh"
-  config.vm.provision "shell", path: "scripts/provision/vagrant_setup_node.sh"
 end
 
