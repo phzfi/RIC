@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# ImageMagick 6.9.3-4 (2016-02-12)
-RELEASE="d21fb1eaf6e444ecd6228f2a58d6d0e24692f53f"
-ORIGIN="http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.bz2?ref=${RELEASE}"
-FILE="imagemagick.tar.bz2"
+ORIGIN="https://www.imagemagick.org/download/releases/ImageMagick-6.9.3-10.tar.xz"
+FILE="imagemagick.tar.xz"
 SOURCE="imagemagick-source"
 BUILD="imagemagick-build"
 

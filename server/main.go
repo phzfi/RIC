@@ -46,7 +46,6 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
-		log.Println(url)
 		operations, format, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
