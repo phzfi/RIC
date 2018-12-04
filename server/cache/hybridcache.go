@@ -5,15 +5,16 @@ package cache
 type HybridCache []Cacher
 
 type Cacher interface {
-	GetBlob(string) ([]byte, bool)
-	AddBlob(string, []byte)
+	GetBlob(string, string) ([]byte, bool)
+	AddBlob(string, string, []byte)
+	DeleteNamespace(string)
 }
 
-func (caches HybridCache) GetBlob(string string) ([]byte, bool) {
+func (caches HybridCache) GetBlob(namespace string, identifier string) ([]byte, bool) {
 	for i, cache := range caches {
-		if blob, found := cache.GetBlob(string); found {
+		if blob, found := cache.GetBlob(namespace, identifier); found {
 			for j := 0; j < i; j++ {
-				caches[j].AddBlob(string, blob)
+				caches[j].AddBlob(namespace, identifier, blob)
 			}
 			return blob, true
 		}
@@ -21,8 +22,15 @@ func (caches HybridCache) GetBlob(string string) ([]byte, bool) {
 	return nil, false
 }
 
-func (caches HybridCache) AddBlob(string string, blob []byte) {
+func (caches HybridCache) AddBlob(namespace string, identifier string, blob []byte) {
 	for _, cache := range caches {
-		cache.AddBlob(string, blob)
+		cache.AddBlob(namespace, identifier, blob)
+	}
+}
+
+
+func (caches HybridCache) DeleteNamespace(namespace string)  {
+	for _, cache := range caches {
+		cache.DeleteNamespace(namespace)
 	}
 }

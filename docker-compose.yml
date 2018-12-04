@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  ric-dev:
+    container_name: ric_dev
+    build: .
+    ports:
+      - "8005:8005"
+      - "40000:40000"
+    volumes:
+      # project_gopath/src/github.com/phzfi/RIC Folder structure assumed
+      - ./../../../../:/root/go
+      - ./RIC_image_repository:/mnt/RIC_image_repository
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - SYS_PTRACE
+
+    command: tail -f /dev/null # Keeps docker-compose from terminating process
+
+  ric-prod:
+    container_name: ric_prod
+    build: ./deploy_server
+    ports:
+      - "8006:8006"
+    volumes:
+      # project_gopath/src/github.com/phzfi/RIC Folder structure assumed
+      - ./:/ric
+
+    command: tail -f /dev/null # Keeps docker-compose from terminating process

@@ -1,27 +1,39 @@
 # RIC
 Responsive image cache
 
+TODO: Update development environment setup
+
+
 
 ### Development environment
+
+Create folder structure `ric_project_gopath/src/github.com/phzfi`
 ```bash
-# start virtual machine
-vagrant up
+mkdir -p ric_project_gopath/src/github.com/phzfi
+cd ric_project_gopath/src/github.com/phzfi
 
-# start RIC server
-vagrant ssh
+git clone <REPO_URL>
 
-cd /vagrant/server
+```
+
+Run docker-composer and login
+```bash
+
+docker-compose up --build --force-recreate
+docker exec -i -t ric_dev /bin/bash
+```
+
+Inside docker container
+```bash
 
 go build
 
-./do_run.sh
+./server
 
-# check that script was run, to detach `ctrl + a` and `d`
-screen -list
 ```
 
-Test that server returns test images:
-`http://localhost:8005/01.jpg`
+Test that server returns status page:
+`http://localhost:8005/status`
 
 ### Accepted RIC query parameters
 
@@ -31,3 +43,13 @@ Test that server returns test images:
 * format: All that imagemagic supports
 * watermark: text
 * url: webroot url
+
+
+
+#Compile and run delve
+Ide must be configured to respond to connection
+```bash
+
+go build -tags debug -v -gcflags "all=-N -l" && /root/go/bin/dlv --headless --listen=:40000 --api-version=2 exec ./server
+
+```

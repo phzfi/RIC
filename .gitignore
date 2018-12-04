@@ -15,3 +15,11 @@
 !/**/placeholder
 
 node_modules/
+
+.idea
+RIC gopath.iml
+RIC.iml
+aws/credentials
+RIC_image_repository
+!RIC_image_repository/.gitkeep
+phz-ric_*.deb

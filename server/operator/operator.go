@@ -4,6 +4,9 @@ import (
 	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/ops"
 	"sync"
+	"github.com/valyala/fasthttp"
+	"github.com/phzfi/RIC/server/ric_file"
+	"github.com/phzfi/RIC/server/logging"
 )
 
 type Operator struct {
@@ -21,8 +24,9 @@ type Progress struct {
 }
 
 type Cacher interface {
-	GetBlob(string) ([]byte, bool)
-	AddBlob(string, []byte)
+	GetBlob(string, string) ([]byte, bool)
+	AddBlob(string, string, []byte)
+	DeleteNamespace(namespace string)
 }
 
 func Make(cache Cacher, tokens int) Operator {
@@ -33,14 +37,14 @@ func Make(cache Cacher, tokens int) Operator {
 	}
 }
 
-func MakeDefault(mm uint64, cacheFolder string, tokens int) Operator {
+func MakeWithDefaultCacheSet(mm uint64, cacheFolder string, tokens int) Operator {
 	return Make(cache.HybridCache{
 		cache.NewCache(cache.NewLRU(), mm),
 		cache.NewDiskCache(cacheFolder, 1024*1024*1024*4, cache.NewLRU()),
 	}, tokens)
 }
 
-func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error) {
+func (o *Operator) GetBlob(namespace string, operations ...ops.Operation) (blob []byte, err error) {
 
 	key := toKey(operations)
 
@@ -49,7 +53,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error)
 
 	for start = len(operations); start > 0; start-- {
 		var found bool
-		startimage, found = o.cache.GetBlob(toKey(operations[:start]))
+		startimage, found = o.cache.GetBlob(namespace, toKey(operations[:start]))
 		if found {
 			break
 		}
@@ -74,7 +78,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error)
 
 		// image may have entered cache while this goroutine moved to this place in code
 		var found bool
-		blob, found = o.cache.GetBlob(key)
+		blob, found = o.cache.GetBlob(namespace, key)
 		if !found {
 			blob, err = o.processor.MakeBlob(startimage, operations[start:])
 			if err != nil {
@@ -85,7 +89,7 @@ func (o *Operator) GetBlob(operations ...ops.Operation) (blob []byte, err error)
 		isReady.blob = blob
 		isReady.Unlock()
 
-		o.cache.AddBlob(key, blob)
+		o.cache.AddBlob(namespace, key, blob)
 
 		o.Lock()
 		delete(o.inProgress, key)
@@ -101,4 +105,17 @@ func (o *Operator) addInProgress(key string) *Progress {
 
 	o.inProgress[key] = p
 	return p
+}
+
+func (o *Operator) DeleteCacheNamespace(uri *fasthttp.URI, source ops.ImageSource) error {
+	filename := string(uri.Path())
+	_, md5Filename, decodeErr := ric_file.DecodeFilename(filename)
+	if decodeErr != nil {
+		logging.Debug(decodeErr)
+		return decodeErr
+	}
+
+	o.cache.DeleteNamespace(md5Filename)
+
+	return nil
 }

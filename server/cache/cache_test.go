@@ -49,16 +49,17 @@ func (AmnesiaCache) GetBlob(_ string) ([]byte, bool) {
 func (AmnesiaCache) AddBlob(_ string, _ []byte) {}
 
 func TestDiskCachePersistence(t *testing.T) {
+	namespace := "testnamespace"
 	id := "testdiskpersist"
 	data := []byte{1, 2, 3, 4, 7}
 
 	_, cache := setupDiskCache()
-	cache.AddBlob(id, data)
+	cache.AddBlob(namespace, id, data)
 
 	time.Sleep(100 * time.Millisecond)
 
 	_, cache = setupDiskCache()
-	recovered, ok := cache.GetBlob(id)
+	recovered, ok := cache.GetBlob(namespace, id)
 
 	if !ok {
 		t.Fatal("The new cache instance did not find the image previously saved on disk.")
@@ -89,11 +90,12 @@ func allTests(t *testing.T, f setupFunc) {
 }
 
 func testCache(t *testing.T, setup setupFunc) {
+	namespace := "testnamespace"
 	id := "testcache"
 	dp, cache := setup()
 
 	found := func() bool {
-		_, ok := cache.GetBlob(id)
+		_, ok := cache.GetBlob(namespace, id)
 		return ok
 	}
 
@@ -101,7 +103,7 @@ func testCache(t *testing.T, setup setupFunc) {
 		t.Fatal("Cache claimed to contain a blob that was never added")
 	}
 
-	cache.AddBlob(id, make([]byte, 10))
+	cache.AddBlob(namespace, id, make([]byte, 10))
 
 	time.Sleep(100 * time.Millisecond) // only necessary for pure disk cache
 
@@ -119,6 +121,7 @@ func testCache(t *testing.T, setup setupFunc) {
 }
 
 func testCacheExit(t *testing.T, setup setupFunc) {
+	namespace := "testnamespace"
 	var (
 		id1 = "cacheexit1"
 		id2 = "cacheexit2"
@@ -126,9 +129,9 @@ func testCacheExit(t *testing.T, setup setupFunc) {
 	)
 	dp, cache := setup()
 
-	cache.AddBlob(id1, make([]byte, 50))
-	cache.AddBlob(id2, make([]byte, 40))
-	cache.AddBlob(id3, make([]byte, 20))
+	cache.AddBlob(namespace, id1, make([]byte, 50))
+	cache.AddBlob(namespace, id2, make([]byte, 40))
+	cache.AddBlob(namespace, id3, make([]byte, 20))
 
 	if dp.pops != 1 {
 		t.Fatal("Wrong amount of blobs removed from cache")
@@ -136,9 +139,10 @@ func testCacheExit(t *testing.T, setup setupFunc) {
 }
 
 func TestTooBig(t *testing.T) {
+	namespace := "testnamespace"
 	dp, cache := setupMemcache()
 	const id = "string"
-	cache.AddBlob(id, make([]byte, cacheSize+1))
+	cache.AddBlob(namespace, id, make([]byte, cacheSize+1))
 
 	if len(dp.loki[id]) != 0 {
 		t.Fatalf("Despite being too big, resource was cached. %#v", dp.loki[id])

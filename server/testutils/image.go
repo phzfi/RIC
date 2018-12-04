@@ -40,7 +40,7 @@ func CheckDistortion(blob []byte, reffn string, tol float64, resfn string) (err 
 }
 
 type TestCase struct {
-	Testfn, Reffn, Resfn string
+	TestFilename, TestParameters, ReferenceFilename, ResultFilename string
 }
 
 type FormatTestCase struct {
@@ -69,7 +69,7 @@ func CheckImage(blob []byte, c TestCase, tol float64, f func(images.Image) error
 		return
 	}
 
-	err = CheckDistortion(blob, c.Reffn, tol, c.Resfn)
+	err = CheckDistortion(blob, c.ReferenceFilename, tol, c.ResultFilename)
 	if err != nil {
 		return
 	}

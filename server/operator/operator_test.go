@@ -13,7 +13,7 @@ var tokens = 3
 
 func prepare() Operator {
 	testutils.RemoveContents(cacheFolder)
-	return MakeDefault(1000, cacheFolder, tokens)
+	return MakeWithDefaultCacheSet(1000, cacheFolder, tokens)
 }
 
 func TestAlreadyCached(t *testing.T) {

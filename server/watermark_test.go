@@ -24,16 +24,16 @@ func TestImageWatermark(t *testing.T) {
 	vertical := 0.0
 
 	cases := []testutils.TestCase{
-		{testimage, testfolder + "marked1.jpg", resfolder + "marked1.jpg"},
-		{testimage, testfolder + "marked2.jpg", resfolder + "marked2.jpg"},
-		{testimage, testfolder + "marked3.jpg", resfolder + "marked3.jpg"},
+		{testimage, "",testfolder + "marked1.jpg", resfolder + "marked1.jpg"},
+		{testimage, "",testfolder + "marked2.jpg", resfolder + "marked2.jpg"},
+		{testimage, "",testfolder + "marked3.jpg", resfolder + "marked3.jpg"},
 	}
 
 	for _, c := range cases {
 
 		img := images.NewImage()
 		defer img.Destroy()
-		err := img.FromFile(c.Testfn)
+		err := img.FromFile(c.TestFilename)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -45,7 +45,7 @@ func TestImageWatermark(t *testing.T) {
 		blob := img.Blob()
 		horizontal = horizontal + 0.5
 		vertical = vertical + 0.5
-		err = testutils.CheckDistortion(blob, c.Reffn, tolerance, c.Resfn)
+		err = testutils.CheckDistortion(blob, c.ReferenceFilename, tolerance, c.ResultFilename)
 		if err != nil {
 			t.Fatal(err)
 		}
