@@ -9,7 +9,7 @@
 Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "ubuntu/wily64"
+  config.vm.box = "ubuntu/xenial64"
 
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
@@ -19,6 +19,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 8005, host: 8005
   config.vm.network "forwarded_port", guest: 8007, host: 8007
   config.vm.network "forwarded_port", guest: 7777, host: 7777
+  config.vm.network "forwarded_port", guest: 2345, host: 2345
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   # config.vm.network "private_network", ip: "192.168.33.10"

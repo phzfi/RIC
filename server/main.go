@@ -46,6 +46,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	if ctx.IsGet() {
 
 		url := ctx.URI()
+		log.Println(url)
 		operations, format, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
@@ -143,6 +144,7 @@ func main() {
 	logging.Debug("Debug enabled")
 
 	server, handler, ln := NewServer(8005, *mem, conf)
+
 	handler.started = time.Now()
 	err := server.Serve(ln)
 	end := time.Now()
@@ -154,7 +156,6 @@ func main() {
 	duration := end.Sub(handler.started)
 	log.Println("Server requests: " + requests)
 	log.Println("Server uptime: " + duration.String())
-
 	// Log errors
 	if err != nil {
 		log.Fatal(err)
