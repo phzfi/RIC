@@ -1,7 +1,8 @@
 #!/bin/bash
 
-ORIGIN="https://www.imagemagick.org/download/releases/ImageMagick-6.9.3-10.tar.xz"
-FILE="imagemagick.tar.xz"
+ORIGIN="https://www.imagemagick.org/download/ImageMagick-6.9.10-15.tar.gz"
+#ORIGIN="https://www.imagemagick.org/download/ImageMagick.tar.gz"
+FILE="imagemagick.tar.gz"
 SOURCE="imagemagick-source"
 BUILD="imagemagick-build"
 
