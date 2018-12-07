@@ -1,5 +1,5 @@
 # Compile stage
-FROM golang:1.11.2 AS build-env
+FROM golang:1.11.2 AS ric-build-env
 
 # Set environment variables
 ENV GOPATH=$HOME
@@ -14,7 +14,7 @@ RUN apt-get -y install file
 RUN apt-get -y install imagemagick
 RUN apt-get -y install libmagickwand-dev
 
-# GET go sources
+# GET go sources and build binary
 WORKDIR /root/go/src/github.com/phzfi/RIC/server
 COPY . .
 CMD go get -t ./...
@@ -23,14 +23,15 @@ CMD ./server
 
 
 
-
-#RUN go build -o RIC server
 #
-# Final stage
-#FROM alpine:3.7
-# For running binary files in alpine
+## Final stage
+#FROM alpine:3.7 AS ric-prod-env
+#
+## For running binary files in alpine
 #RUN apk add --no-cache libc6-compat
+#
 #EXPOSE 8005
-##WORKDIR /
-#COPY --from=build-env /server /
-#CMD ["/server"]
+#WORKDIR /
+##COPY --from=ric-build-env /root/go/src/github.com/phzfi/RIC/server /server
+#
+##CMD ["/server/server"]
