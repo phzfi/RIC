@@ -15,3 +15,6 @@
 !/**/placeholder
 
 node_modules/
+
+.idea
+
