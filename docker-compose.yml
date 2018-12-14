@@ -1,27 +1,18 @@
 version: '3'
 
 services:
-  build-env:
+  ric-dev:
+    container_name: ric_dev
     build: .
     ports:
       - "8005:8005"
       - "40000:40000"
     volumes:
-      - ./:/root/go/src/github.com/phzfi/RIC
+      # project_gopath/src/github.com/phzfi/RIC Folder structure assumed
+      - ./../../../../:/root/go
     security_opt:
       - apparmor:unconfined
     cap_add:
       - SYS_PTRACE
 
-#
-#  prod-env:
-#    build: .
-#    ports:
-#      - "8005:8005"
-
-#    volumes:
-#      - ./:/root/go/src/github.com/phzfi/RIC
-#    security_opt:
-#      - apparmor:unconfined
-#    cap_add:
-#      - SYS_PTRACE
+    command: tail -f /dev/null # Keeps docker-compose from terminating process

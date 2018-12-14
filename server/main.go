@@ -45,8 +45,19 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 	if ctx.IsGet() {
 
-		url := ctx.URI()
-		operations, format, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
+		// Special case for status check.
+		// TODO: Consider implementing routing?
+		path := string(ctx.Path())
+		if path == "/status" {
+			_, err := ctx.WriteString("OK")
+			if err != nil{
+				ctx.Error("Failed to write output", 500)
+			}
+			return
+		}
+
+		uri := ctx.URI()
+		operations, format, err, invalid := ParseURI(uri, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -62,8 +73,13 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			logging.Debug(err)
 		} else {
 			ctx.SetContentType("image/" + format)
-			ctx.Write(blob)
-			logging.Debug("Blob returned")
+
+			length, err := ctx.Write(blob)
+			if err != nil {
+				ctx.Error("Failed to write output", 500)
+				return
+			}
+			logging.Debug(fmt.Sprintf("Blob returned with length: %d", length))
 		}
 
 	} else if ctx.IsPost() {
@@ -75,7 +91,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 // Respond to POST message by saying Hello
 func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
-	_, err := ctx.WriteString("Hello world!")
+	_, err := ctx.WriteString("OK")
 	if err != nil {
 		log.Println(err)
 	}

@@ -17,4 +17,5 @@
 node_modules/
 
 .idea
-
+RIC gopath.iml
+RIC.iml

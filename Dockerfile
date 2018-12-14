@@ -14,16 +14,9 @@ RUN apt-get -y install file
 RUN apt-get -y install imagemagick
 RUN apt-get -y install libmagickwand-dev
 
-# GET go sources and build binary
 WORKDIR /root/go/src/github.com/phzfi/RIC/server
-COPY . .
-CMD go get -t ./...
-CMD go build
-CMD ./server
 
-
-
-#
+# WIP
 ## Final stage
 #FROM alpine:3.7 AS ric-prod-env
 #
@@ -32,6 +25,6 @@ CMD ./server
 #
 #EXPOSE 8005
 #WORKDIR /
-##COPY --from=ric-build-env /root/go/src/github.com/phzfi/RIC/server /server
+#COPY --from=ric-build-env /root/go/src/github.com/phzfi/RIC/server /server
 #
-##CMD ["/server/server"]
+#CMD ["/server/server"]
