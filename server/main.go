@@ -11,6 +11,8 @@ import (
 	"gopkg.in/gographics/imagick.v2/imagick"
 	"log"
 	"net"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -102,11 +104,13 @@ func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.Server, *MyHandler, net.Listener) {
 	logging.Debug("Creating server")
 	imageSource := ops.MakeImageSource()
+
 	// Add roots
-	// TODO: This must be externalized outside the source code.
 	logging.Debug("Adding roots")
-	if imageSource.AddRoot("/var/www") != nil {
-		log.Fatal("Root not added /var/www")
+	if conf.Server.ImageFolder != "" {
+		if imageSource.AddRoot(conf.Server.ImageFolder) != nil {
+			log.Fatal(fmt.Sprintf("Root not added %s", conf.Server.ImageFolder))
+		}
 	}
 
 	if imageSource.AddRoot(".") != nil {
@@ -145,7 +149,9 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 
 func main() {
 
-	cpath := flag.String("c", "config.ini", "Sets the configuration .ini file used.")
+	cpath := locateConfig()
+
+	logging.Debug(fmt.Sprintf("Loading config from %s", *cpath))
 	flag.Parse()
 	// CLI arguments
 
@@ -155,10 +161,10 @@ func main() {
 	imagick.Initialize()
 	defer imagick.Terminate()
 
-	log.Println("Server starting...")
+	log.Println(fmt.Sprintf("Server starting. Listening to port %d...", conf.Server.Port ))
 	logging.Debug("Debug enabled")
 
-	server, handler, ln := NewServer(8005, *mem, conf)
+	server, handler, ln := NewServer( conf.Server.Port, *mem, conf)
 
 	handler.started = time.Now()
 	err := server.Serve(ln)
@@ -175,4 +181,31 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func locateConfig() *string {
+	// First check directory from where binary was launched
+	currentDirectory, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+
+	if _, err := os.Stat(currentDirectory + "/ric_config.ini"); os.IsNotExist(err) {
+		// No try default installation location
+		currentDirectory = getBinaryFileDirectory()
+	}
+
+	if _, err := os.Stat(currentDirectory + "/ric_config.ini"); os.IsNotExist(err) {
+		log.Fatal("Could not load configuration file")
+	}
+	cpath := flag.String("c", currentDirectory + "/ric_config.ini", "Sets the configuration .ini file used.")
+
+	return cpath
+}
+
+func getBinaryFileDirectory() string {
+
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	exPath := filepath.Dir(ex)
+	return exPath
 }

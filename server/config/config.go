@@ -20,6 +20,8 @@ type ConfValues struct {
 type server struct {
 	Tokens int `ini:"concurrency"`
 	Memory uint64
+	ImageFolder string
+	Port int
 }
 
 type Watermark struct {
@@ -47,6 +49,8 @@ var defaults = ConfValues{
 	server{
 		Tokens: 1,
 		Memory: 2048 * 1024 * 1024,
+		ImageFolder: "",
+		Port: 8005,
 	},
 }
 
