@@ -1,0 +1,406 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This stack is for RIC
+
+Parameters:
+  KeyName:
+    Description: "The EC2 Key Pair name to use when creating instances"
+    Type: String
+    Default: ric-aws-key
+  OperatorEMail:
+    Description: E-mail address to notify if there are any scaling operations
+    Type: String
+    AllowedPattern: "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)"
+    ConstraintDescription: must be a valid email address.
+    Default: erkki@phz.fi
+  RICServerInstanceType:
+    Description: "EC2 instance type for the application server"
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+    ConstraintDescription: "Development uses a small T-instance."
+  WhitelistedIpAddress:
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
+
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.192.0.0/16
+
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.10.0/24
+
+  PrivateSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.20.0/24
+
+  PrivateSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.30.0/24
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: RIC
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: VPC
+      InternetGatewayId:
+        Ref: InternetGateway
+
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: RIC
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: RIC-Public-1
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: RIC-Private-1
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: RIC-Private-2
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: RIC Public Routes
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "RIC Email notification topic"
+      Subscription:
+        - Endpoint: !Ref OperatorEMail
+          Protocol: email
+
+
+  WebServerGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      LaunchConfigurationName:
+        Ref: LaunchConfig
+      MinSize: 1
+      MaxSize: 1
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      TargetGroupARNs:
+        - Ref: ALBTargetGroupHTTP
+      #        - Ref: ALBTargetGroupHTTPS
+
+      NotificationConfiguration:
+        TopicARN: !Ref NotificationTopic
+        NotificationTypes:
+          - autoscaling:EC2_INSTANCE_LAUNCH
+          - autoscaling:EC2_INSTANCE_LAUNCH_ERROR
+          - autoscaling:EC2_INSTANCE_TERMINATE
+          - autoscaling:EC2_INSTANCE_TERMINATE_ERROR
+      Tags:
+        - Key: ProjectName
+          Value: RIC
+          PropagateAtLaunch: true
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 1
+        MaxBatchSize: 1
+        # WaitOnResourceSignals: "true"
+        # PauseTime: "PT10S"
+
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      KeyName: !Ref KeyName
+      ImageId: ami-01e51b34598ae47a0
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      InstanceType: !Ref RICServerInstanceType
+      UserData: !Base64
+        "Fn::Sub": |
+          #!/bin/bash
+
+          META_API="http://169.254.169.254/latest/meta-data"
+          WEBPAGE="/usr/share/nginx/html/index.html"
+
+          curl -s $META_API/instance-id > $WEBPAGE
+          echo "<br>" >> $WEBPAGE
+          curl -s $META_API/placement/availability-zone >> $WEBPAGE
+
+          echo "Bootstrap done."
+          sudo mkdir -p /tmp/RICdiskcache
+          chown ubuntu:ubuntu /tmp/RICdiskcache
+
+          cd /home/ubuntu
+          ric
+
+  WebServerScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup
+      Cooldown: 60
+      ScalingAdjustment: 1
+
+  WebServerScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup
+      Cooldown: 60
+      ScalingAdjustment: -1
+
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale-up if any 5xx errors
+      MetricName: HTTPCode_ELB_5XX_Count
+      Namespace: AWS/ApplicationELB
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      AlarmActions:
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: GreaterThanThreshold
+
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale-down if CPU < 20% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 20
+      AlarmActions:
+        - !Ref WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: LessThanThreshold
+
+  ALBListenerHTTP:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: ALBTargetGroupHTTP
+      LoadBalancerArn:
+        Ref: ApplicationLoadBalancer
+      Port: 8005
+      Protocol: HTTP
+
+  ALBTargetGroupHTTP:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 5
+      HealthCheckPath: /status
+      Port: 8005
+      Protocol: HTTP
+      Matcher:
+        HttpCode: '200'
+      VpcId:
+        Ref: VPC
+      Tags:
+        - Key: ProjectName
+          Value: RIC
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Tags:
+        - Key: ProjectName
+          Value: RIC
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: allow access to ALB from internet
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - FromPort: 8005
+          ToPort: 8005
+          IpProtocol: tcp
+          CidrIp: 0.0.0.0/0
+
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and Image port
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref BastionSecurityGroup
+        - FromPort: 8005
+          ToPort: 8005
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+
+  EFSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow EFS from EC2 only
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - FromPort: 2049
+          ToPort: 2049
+          IpProtocol: tcp
+          CidrIp: 172.31.0.0/20
+        - FromPort: 2049
+          ToPort: 2049
+          IpProtocol: tcp
+          CidrIp: 172.31.16.0/20
+        - FromPort: 2049
+          ToPort: 2049
+          IpProtocol: tcp
+          CidrIp: 172.31.32.0/20
+
+
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH connection
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          CidrIp: 194.136.103.72/29
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          CidrIp: 80.220.0.0/14
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          CidrIp: 84.248.0.0/14
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          CidrIp: 86.115.0.0/16
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          CidrIp: 82.181.234.0/24
+        - FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+          CidrIp: 62.78.198.0/24
+
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      KeyName:
+        Ref: KeyName
+      ImageId: ami-034fffcc6a0063961
+
