@@ -160,6 +160,7 @@ Resources:
         - Key: Name
           Value: RIC-Private-2
 
+# ------------- NOTIFICATION -------------------------------------------------------------------------------------------
 
   NotificationTopic:
     Type: AWS::SNS::Topic
