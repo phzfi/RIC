@@ -8,3 +8,10 @@ echo 'echo "deb http://pkg.phz.fi/bionic ./" >> /etc/apt/sources.list.d/pkg.phz.
 sudo add-apt-repository http://pkg.phz.fi/
 sudo apt-get update
 sudo apt-get -y install phz-ric
+
+
+cd ~
+git clone https://github.com/aws/efs-utils
+cd ~/efs-utils
+./build-deb.sh
+sudo apt-get -y install ./build/amazon-efs-utils*deb

@@ -1,5 +1,11 @@
 # Compile stage
-FROM golang:1.11.2 AS ric-build-env
+FROM ubuntu:bionic AS ric-build-env
+
+RUN apt-get update
+RUN apt-get -y install software-properties-common
+#RUN add-apt-repository ppa:longsleep/golang-backports
+RUN apt-get update
+RUN apt-get -y install golang-go
 
 # Set environment variables
 ENV GOPATH=$HOME
@@ -8,12 +14,19 @@ ENV CGO_ENABLED 1
 
 # Update package handler packages
 RUN apt-get update
+RUN apt-get -y install git
 
 # Install image preview generator tools
 RUN apt-get -y install file
 RUN apt-get -y install imagemagick
 RUN apt-get -y install libmagickwand-dev
 
+#ADD scripts/provision /provision
+#
+#RUN apt-get -y install wget
+#
+#RUN /provision/vagrant_setup_imagemagick.sh
+#
 WORKDIR /root/go/src/github.com/phzfi/RIC/server
 
 # WIP

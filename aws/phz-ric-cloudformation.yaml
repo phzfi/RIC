@@ -37,15 +37,20 @@ Parameters:
     Type: String
     Default: 10.192.10.0/24
 
+  PublicSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.20.0/24
+
   PrivateSubnet1CIDR:
     Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
     Type: String
-    Default: 10.192.20.0/24
+    Default: 10.192.30.0/24
 
   PrivateSubnet2CIDR:
     Description: Please enter the IP range (CIDR notation) for the private subnet in the first Availability Zone
     Type: String
-    Default: 10.192.30.0/24
+    Default: 10.192.40.0/24
 
 
 Resources:
@@ -73,6 +78,32 @@ Resources:
         - Key: Name
           Value: RIC
 
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AttachGateway
+    Properties:
+      Domain: vpc
+
+  NatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: AttachGateway
+    Properties:
+      Domain: vpc
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+
+# ------------- SUBNETS ------------------------------------------------------------------------------------------------
+
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -86,6 +117,20 @@ Resources:
       Tags:
         - Key: Name
           Value: RIC-Public-1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: RIC-Public-2
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
@@ -115,6 +160,17 @@ Resources:
         - Key: Name
           Value: RIC-Private-2
 
+
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "RIC Email notification topic"
+      Subscription:
+        - Endpoint: !Ref OperatorEMail
+          Protocol: email
+
+# ------------- ROUTE TABLES -------------------------------------------------------------------------------------------
+
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -137,26 +193,56 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet1
 
-  PrivateSubnet1RouteTableAssociation:
+  PublicSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: RIC Private Routes 1
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
       SubnetId: !Ref PrivateSubnet1
+
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: RIC Private Routes 2
+
+  DefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
 
   PrivateSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref PublicRouteTable
+      RouteTableId: !Ref PrivateRouteTable2
       SubnetId: !Ref PrivateSubnet2
 
-  NotificationTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      DisplayName: "RIC Email notification topic"
-      Subscription:
-        - Endpoint: !Ref OperatorEMail
-          Protocol: email
-
+# ------------- APPLICATION --------------------------------------------------------------------------------------------
 
   WebServerGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -166,7 +252,7 @@ Resources:
       LaunchConfigurationName:
         Ref: LaunchConfig
       MinSize: 1
-      MaxSize: 1
+      MaxSize: 2
       VPCZoneIdentifier:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
@@ -212,6 +298,8 @@ Resources:
           curl -s $META_API/placement/availability-zone >> $WEBPAGE
 
           echo "Bootstrap done."
+
+
           sudo mkdir -p /tmp/RICdiskcache
           chown ubuntu:ubuntu /tmp/RICdiskcache
 
@@ -302,13 +390,26 @@ Resources:
     Properties:
       Scheme: internet-facing
       Subnets:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
       SecurityGroups:
         - !Ref ALBSecurityGroup
       Tags:
         - Key: ProjectName
           Value: RIC
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      KeyName:
+        Ref: KeyName
+      ImageId: ami-034fffcc6a0063961
+
+# ------------- SECURITY GROUPS ----------------------------------------------------------------------------------------
 
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -391,16 +492,4 @@ Resources:
           ToPort: 22
           IpProtocol: tcp
           CidrIp: 62.78.198.0/24
-
-
-  BastionInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      SubnetId: !Ref PublicSubnet1
-      InstanceType: t2.micro
-      SecurityGroupIds:
-        - !Ref BastionSecurityGroup
-      KeyName:
-        Ref: KeyName
-      ImageId: ami-034fffcc6a0063961
 
