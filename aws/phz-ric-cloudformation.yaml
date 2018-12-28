@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This stack is for RIC
+Description: RIC (Responsive Image Cache) stack
 
 Parameters:
   KeyName:
@@ -52,22 +52,27 @@ Parameters:
     Type: String
     Default: 10.192.40.0/24
 
+  VpcId:
+    Description: Id of existing VPC. We must use existing because we created persistent file storage outside cloudformation
+    Type: AWS::EC2::VPC::Id
+    Default: vpc-0dd594c8668f55b8e
+
 
 Resources:
-  VPC:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: !Ref VpcCIDR
-      EnableDnsHostnames: true
-      Tags:
-        - Key: Name
-          Value: RIC
+#  VPC:
+#    Type: AWS::EC2::VPC
+#    Properties:
+#      CidrBlock: !Ref VpcCIDR
+#      EnableDnsHostnames: true
+#      Tags:
+#        - Key: Name
+#          Value: RIC
 
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId:
-        Ref: VPC
+        Ref: VpcId
       InternetGatewayId:
         Ref: InternetGateway
 
@@ -107,7 +112,7 @@ Resources:
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       AvailabilityZone:
         Fn::Select:
           - 0
@@ -121,7 +126,7 @@ Resources:
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       AvailabilityZone:
         Fn::Select:
           - 1
@@ -135,7 +140,7 @@ Resources:
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       AvailabilityZone:
         Fn::Select:
           - 0
@@ -149,7 +154,7 @@ Resources:
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       AvailabilityZone:
         Fn::Select:
           - 1
@@ -175,7 +180,7 @@ Resources:
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       Tags:
         - Key: Name
           Value: RIC Public Routes
@@ -203,7 +208,7 @@ Resources:
   PrivateRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       Tags:
         - Key: Name
           Value: RIC Private Routes 1
@@ -225,7 +230,7 @@ Resources:
   PrivateRouteTable2:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VpcId
       Tags:
         - Key: Name
           Value: RIC Private Routes 2
@@ -283,7 +288,7 @@ Resources:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       KeyName: !Ref KeyName
-      ImageId: ami-01e51b34598ae47a0
+      ImageId: ami-07192668ba34589d4
       SecurityGroups:
         - !Ref InstanceSecurityGroup
       InstanceType: !Ref RICServerInstanceType
@@ -300,11 +305,10 @@ Resources:
 
           echo "Bootstrap done."
 
+          sudo mkdir -p /mnt/RIC_image_repository
+          sudo mount -v -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0e9a1e57.efs.eu-central-1.amazonaws.com:/ /mnt/RIC_image_repository
+          sudo chown ubuntu:ubuntu /mnt/RIC_image_repository
 
-          sudo mkdir -p /tmp/RICdiskcache
-          chown ubuntu:ubuntu /tmp/RICdiskcache
-
-          cd /home/ubuntu
           ric
 
   WebServerScaleUpPolicy:
@@ -381,7 +385,7 @@ Resources:
       Matcher:
         HttpCode: '200'
       VpcId:
-        Ref: VPC
+        Ref: VpcId
       Tags:
         - Key: ProjectName
           Value: RIC
@@ -409,6 +413,9 @@ Resources:
       KeyName:
         Ref: KeyName
       ImageId: ami-034fffcc6a0063961
+      Tags:
+        - Key: Name
+          Value: RIC Bastion
 
 # ------------- SECURITY GROUPS ----------------------------------------------------------------------------------------
 
@@ -417,7 +424,7 @@ Resources:
     Properties:
       GroupDescription: allow access to ALB from internet
       VpcId:
-        Ref: VPC
+        Ref: VpcId
       SecurityGroupIngress:
         - FromPort: 8005
           ToPort: 8005
@@ -430,7 +437,7 @@ Resources:
     Properties:
       GroupDescription: Allow SSH and Image port
       VpcId:
-        Ref: VPC
+        Ref: VpcId
       SecurityGroupIngress:
         - FromPort: 22
           ToPort: 22
@@ -440,34 +447,33 @@ Resources:
           ToPort: 8005
           IpProtocol: tcp
           SourceSecurityGroupId: !Ref ALBSecurityGroup
+        - FromPort: 2049
+          ToPort: 2049
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref EFSSecurityGroup
 
   EFSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow EFS from EC2 only
       VpcId:
-        Ref: VPC
+        Ref: VpcId
       SecurityGroupIngress:
         - FromPort: 2049
           ToPort: 2049
           IpProtocol: tcp
-          CidrIp: 172.31.0.0/20
+          CidrIp: 10.192.30.0/24
         - FromPort: 2049
           ToPort: 2049
           IpProtocol: tcp
-          CidrIp: 172.31.16.0/20
-        - FromPort: 2049
-          ToPort: 2049
-          IpProtocol: tcp
-          CidrIp: 172.31.32.0/20
-
+          CidrIp: 10.192.40.0/24
 
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow SSH connection
       VpcId:
-        Ref: VPC
+        Ref: VpcId
       SecurityGroupIngress:
         - FromPort: 22
           ToPort: 22

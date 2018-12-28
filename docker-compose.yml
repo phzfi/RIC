@@ -10,6 +10,7 @@ services:
     volumes:
       # project_gopath/src/github.com/phzfi/RIC Folder structure assumed
       - ./../../../../:/root/go
+      - ./RIC_image_repository:/mnt/RIC_image_repository
     security_opt:
       - apparmor:unconfined
     cap_add:

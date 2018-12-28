@@ -27,6 +27,7 @@ RUN apt-get -y install libmagickwand-dev
 #
 #RUN /provision/vagrant_setup_imagemagick.sh
 #
+
 WORKDIR /root/go/src/github.com/phzfi/RIC/server
 
 # WIP

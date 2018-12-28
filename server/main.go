@@ -107,15 +107,24 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 
 	// Add roots
 	logging.Debug("Adding roots")
-	if conf.Server.ImageFolder != "" {
-		if imageSource.AddRoot(conf.Server.ImageFolder) != nil {
-			log.Fatal(fmt.Sprintf("Root not added %s", conf.Server.ImageFolder))
-		}
+	if conf.Server.ImageFolder == "" {
+		log.Fatal(fmt.Sprintf("Required configuration ImageFolder not found. Exiting",))
 	}
 
-	if imageSource.AddRoot(".") != nil {
-		log.Println("Root not added .")
+	// Assert image folder
+	if _, err := os.Stat(conf.Server.ImageFolder); os.IsNotExist(err) {
+		log.Fatal(fmt.Sprintf("Invalid image directory %s ", conf.Server.ImageFolder))
 	}
+
+	// Assert cache folder
+	if _, err := os.Stat(conf.Server.CacheFolder); os.IsNotExist(err) {
+		log.Fatal(fmt.Sprintf("Invalid cache directory %s ", conf.Server.CacheFolder))
+	}
+
+	if imageSource.AddRoot(conf.Server.ImageFolder) != nil {
+		log.Fatal(fmt.Sprintf("Failed to add image folder %s", conf.Server.ImageFolder))
+	}
+
 	logging.Debug("Reading server config")
 	//setting default values
 
@@ -129,7 +138,7 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 	handler := &MyHandler{
 		requests:    0,
 		imageSource: imageSource,
-		operator:    operator.MakeDefault(maxMemory, "/tmp/RICdiskcache", conf.Server.Tokens),
+		operator:    operator.MakeDefault(maxMemory, conf.Server.CacheFolder, conf.Server.Tokens),
 		watermarker: watermarker,
 	}
 
