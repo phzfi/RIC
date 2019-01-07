@@ -6,18 +6,78 @@ import (
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"strings"
+	"encoding/base64"
+	"fmt"
+	"net/http"
+//	"encoding/hex"
+//	"crypto/md5"
+	"bufio"
+	"os"
+	"io"
 )
 
 func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
 	filename := string(uri.Path())
 
-	w, h, cropx, cropy, mode, format, url, invalid := getParams(uri.QueryArgs())
+	w, h, cropx, cropy, mode, format, requestUrl, invalid := getParams(uri.QueryArgs())
+
+	// Check and download an image
+	//encoded, _ := url.Parse(requestUrl)
+	decoded, _ := base64.StdEncoding.DecodeString(filename[1:])
+	decodedPath := string(decoded)
+	filename2 := decodedPath //hex.EncodeToString(md5.Sum([]byte(decodedPath)))
+	fmt.Println("Request url path:", decodedPath)
+
+	exists := false
+	//TODO: Check that the domain/url is allowed (we don't want to work as a proxy)
+	if ! exists {
+		resp, httpErr := http.Get(decodedPath)
+		if httpErr != nil {
+			return
+		}
+		fmt.Println("Response:", resp)
+
+		file, fileErr := os.OpenFile(filename2, os.O_CREATE, 0644)
+		file, fileErr = os.OpenFile(filename2, os.O_WRONLY, 0644)
+		if fileErr != nil {
+			return
+		}
+		bufferedWriter := bufio.NewWriter(file)
+		buffer := make([]byte, 4096)
+		for {
+			var bytesWritten = 0
+			bytesToWrite, readErr := resp.Body.Read(buffer)
+			if readErr != nil {
+				if readErr == io.EOF {break}
+				return
+			}
+			writeIndex := 0
+			for bytesWritten < bytesToWrite {
+				bytesWrote, writeErr := bufferedWriter.Write(buffer[writeIndex:bytesToWrite])
+				writeIndex = writeIndex + bytesWrote
+				bytesWritten = bytesWritten + bytesWrote
+				if writeErr != nil {
+					return
+				}
+			}
+		}
+		//bufferedWriter.ReadFrom(resp.Body)
+		bufferedWriter.Flush()
+		file.Close()
+	}
+	filename = filename2
+
+	if err != nil {
+		fmt.Println("decode error:", err)
+		return
+	}
+
 	if invalid != nil {
 		return
 	}
 
-	if url != "" {
-		source.AddRoot(url)
+	if requestUrl != "" {
+		source.AddRoot(requestUrl)
 	}
 
 	ow, oh, err := source.ImageSize(filename)
@@ -26,6 +86,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	}
 
 	operations = []ops.Operation{source.LoadImageOp(filename)}
+
 
 	adjustWidth := func() {
 		w = roundedIntegerDivision(h*ow, oh)
@@ -134,7 +195,10 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	case cropmidMode:
 		cropmid()
 	}
-	watermark()
+
+	if true == false {
+		watermark()
+	}
 
 	operations = append(operations, ops.Convert{format})
 
