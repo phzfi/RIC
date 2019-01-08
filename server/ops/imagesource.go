@@ -122,3 +122,7 @@ func (is *ImageSource) RemoveRoot(root string) error {
 	}
 	return is.roots.Remove(abspath)
 }
+
+//func (is *ImageSource) getDefaultRoot () (string)  {
+//	return is.roots[0]
+//}

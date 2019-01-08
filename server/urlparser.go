@@ -14,6 +14,8 @@ import (
 	"bufio"
 	"os"
 	"io"
+	"crypto/md5"
+
 )
 
 func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
@@ -25,20 +27,26 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	//encoded, _ := url.Parse(requestUrl)
 	decoded, _ := base64.StdEncoding.DecodeString(filename[1:])
 	decodedPath := string(decoded)
-	filename2 := decodedPath //hex.EncodeToString(md5.Sum([]byte(decodedPath)))
-	fmt.Println("Request url path:", decodedPath)
+	md5Hash := md5.New()
+	io.WriteString(md5Hash, decodedPath)
+	md5Filename := fmt.Sprintf("%x", md5Hash.Sum(nil))
 
-	exists := false
+	filePath := "/mnt/RIC_image_repository/images/" + md5Filename
 	//TODO: Check that the domain/url is allowed (we don't want to work as a proxy)
-	if ! exists {
+
+	if !fileExists(filePath) {
+
 		resp, httpErr := http.Get(decodedPath)
 		if httpErr != nil {
 			return
 		}
 		fmt.Println("Response:", resp)
 
-		file, fileErr := os.OpenFile(filename2, os.O_CREATE, 0644)
-		file, fileErr = os.OpenFile(filename2, os.O_WRONLY, 0644)
+		file, fileErr := os.OpenFile(filePath, os.O_CREATE, 0644)
+
+
+
+		file, fileErr = os.OpenFile(filePath, os.O_WRONLY, 0644)
 		if fileErr != nil {
 			return
 		}
@@ -47,8 +55,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 		for {
 			var bytesWritten = 0
 			bytesToWrite, readErr := resp.Body.Read(buffer)
-			if readErr != nil {
-				if readErr == io.EOF {break}
+			if readErr != nil && readErr != io.EOF {
 				return
 			}
 			writeIndex := 0
@@ -60,12 +67,13 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 					return
 				}
 			}
+			if readErr == io.EOF {break}
 		}
 		//bufferedWriter.ReadFrom(resp.Body)
 		bufferedWriter.Flush()
 		file.Close()
 	}
-	filename = filename2
+	filename = md5Filename
 
 	if err != nil {
 		fmt.Println("decode error:", err)
@@ -318,4 +326,14 @@ func getUint(a *fasthttp.Args, param string) int {
 
 func isParseError(err error) bool {
 	return err != nil && err != fasthttp.ErrNoArgValue
+}
+
+// Exists reports whether the named file or directory exists.
+func fileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
