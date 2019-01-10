@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"errors"
 )
 
 type dim [2]int
@@ -110,19 +111,23 @@ func (i *ImageSource) AddRoot(root string) error {
 	return i.roots.Add(abspath)
 }
 
-func (is *ImageSource) RemoveRoot(root string) error {
+func (i *ImageSource) RemoveRoot(root string) error {
 
 	if isWebroot(root) {
-		return is.webroots.Remove(root)
+		return i.webroots.Remove(root)
 	}
 
 	abspath, err := filepath.Abs(root)
 	if err != nil {
 		return err
 	}
-	return is.roots.Remove(abspath)
+	return i.roots.Remove(abspath)
 }
 
-//func (is *ImageSource) getDefaultRoot () (string)  {
-//	return is.roots[0]
-//}
+func (i ImageSource) GetDefaultRoot () (string, error)  {
+	if len(i.roots) > 0 {
+		return i.roots[0], nil
+	}
+
+	return "", errors.New("no valid roots defined")
+}

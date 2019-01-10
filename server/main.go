@@ -59,7 +59,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		}
 
 		uri := ctx.URI()
-		operations, format, err, invalid := ParseURI(uri, h.imageSource, h.watermarker)
+		operations, format, err, invalid := HandleReceiveFile(uri, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -88,6 +88,18 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		// POST is currently unused so we can use this for testing
 		h.RetrieveHello(ctx)
 		logging.Debug("Post request received")
+	} else if ctx.IsDelete() {
+
+		logging.Debug("Delete request received")
+		uri := ctx.URI()
+		deleteErr:= DeleteFile(uri, h.imageSource)
+
+		if deleteErr != nil {
+			ctx.Error("failed to delete file", 400)
+			logging.Debug(fmt.Sprintf("Failed to delete file: %s", deleteErr))
+		} else {
+			ctx.SetStatusCode(200)
+		}
 	}
 }
 

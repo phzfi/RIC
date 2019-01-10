@@ -20,3 +20,5 @@ node_modules/
 RIC gopath.iml
 RIC.iml
 aws/credentials
+RIC_image_repository
+!RIC_image_repository/.gitkeep

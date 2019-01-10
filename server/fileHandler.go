@@ -9,43 +9,41 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-//	"encoding/hex"
-//	"crypto/md5"
 	"bufio"
 	"os"
 	"io"
 	"crypto/md5"
-
 )
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
+func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
 	filename := string(uri.Path())
 
 	w, h, cropx, cropy, mode, format, requestUrl, invalid := getParams(uri.QueryArgs())
 
-	// Check and download an image
-	//encoded, _ := url.Parse(requestUrl)
-	decoded, _ := base64.StdEncoding.DecodeString(filename[1:])
-	decodedPath := string(decoded)
-	md5Hash := md5.New()
-	io.WriteString(md5Hash, decodedPath)
-	md5Filename := fmt.Sprintf("%x", md5Hash.Sum(nil))
+	if invalid != nil {
+		logging.Debug(invalid)
+		return
+	}
 
-	filePath := "/mnt/RIC_image_repository/images/" + md5Filename
+	decodedPath, md5Filename := decodeFilename(filename)
+
+	rootDir, rootErr := source.GetDefaultRoot()
+	if rootErr != nil {
+		logging.Debug(rootErr)
+		return
+	}
 	//TODO: Check that the domain/url is allowed (we don't want to work as a proxy)
+	filePath := rootDir + "/" + md5Filename
 
 	if !fileExists(filePath) {
 
 		resp, httpErr := http.Get(decodedPath)
 		if httpErr != nil {
+			//log.Fatal(httpErr)
+			logging.Debug(fmt.Sprintf("failed to retrieve external image: %s :%s",  filename, httpErr))
 			return
 		}
-		fmt.Println("Response:", resp)
-
 		file, fileErr := os.OpenFile(filePath, os.O_CREATE, 0644)
-
-
-
 		file, fileErr = os.OpenFile(filePath, os.O_WRONLY, 0644)
 		if fileErr != nil {
 			return
@@ -69,20 +67,11 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 			}
 			if readErr == io.EOF {break}
 		}
-		//bufferedWriter.ReadFrom(resp.Body)
 		bufferedWriter.Flush()
 		file.Close()
 	}
 	filename = md5Filename
 
-	if err != nil {
-		fmt.Println("decode error:", err)
-		return
-	}
-
-	if invalid != nil {
-		return
-	}
 
 	if requestUrl != "" {
 		source.AddRoot(requestUrl)
@@ -211,6 +200,52 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	operations = append(operations, ops.Convert{format})
 
 	return
+}
+
+func decodeFilename(filename string) (decodedPath string, md5Filename string, ) {
+	// Check and download an image
+	//encoded, _ := url.Parse(requestUrl)
+	decoded, encodeErr := base64.StdEncoding.DecodeString(filename[1:])
+	if encodeErr != nil {
+		logging.Debug("invalid request filename format:", filename)
+		return
+	}
+	decodedPath = string(decoded)
+	md5Hash := md5.New()
+	io.WriteString(md5Hash, decodedPath)
+	md5Filename = fmt.Sprintf("%x", md5Hash.Sum(nil))
+
+	return
+
+}
+
+func DeleteFile(uri *fasthttp.URI, source ops.ImageSource,) (error){
+	filename := string(uri.Path())
+
+	decodedPath, md5Filename := decodeFilename(filename)
+	logging.Debug(fmt.Sprintf("Attempting to delete file: %s (%s)", md5Filename, decodedPath))
+	rootDir, rootErr := source.GetDefaultRoot()
+	if rootErr != nil {
+		logging.Debug(rootErr)
+		return rootErr
+	}
+
+	filePath := rootDir + "/" + md5Filename
+
+	if fileExists(filePath) {
+		removeErr := os.Remove(filePath)
+		if removeErr != nil {
+			logging.Debug(rootErr)
+			return errors.New("failed to delete file")
+		}
+
+		logging.Debug("File deleted: " +  decodedPath)
+		return nil
+	} else {
+		return errors.New("file does not exist")
+	}
+
+
 }
 
 func roundedIntegerDivision(n, m int) int {
