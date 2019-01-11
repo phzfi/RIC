@@ -15,9 +15,10 @@ type Policy interface {
 }
 
 type Storer interface {
-	Load(string) ([]byte, bool)
-	Store(string, []byte)
-	Delete(string) uint64
+	Load(string, string) ([]byte, bool)
+	Store(string, []byte, string)
+	Delete(string, string) uint64
+	DeleteNamespace(string) (error)
 }
 
 type Cache struct {
@@ -27,29 +28,30 @@ type Cache struct {
 	storer Storer
 
 	maxMemory, currentMemory uint64
+	namespace string
 }
 
 // Gets an image blob of requested dimensions
-func (c *Cache) GetBlob(key string) (blob []byte, found bool) {
+func (c *Cache) GetBlob(namespace string, key string) (blob []byte, found bool) {
 
 	b64 := stringToBase64(key)
-	logging.Debugf("Cache get with key: %v", b64)
+	logging.Debugf("Cache get with key: %v:%v", namespace, b64)
 
 	c.RLock()
-	blob, found = c.storer.Load(key)
+	blob, found = c.storer.Load(key, namespace)
 	c.RUnlock()
 
 	if found {
-		logging.Debugf("Cache found: %v", b64)
+		logging.Debugf("Cache found: %v:%v", namespace, b64)
 		c.policy.Visit(key)
 	} else {
-		logging.Debugf("Cache not found: %v", b64)
+		logging.Debugf("Cache not found: %v:%v", namespace, b64)
 	}
 
 	return
 }
 
-func (c *Cache) AddBlob(key string, blob []byte) {
+func (c *Cache) AddBlob(namespace string, key string, blob []byte) {
 
 	size := uint64(len(blob))
 
@@ -57,7 +59,7 @@ func (c *Cache) AddBlob(key string, blob []byte) {
 		return
 	}
 
-	logging.Debugf("Cache add: %v", stringToBase64(key))
+	logging.Debugf("Cache add: %v:%v", namespace, stringToBase64(key))
 
 	// This is the only point where the cache is mutated.
 	// While this runs the there can be no reads from the storer.
@@ -68,11 +70,17 @@ func (c *Cache) AddBlob(key string, blob []byte) {
 	}
 	c.policy.Push(key)
 	c.currentMemory += uint64(len(blob))
-	c.storer.Store(key, blob)
+	c.storer.Store(key, blob, namespace)
 }
 
 func (c *Cache) deleteOne() {
-	to_delete := c.policy.Pop()
-	logging.Debugf("Cache delete: %v", stringToBase64(to_delete))
-	c.currentMemory -= c.storer.Delete(to_delete)
+	// TODO: FIX namespace
+	//to_delete := c.policy.Pop()
+	//logging.Debugf("Cache delete: %v:%v", c.namespace, stringToBase64(to_delete))
+	//c.currentMemory -= c.storer.Delete(to_delete, c.namespace)
+}
+
+
+func (c *Cache) DeleteNamespace(namespace string) {
+	c.storer.DeleteNamespace(namespace)
 }

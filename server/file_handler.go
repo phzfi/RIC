@@ -6,30 +6,28 @@ import (
 	"github.com/phzfi/RIC/server/ops"
 	"github.com/valyala/fasthttp"
 	"strings"
-	"encoding/base64"
 	"fmt"
 	"net/http"
-	"bufio"
 	"os"
 	"io"
-	"crypto/md5"
+	"github.com/phzfi/RIC/server/ric_file"
 )
 
-func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
-	filename := string(uri.Path())
+func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename string, err error) {
+	rawFilename := string(uri.Path())
 
-	w, h, cropx, cropy, mode, format, requestUrl, invalid := getParams(uri.QueryArgs())
-
-	if invalid != nil {
-		logging.Debug(invalid)
+	decodedPath, md5Filename, decodeErr := ric_file.DecodeFilename(rawFilename)
+	if decodeErr != nil {
+		logging.Debug(decodeErr)
+		err = decodeErr
 		return
 	}
 
-	decodedPath, md5Filename := decodeFilename(filename)
-
+	logging.Debug(fmt.Sprintf("Processing file: %s (%s) ", md5Filename, decodedPath))
 	rootDir, rootErr := source.GetDefaultRoot()
 	if rootErr != nil {
-		logging.Debug(rootErr)
+		logging.Debug(err)
+		err = rootErr
 		return
 	}
 	//TODO: Check that the domain/url is allowed (we don't want to work as a proxy)
@@ -37,41 +35,39 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, marker ops.Wat
 
 	if !fileExists(filePath) {
 
-		resp, httpErr := http.Get(decodedPath)
+		response, httpErr := http.Get(decodedPath)
+		defer response.Body.Close()
+
 		if httpErr != nil {
 			//log.Fatal(httpErr)
-			logging.Debug(fmt.Sprintf("failed to retrieve external image: %s :%s",  filename, httpErr))
+			logging.Debug(fmt.Sprintf("failed to retrieve external image: %s , %s , %s", decodedPath, filename, httpErr))
+			err = httpErr
 			return
 		}
-		file, fileErr := os.OpenFile(filePath, os.O_CREATE, 0644)
-		file, fileErr = os.OpenFile(filePath, os.O_WRONLY, 0644)
-		if fileErr != nil {
+
+		file, copyErr := os.Create(filePath)
+		defer file.Close()
+
+		_, copyErr = io.Copy(file, response.Body)
+		if copyErr != nil {
+			err = copyErr
 			return
 		}
-		bufferedWriter := bufio.NewWriter(file)
-		buffer := make([]byte, 4096)
-		for {
-			var bytesWritten = 0
-			bytesToWrite, readErr := resp.Body.Read(buffer)
-			if readErr != nil && readErr != io.EOF {
-				return
-			}
-			writeIndex := 0
-			for bytesWritten < bytesToWrite {
-				bytesWrote, writeErr := bufferedWriter.Write(buffer[writeIndex:bytesToWrite])
-				writeIndex = writeIndex + bytesWrote
-				bytesWritten = bytesWritten + bytesWrote
-				if writeErr != nil {
-					return
-				}
-			}
-			if readErr == io.EOF {break}
-		}
-		bufferedWriter.Flush()
-		file.Close()
 	}
+
 	filename = md5Filename
 
+	return
+
+}
+func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
+
+	width, height, cropX, cropY, mode, format, requestUrl, invalid := getParams(uri.QueryArgs())
+
+	if invalid != nil {
+		logging.Debug(invalid)
+		return
+	}
 
 	if requestUrl != "" {
 		source.AddRoot(requestUrl)
@@ -86,94 +82,94 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, marker ops.Wat
 
 
 	adjustWidth := func() {
-		w = roundedIntegerDivision(h*ow, oh)
+		width = roundedIntegerDivision(height*ow, oh)
 	}
 
 	adjustHeight := func() {
-		h = roundedIntegerDivision(w*oh, ow)
+		height = roundedIntegerDivision(width*oh, ow)
 	}
 
 	adjustSize := func() {
-		if h == 0 && w != 0 {
+		if height == 0 && width != 0 {
 			adjustHeight()
-		} else if h != 0 && w == 0 {
+		} else if height != 0 && width == 0 {
 			adjustWidth()
-		} else if w == 0 && h == 0 {
-			w, h = ow, oh
+		} else if width == 0 && height == 0 {
+			width, height = ow, oh
 		}
 	}
 
 	denyUpscale := func() {
-		h0 := h
-		w0 := w
-		if w > ow {
-			h = roundedIntegerDivision(ow*h0, w0)
-			w = ow
+		h0 := height
+		w0 := width
+		if width > ow {
+			height = roundedIntegerDivision(ow*h0, w0)
+			width = ow
 		}
-		if h > oh || h > h0 {
-			w = roundedIntegerDivision(oh*w0, h0)
-			h = oh
+		if height > oh || height > h0 {
+			width = roundedIntegerDivision(oh*w0, h0)
+			height = oh
 		}
 	}
 
 	resize := func() {
 		denyUpscale()
 		adjustSize()
-		operations = append(operations, ops.Resize{w, h})
+		operations = append(operations, ops.Resize{width, height})
 	}
 
 	liquid := func() {
 		denyUpscale()
 		adjustSize()
-		operations = append(operations, ops.LiquidRescale{w, h})
+		operations = append(operations, ops.LiquidRescale{width, height})
 	}
 
 	crop := func() {
-		if w == 0 {
-			w = ow
+		if width == 0 {
+			width = ow
 		}
-		if h == 0 {
-			h = oh
+		if height == 0 {
+			height = oh
 		}
-		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+		operations = append(operations, ops.Crop{width, height, cropX, cropY})
 	}
 
 	cropmid := func() {
-		if w == 0 || w > ow {
-			w = ow
+		if width == 0 || width > ow {
+			width = ow
 		}
-		if h == 0 || h > oh {
-			h = oh
+		if height == 0 || height > oh {
+			height = oh
 		}
 		midW := roundedIntegerDivision(ow, 2)
 		midH := roundedIntegerDivision(oh, 2)
-		cropx := midW - roundedIntegerDivision(w, 2)
-		cropy := midH - roundedIntegerDivision(h, 2)
-		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+		cropx := midW - roundedIntegerDivision(width, 2)
+		cropy := midH - roundedIntegerDivision(height, 2)
+		operations = append(operations, ops.Crop{width, height, cropx, cropy})
 	}
 
 	fit := func() {
-		if w > ow {
-			w = ow
+		if width > ow {
+			width = ow
 		}
-		if h > oh {
-			h = oh
+		if height > oh {
+			height = oh
 		}
-		if w != 0 && h != 0 {
-			if ow*h > w*oh {
+		if width != 0 && height != 0 {
+			if ow*height > width*oh {
 				adjustHeight()
 			} else {
 				adjustWidth()
 			}
-			operations = append(operations, ops.Resize{w, h})
+			operations = append(operations, ops.Resize{width, height})
 		} else {
 			resize()
 		}
 	}
 
 	watermark := func() {
-		heightOK := h > marker.MinHeight && h < marker.MaxHeight
-		widthOK := w > marker.MinWidth && w < marker.MaxWidth
+		heightOK := height > marker.MinHeight && height < marker.MaxHeight
+		widthOK := width > marker.MinWidth && width < marker.MaxWidth
 		if marker.AddMark && heightOK && widthOK {
 			logging.Debug("Adding watermarkOp")
 			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))
@@ -202,27 +198,14 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, marker ops.Wat
 	return
 }
 
-func decodeFilename(filename string) (decodedPath string, md5Filename string, ) {
-	// Check and download an image
-	//encoded, _ := url.Parse(requestUrl)
-	decoded, encodeErr := base64.StdEncoding.DecodeString(filename[1:])
-	if encodeErr != nil {
-		logging.Debug("invalid request filename format:", filename)
-		return
-	}
-	decodedPath = string(decoded)
-	md5Hash := md5.New()
-	io.WriteString(md5Hash, decodedPath)
-	md5Filename = fmt.Sprintf("%x", md5Hash.Sum(nil))
-
-	return
-
-}
-
-func DeleteFile(uri *fasthttp.URI, source ops.ImageSource,) (error){
+func DeleteFile(uri *fasthttp.URI, source ops.ImageSource) (error){
 	filename := string(uri.Path())
 
-	decodedPath, md5Filename := decodeFilename(filename)
+	decodedPath, md5Filename, decodeErr := ric_file.DecodeFilename(filename)
+	if decodeErr != nil {
+		logging.Debug(decodeErr)
+		return decodeErr
+	}
 	logging.Debug(fmt.Sprintf("Attempting to delete file: %s (%s)", md5Filename, decodedPath))
 	rootDir, rootErr := source.GetDefaultRoot()
 	if rootErr != nil {
@@ -239,13 +222,11 @@ func DeleteFile(uri *fasthttp.URI, source ops.ImageSource,) (error){
 			return errors.New("failed to delete file")
 		}
 
-		logging.Debug("File deleted: " +  decodedPath)
+		logging.Debugf("File deleted: %s (%s)", md5Filename, decodedPath)
 		return nil
 	} else {
 		return errors.New("file does not exist")
 	}
-
-
 }
 
 func roundedIntegerDivision(n, m int) int {
@@ -296,7 +277,8 @@ const (
 )
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url string, err error) {
+func getParams(a *fasthttp.Args) (width int, height int, cropX int, cropY int, mode mode, format, url string, err error) {
+
 
 	if strings.Contains(a.String(), "%3F") { // %3F = ?
 		err = errors.New("Invalid characters in request!")
@@ -309,11 +291,11 @@ func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url
 		}
 	}()
 
-	w = getUint(a, widthParam)
-	h = getUint(a, heightParam)
+	width = getUint(a, widthParam)
+	height = getUint(a, heightParam)
 
-	cropx = getUint(a, cropxParam)
-	cropy = getUint(a, cropyParam)
+	cropX = getUint(a, cropxParam)
+	cropY = getUint(a, cropyParam)
 
 	mode = stringToMode[string(a.Peek(modeParam))]
 	if mode == 0 {

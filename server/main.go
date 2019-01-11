@@ -59,7 +59,14 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		}
 
 		uri := ctx.URI()
-		operations, format, err, invalid := HandleReceiveFile(uri, h.imageSource, h.watermarker)
+		filename, fileErr := HandleReceiveFile(uri, h.imageSource)
+		if fileErr != nil {
+			logging.Debug(fileErr)
+			ctx.Error("Failed to handle file", 400)
+			return
+		}
+
+		operations, format, err, invalid := CreateOperations(filename, uri, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -69,7 +76,8 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			ctx.Error(invalid.Error(), 400)
 			return
 		}
-		blob, err := h.operator.GetBlob(operations...)
+
+		blob, err := h.operator.GetBlob(filename, operations...)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -92,6 +100,8 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 		logging.Debug("Delete request received")
 		uri := ctx.URI()
+
+		h.operator.DeleteCacheNamespace(uri, h.imageSource)
 		deleteErr:= DeleteFile(uri, h.imageSource)
 
 		if deleteErr != nil {
@@ -150,7 +160,7 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 	handler := &MyHandler{
 		requests:    0,
 		imageSource: imageSource,
-		operator:    operator.MakeDefault(maxMemory, conf.Server.CacheFolder, conf.Server.Tokens),
+		operator:    operator.MakeWithDefaultCacheSet(maxMemory, conf.Server.CacheFolder, conf.Server.Tokens),
 		watermarker: watermarker,
 	}
 

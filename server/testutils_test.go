@@ -48,7 +48,7 @@ func stopServer(server *fasthttp.Server, ln net.Listener, srverr chan error) err
 // uses the cache and ImageSource operation with current working dir as root.
 // Returns the operator and the source operation.
 func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
-	o = operator.MakeDefault(512*1024*1024, "/tmp/RIC_testimagecache", tokens)
+	o = operator.MakeWithDefaultCacheSet(512*1024*1024, "/tmp/RIC_testimagecache", tokens)
 	src = ops.MakeImageSource()
 	src.AddRoot("./")
 	return
