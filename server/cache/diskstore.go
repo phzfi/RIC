@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/phzfi/RIC/server/logging"
 	"errors"
+	"strings"
 )
 
 // initializes cache with images found in given folder
@@ -103,7 +104,7 @@ func NewDiskStore(folder string) *DiskStore {
 	}
 }
 
-func (d *DiskStore) Load(identifier string, namespace string) (blob []byte, ok bool) {
+func (d *DiskStore) Load(namespace string, identifier string) (blob []byte, ok bool) {
 	d.RLock()
 	filename := stringToBase64(identifier)
 	key := createKey(namespace, filename)
@@ -122,7 +123,7 @@ func (d *DiskStore) Load(identifier string, namespace string) (blob []byte, ok b
 	return
 }
 
-func (d *DiskStore) Store(identifier string, blob []byte, namespace string) {
+func (d *DiskStore) Store(namespace string, identifier string, blob []byte) {
 	filename := stringToBase64(identifier)
 	folder := filepath.FromSlash(d.folder + "/" + namespace)
 	folderErr := assertFolder(folder)
@@ -145,7 +146,7 @@ func (d *DiskStore) Store(identifier string, blob []byte, namespace string) {
 	}()
 }
 
-func (d *DiskStore) Delete(identifier string, namespace string) uint64 {
+func (d *DiskStore) Delete(namespace string, identifier string) uint64 {
 	d.Lock()
 	entry, ok := d.entries[identifier]
 
@@ -195,4 +196,9 @@ func assertFolder(path string) (err error) {
 
 func createKey(namespace string, identifier string) string {
 	return fmt.Sprintf("%s:%s", namespace, identifier)
+}
+
+func splitKey(key string) (namespace string, identifier string) {
+	keyParts := strings.Split(key, ":")
+	return keyParts[0], keyParts[1]
 }

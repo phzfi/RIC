@@ -14,7 +14,7 @@ func (r Resize) Marshal() string {
 }
 
 func (r Resize) Apply(img images.Image) error {
-	logging.Debug("Resizing image to: %v, %v", r.Width, r.Height)
+	logging.Debugf("Resizing image to: %v, %v", r.Width, r.Height)
 	return img.Resize(r.Width, r.Height)
 }
 

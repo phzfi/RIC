@@ -1,6 +1,9 @@
 package cache
 
-import "sync"
+import (
+	"sync"
+	"errors"
+)
 
 type LRU struct {
 	sync.Mutex
@@ -47,15 +50,19 @@ func (lru *LRU) Visit(id string) {
 	lru.Lock()
 	defer lru.Unlock()
 
-	lru.toList[id].remove()
+	if lru.toList[id] != nil {
+		lru.toList[id].remove()
+	}
+
 	lru.push(id)
 }
 
-func (lru *LRU) Pop() (id string) {
+func (lru *LRU) Pop() (id string, err error) {
 
 	first := lru.first()
 	if first == &lru.tail {
-		panic("LRU underflow")
+		err = errors.New("queue empty")
+		return
 	}
 
 	id = first.id

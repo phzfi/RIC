@@ -50,6 +50,16 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		// Special case for status check.
 		// TODO: Consider implementing routing?
 		path := string(ctx.Path())
+		if path == "/" {
+			logging.Debug("Requested url /")
+			ctx.SetStatusCode(200)
+			return
+		}
+		if path == "/favicon.ico" {
+			logging.Debug("Requested url /favicon.ico, returning 404")
+			ctx.SetStatusCode(404)
+			return
+		}
 		if path == "/status" {
 			_, err := ctx.WriteString("OK")
 			if err != nil{
@@ -57,6 +67,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			}
 			return
 		}
+
 
 		uri := ctx.URI()
 		filename, fileErr := HandleReceiveFile(uri, h.imageSource)

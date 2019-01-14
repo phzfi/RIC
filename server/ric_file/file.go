@@ -11,6 +11,10 @@ import (
 
 
 func DecodeFilename(filename string) (decodedPath string, md5Filename string, err error) {
+	if len(filename[1:]) == 0 {
+		err = errors.New("encoded filename missing")
+		return
+	}
 	decoded, encodeErr := base64.StdEncoding.DecodeString(filename[1:])
 	if encodeErr != nil {
 		logging.Debug(fmt.Sprintf("invalid request filename format: %s, %s", encodeErr, filename))

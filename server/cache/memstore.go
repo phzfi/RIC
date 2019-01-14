@@ -16,7 +16,7 @@ func NewCache(policy Policy, mm uint64) *Cache {
 
 type MemoryStore map[string]map[string][]byte
 
-func (s MemoryStore) Load(identifier string, namespace string) (b []byte, ok bool) {
+func (s MemoryStore) Load(namespace string, identifier string) (b []byte, ok bool) {
 	b, ok = s[namespace][identifier]
 	if !ok {
 		mm := make(map[string][]byte)
@@ -25,13 +25,13 @@ func (s MemoryStore) Load(identifier string, namespace string) (b []byte, ok boo
 	return
 }
 
-func (s MemoryStore) Store(identifier string, value []byte, namespace string) {
+func (s MemoryStore) Store(namespace string, identifier string, value []byte) {
 	s[namespace][identifier] = value
 }
 
-func (s MemoryStore) Delete(identifier string, namespace string) (size uint64) {
-	key := createKey(namespace, identifier)
-	size = uint64(len(s[key]))
+func (s MemoryStore) Delete(namespace string, identifier string) (size uint64) {
+	//key := createKey(namespace, identifier)
+	size = uint64(len(s[namespace][identifier]))
 	delete(s[namespace], identifier)
 	return
 }

@@ -8,7 +8,7 @@ import (
 type Policy interface {
 	// Push and Pop do not need to be thread safe
 	Push(string)
-	Pop() string
+	Pop() (string, error)
 
 	// Image is requested and found in cache. Needs to be thread safe.
 	Visit(string)
@@ -16,7 +16,7 @@ type Policy interface {
 
 type Storer interface {
 	Load(string, string) ([]byte, bool)
-	Store(string, []byte, string)
+	Store(string, string, []byte)
 	Delete(string, string) uint64
 	DeleteNamespace(string) (error)
 }
@@ -38,14 +38,14 @@ func (c *Cache) GetBlob(namespace string, key string) (blob []byte, found bool) 
 	logging.Debugf("Cache get with key: %v:%v", namespace, b64)
 
 	c.RLock()
-	blob, found = c.storer.Load(key, namespace)
+	blob, found = c.storer.Load(namespace, key)
 	c.RUnlock()
 
 	if found {
-		logging.Debugf("Cache found: %v:%v", namespace, b64)
-		c.policy.Visit(key)
+		logging.Debugf("Cache found from %T: %v:%v", c.storer, namespace, b64)
+		c.policy.Visit(createKey(namespace, key))
 	} else {
-		logging.Debugf("Cache not found: %v:%v", namespace, b64)
+		logging.Debugf("Cache not found in %T: %v:%v", c.storer, namespace, b64)
 	}
 
 	return
@@ -68,16 +68,20 @@ func (c *Cache) AddBlob(namespace string, key string, blob []byte) {
 	for c.currentMemory+size > c.maxMemory {
 		c.deleteOne()
 	}
-	c.policy.Push(key)
+	c.policy.Push(createKey(namespace, key))
 	c.currentMemory += uint64(len(blob))
-	c.storer.Store(key, blob, namespace)
+	c.storer.Store(namespace, key, blob)
 }
 
 func (c *Cache) deleteOne() {
-	// TODO: FIX namespace
-	//to_delete := c.policy.Pop()
-	//logging.Debugf("Cache delete: %v:%v", c.namespace, stringToBase64(to_delete))
-	//c.currentMemory -= c.storer.Delete(to_delete, c.namespace)
+	toDelete, err := c.policy.Pop()
+	if err != nil {
+		logging.Debug("Cache delete failed, not items in cache")
+		return
+	}
+	namespace, identifier := splitKey(toDelete)
+	logging.Debugf("Cache delete: %v:%v", namespace, stringToBase64(identifier))
+	c.currentMemory -= c.storer.Delete(namespace, identifier)
 }
 
 

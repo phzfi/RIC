@@ -1,5 +1,7 @@
 package cache
 
+import "errors"
+
 type FIFO struct {
 	data       []string
 	head, tail int
@@ -26,10 +28,11 @@ func (q *FIFO) Push(info string) {
 	q.tail %= len(q.data)
 }
 
-func (q *FIFO) Pop() (info string) {
+func (q *FIFO) Pop() (info string, err error) {
 
 	if q.Len() == 0 {
-		panic("Queue underflow")
+		err = errors.New("no items in queue")
+		return
 	}
 
 	info = q.data[q.head]
