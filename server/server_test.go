@@ -22,7 +22,7 @@ func TestHello(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := ([]byte)("Hello world!")
+	expected := ([]byte)("OK")
 	if !bytes.Equal(expected, body) {
 		t.Fatal("Server did not greet us properly!")
 	}
@@ -170,6 +170,8 @@ func TestMIMEtype(t *testing.T) {
 	folder := "testimages/server/"
 
 	for _, c := range cases {
+		str := fmt.Sprintf("http://localhost:%d/", port) + folder + "01.jpg" + c
+		fmt.Printf(str)
 		request.SetRequestURI(fmt.Sprintf("http://localhost:%d/", port) + folder + "01.jpg" + c)
 		fasthttp.Do(request, response)
 		MIME := string(response.Header.ContentType())
@@ -177,7 +179,6 @@ func TestMIMEtype(t *testing.T) {
 		img := images.NewImage()
 		img.FromBlob(response.Body())
 		expected := "image/" + strings.ToLower(img.GetImageFormat())
-
 		if MIME != expected {
 			t.Fatal(fmt.Sprintf("Server returned: %s, image is %s", MIME, expected))
 		}

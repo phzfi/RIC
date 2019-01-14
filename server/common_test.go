@@ -70,7 +70,7 @@ func TestOperatorConvert(t *testing.T) {
 		var vo = c.op.(ops.Convert)
 		logging.Debug(fmt.Sprintf("Testing convert: %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.Format, vt.Resfn))
 
-		blob, err := operator.GetBlob(src.LoadImageOp(vt.Testfn), vo)
+		blob, err := operator.GetBlob("namespace", src.LoadImageOp(vt.Testfn), vo)
 		if err != nil {
 			return
 		}
@@ -124,7 +124,7 @@ func TestOperatorResize(t *testing.T) {
 		var vo = c.op.(ops.Resize)
 		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.W, vt.H, vt.Resfn))
 
-		blob, err := operator.GetBlob(src.LoadImageOp(vt.Testfn), vo)
+		blob, err := operator.GetBlob("namespace", src.LoadImageOp(vt.Testfn), vo)
 		if err != nil {
 			return
 		}
@@ -167,7 +167,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 		var vo = c.op.(ops.LiquidRescale)
 		logging.Debug(fmt.Sprintf("Testing resize: %v, %v, %v, %v, %v", vt.Testfn, vt.Reffn, vt.W, vt.H, vt.Resfn))
 
-		blob, err := operator.GetBlob(src.LoadImageOp(vt.Testfn), vo)
+		blob, err := operator.GetBlob("namespace", src.LoadImageOp(vt.Testfn), vo)
 		if err != nil {
 			return
 		}

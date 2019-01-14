@@ -126,7 +126,8 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 // Respond to POST message by saying Hello
 func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
-	_, err := ctx.WriteString("OK")
+	_, err := ctx.WriteString("" +
+		"")
 	if err != nil {
 		log.Println(err)
 	}
