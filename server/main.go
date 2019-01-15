@@ -44,17 +44,12 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 	// Increase request count
 	count := &(h.requests)
 	atomic.AddUint64(count, 1)
-
 	if ctx.IsGet() {
 
 		// Special case for status check.
 		// TODO: Consider implementing routing?
 		path := string(ctx.Path())
-		if path == "/" {
-			logging.Debug("Requested url /")
-			ctx.SetStatusCode(200)
-			return
-		}
+		// "SPECIAL routes"
 		if path == "/favicon.ico" {
 			logging.Debug("Requested url /favicon.ico, returning 404")
 			ctx.SetStatusCode(404)
@@ -67,7 +62,6 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			}
 			return
 		}
-
 
 		uri := ctx.URI()
 		filename, fileErr := HandleReceiveFile(uri, h.imageSource)
@@ -102,6 +96,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 			}
 			logging.Debug(fmt.Sprintf("Blob returned with length: %d", length))
 		}
+
 
 	} else if ctx.IsPost() {
 		// POST is currently unused so we can use this for testing

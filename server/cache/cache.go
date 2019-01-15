@@ -28,7 +28,6 @@ type Cache struct {
 	storer Storer
 
 	maxMemory, currentMemory uint64
-	namespace string
 }
 
 // Gets an image blob of requested dimensions
@@ -37,9 +36,12 @@ func (c *Cache) GetBlob(namespace string, key string) (blob []byte, found bool) 
 	b64 := stringToBase64(key)
 	logging.Debugf("Cache get with key: %v:%v", namespace, b64)
 
-	c.RLock()
+	// TODO: Change back to RLock after memstore.go 2d structure refactor
+	//c.RLock()
+	c.Lock()
 	blob, found = c.storer.Load(namespace, key)
-	c.RUnlock()
+	//c.RUnlock()
+	c.Unlock()
 
 	if found {
 		logging.Debugf("Cache found from %T: %v:%v", c.storer, namespace, b64)
@@ -59,7 +61,7 @@ func (c *Cache) AddBlob(namespace string, key string, blob []byte) {
 		return
 	}
 
-	logging.Debugf("Cache add: %v:%v", namespace, stringToBase64(key))
+	logging.Debugf("Cache add to %T: %v:%v", c.storer, namespace, stringToBase64(key))
 
 	// This is the only point where the cache is mutated.
 	// While this runs the there can be no reads from the storer.

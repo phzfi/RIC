@@ -17,15 +17,21 @@ func NewCache(policy Policy, mm uint64) *Cache {
 type MemoryStore map[string]map[string][]byte
 
 func (s MemoryStore) Load(namespace string, identifier string) (b []byte, ok bool) {
+
 	b, ok = s[namespace][identifier]
 	if !ok {
-		mm := make(map[string][]byte)
-		s[namespace] = mm
+		memoryBlock := make(map[string][]byte)
+		s[namespace] = memoryBlock
 	}
 	return
 }
 
 func (s MemoryStore) Store(namespace string, identifier string, value []byte) {
+	_, ok := s[namespace]
+	if !ok {
+		memoryBlock := make(map[string][]byte)
+		s[namespace] = memoryBlock
+	}
 	s[namespace][identifier] = value
 }
 

@@ -17,6 +17,8 @@ RUN apt-get update
 RUN apt-get -y install git
 
 # Install image preview generator tools
+RUN apt-get -y install webp
+RUN apt-get -y install libwebp-dev
 RUN apt-get -y install file
 RUN apt-get -y install imagemagick
 RUN apt-get -y install libmagickwand-dev

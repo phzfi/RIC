@@ -11,6 +11,7 @@ import (
 	"os"
 	"io"
 	"github.com/phzfi/RIC/server/ric_file"
+	"net/url"
 )
 
 func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename string, err error) {
@@ -35,9 +36,15 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename stri
 
 	if !fileExists(filePath) {
 
+		 _, uriErr := url.ParseRequestURI(decodedPath)
+		if uriErr != nil {
+			logging.Debugf("Invalid url given as parameter: %s", decodedPath)
+			err = uriErr
+			return
+		}
+
 		response, httpErr := http.Get(decodedPath)
 		defer response.Body.Close()
-
 		if httpErr != nil {
 			//log.Fatal(httpErr)
 			logging.Debug(fmt.Sprintf("failed to retrieve external image: %s , %s , %s", decodedPath, filename, httpErr))
@@ -48,7 +55,7 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename stri
 		file, copyErr := os.Create(filePath)
 		defer file.Close()
 
-		_, copyErr = io.Copy(file, response.Body)
+		 _, copyErr = io.Copy(file, response.Body)
 		if copyErr != nil {
 			err = copyErr
 			return
@@ -58,8 +65,8 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename stri
 	filename = md5Filename
 
 	return
-
 }
+
 func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
 
 	width, height, cropX, cropY, mode, format, requestUrl, invalid := getParams(uri.QueryArgs())
