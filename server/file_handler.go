@@ -44,11 +44,17 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename stri
 		}
 
 		response, httpErr := http.Get(decodedPath)
-		defer response.Body.Close()
 		if httpErr != nil {
 			//log.Fatal(httpErr)
 			logging.Debug(fmt.Sprintf("failed to retrieve external image: %s , %s , %s", decodedPath, filename, httpErr))
 			err = httpErr
+			return
+		}
+		defer response.Body.Close()
+
+		if response.StatusCode != 200 || !strings.Contains(response.Header.Get("Content-Type"), "image/") {
+			logging.Debug(fmt.Sprintf("invalid response received: status code: %v , Content-type:%v", response.StatusCode , response.Header.Get("Content-Type")))
+			err = errors.New("invalid response received")
 			return
 		}
 
