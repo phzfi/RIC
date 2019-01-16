@@ -25,7 +25,7 @@ docker exec -i -t ric_dev /bin/bash
 
 Inside docker container
 ```bash
-
+go get -t ./...
 go build
 
 ./server
