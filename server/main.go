@@ -98,10 +98,6 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		}
 
 
-	} else if ctx.IsPost() {
-		// POST is currently unused so we can use this for testing
-		h.RetrieveHello(ctx)
-		logging.Debug("Post request received")
 	} else if ctx.IsDelete() {
 
 		logging.Debug("Delete request received")
@@ -116,15 +112,6 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		} else {
 			ctx.SetStatusCode(200)
 		}
-	}
-}
-
-// Respond to POST message by saying Hello
-func (h MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
-	_, err := ctx.WriteString("" +
-		"")
-	if err != nil {
-		log.Println(err)
 	}
 }
 
