@@ -12,9 +12,10 @@ import (
 	"io"
 	"github.com/phzfi/RIC/server/ric_file"
 	"net/url"
+	"github.com/phzfi/RIC/server/config"
 )
 
-func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename string, err error) {
+func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, serverWhitelistConfigPath string) (filename string, err error) {
 	rawFilename := string(uri.Path())
 
 	decodedPath, md5Filename, decodeErr := ric_file.DecodeFilename(rawFilename)
@@ -35,14 +36,18 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource) (filename stri
 	filePath := rootDir + "/" + md5Filename
 
 	if !fileExists(filePath) {
-
-		 _, uriErr := url.ParseRequestURI(decodedPath)
+		 requestUrl, uriErr := url.ParseRequestURI(decodedPath)
 		if uriErr != nil {
 			logging.Debugf("Invalid url given as parameter: %s", decodedPath)
 			err = uriErr
 			return
 		}
 
+		if !isPathAllowed(serverWhitelistConfigPath, requestUrl.Host) {
+			logging.Debugf("unauthorized url given: %v", decodedPath)
+			err = errors.New("unauthorized url given")
+			return
+		}
 		response, httpErr := http.Get(decodedPath)
 		if httpErr != nil {
 			//log.Fatal(httpErr)
@@ -366,4 +371,19 @@ func fileExists(name string) bool {
 		}
 	}
 	return true
+}
+
+func isPathAllowed(configPath string, host string) (allowed bool){
+	allowedHosts, err := config.ReadHostWhitelist(configPath)
+
+	if err != nil {
+		return false
+	}
+	for _, allowedHost := range allowedHosts {
+		if allowedHost == host {
+			logging.Debugf("Permission fot host %v found", host)
+			return true
+		}
+	}
+	return false
 }

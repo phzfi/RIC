@@ -6,6 +6,10 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"path/filepath"
+	"os"
+	"github.com/phzfi/RIC/server/logging"
+	"errors"
 )
 
 type Conf struct {
@@ -14,14 +18,15 @@ type Conf struct {
 
 type ConfValues struct {
 	Watermark Watermark
-	Server    server
+	Server    Server
 }
 
-type server struct {
+type Server struct {
 	Tokens int `ini:"concurrency"`
 	Memory uint64
 	ImageFolder string
 	CacheFolder string
+	HostWhitelistConfig string
 	Port int
 }
 
@@ -37,6 +42,7 @@ type Watermark struct {
 	AddMark    bool
 }
 
+
 var defaults = ConfValues{
 	Watermark{
 		MinHeight:  200,
@@ -48,11 +54,12 @@ var defaults = ConfValues{
 		Vertical:   0.0,
 		Horizontal: 1.0,
 	},
-	server{
+	Server{
 		Tokens: 1,
 		Memory: 2048 * 1024 * 1024,
 		ImageFolder: "",
 		CacheFolder: "",
+		HostWhitelistConfig: "",
 		Port: 8005,
 	},
 }
@@ -95,6 +102,31 @@ func ReadConfig(path string) (c *ConfValues) {
 			}
 		}
 	}
+
+	return
+}
+
+
+
+func ReadHostWhitelist(configPath string) (hosts []string, err error) {
+	//config := ReadConfig(configPath)
+
+	location, err := filepath.Abs(configPath)
+	if _, err = os.Stat(location); os.IsNotExist(err)  {
+		return
+	}
+
+	configData, err := ini.LoadFile(location)
+	configValue, ok := configData.Get("hosts", "allowed")
+
+	if  !ok {
+		logging.Debug("Could not get server whitelist")
+		err = errors.New("no server whitelist")
+		fmt.Println("Failed to read server whitelist configuration file. Check 'HostWhitelistConfig'-entry in ric_config.ini")
+		return
+	}
+
+	hosts = strings.Split(configValue, ",")
 
 	return
 }

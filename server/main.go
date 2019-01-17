@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
+	"errors"
 )
 
 // MyHandler type is used to encompass HandlerFunc interface.
@@ -32,6 +33,9 @@ type MyHandler struct {
 	operator    operator.Operator
 	imageSource ops.ImageSource
 	watermarker ops.Watermarker
+
+	serverConfig config.Server
+
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -64,7 +68,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		}
 
 		uri := ctx.URI()
-		filename, fileErr := HandleReceiveFile(uri, h.imageSource)
+		filename, fileErr := HandleReceiveFile(uri, h.imageSource, h.serverConfig.HostWhitelistConfig)
 		if fileErr != nil {
 			logging.Debug(fileErr)
 			ctx.Error("Failed to handle file", 400)
@@ -156,6 +160,7 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 		imageSource: imageSource,
 		operator:    operator.MakeWithDefaultCacheSet(maxMemory, conf.Server.CacheFolder, conf.Server.Tokens),
 		watermarker: watermarker,
+		serverConfig: conf.Server,
 	}
 
 	// Configure server
@@ -174,13 +179,16 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 
 func main() {
 
-	cpath := locateConfig()
+	configPath, configErr := locateConfig()
+	if configErr != nil {
+		log.Fatal("Failed to load config: " + configErr.Error())
+	}
 
-	logging.Debug(fmt.Sprintf("Loading config from %s", *cpath))
+	logging.Debug(fmt.Sprintf("Loading config from %s", configPath))
 	flag.Parse()
 	// CLI arguments
 
-	conf := config.ReadConfig(*cpath)
+	conf := config.ReadConfig(configPath)
 
 	mem := flag.Uint64("m", conf.Server.Memory, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
 	imagick.Initialize()
@@ -208,21 +216,27 @@ func main() {
 	}
 }
 
-func locateConfig() *string {
-	// First check directory from where binary was launched
-	currentDirectory, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+func locateConfig() (location string, err error) {
 
-	if _, err := os.Stat(currentDirectory + "/ric_config.ini"); os.IsNotExist(err) {
-		// No try default installation location
-		currentDirectory = getBinaryFileDirectory()
+	// Default location
+	location = "/etc/ric/ric_config.ini"
+	if _, err = os.Stat(location); err == nil  {
+		return
 	}
 
-	if _, err := os.Stat(currentDirectory + "/ric_config.ini"); os.IsNotExist(err) {
-		log.Fatal("Could not load configuration file")
+	// Location of binary file
+	location, _ = filepath.Abs(getBinaryFileDirectory() + "/ric_config.ini")
+	if _, err = os.Stat(location); err == nil  {
+		return
 	}
-	cpath := flag.String("c", currentDirectory + "/ric_config.ini", "Sets the configuration .ini file used.")
 
-	return cpath
+	// Location of binary file started
+	location, _ = filepath.Abs(filepath.Dir(os.Args[0]) + "/ric_config.ini")
+	if _, err = os.Stat(location); err == nil  {
+		return
+	}
+
+	return "", errors.New("failed to locate config")
 }
 
 func getBinaryFileDirectory() string {

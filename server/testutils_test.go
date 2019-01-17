@@ -156,7 +156,7 @@ func createTestImageFolderStructure() {
 
 func emptyDirectory(directoryPath string) {
 	_ = os.RemoveAll(directoryPath)
-	err := os.Mkdir(directoryPath, 777)
+	err := os.MkdirAll(directoryPath, 777)
 	if err != nil {
 		log.Fatal(err)
 	}

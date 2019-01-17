@@ -32,6 +32,13 @@ go build
 
 ```
 
+#Configuration
+
+Default location of ric config is `/etc/ric/ric_config.ini.`
+In configuration file, remote server whitelist configuration file path must be defined.
+Default location is `/mnt/config/host_whitelist.ini`
+
+
 Test that server returns status page:
 `http://localhost:8005/status`
 
