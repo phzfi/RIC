@@ -18,14 +18,14 @@ git clone <REPO_URL>
 
 Run docker-composer and login
 ```bash
-
 docker-compose up --build --force-recreate
 docker exec -i -t ric_dev /bin/bash
 ```
 
 Inside docker container
 ```bash
-go get -t ./...
+scripts/provision/docker_install_go_dependencies.sh
+
 go build
 
 ./server
