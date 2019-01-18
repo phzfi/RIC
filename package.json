@@ -27,6 +27,6 @@
   },
   "homepage": "https://github.com/phzfi/RIC#readme",
   "devDependencies": {
-    "serve": "1.4.0"
+    "serve": "7.0.0"
   }
 }
