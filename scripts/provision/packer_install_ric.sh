@@ -9,3 +9,23 @@ echo 'echo "deb http://pkg.phz.fi/bionic ./" >> /etc/apt/sources.list.d/pkg.phz.
 sudo apt-get update
 sudo apt-get -y install phz-ric
 sudo apt-get -y install nfs-common
+
+sudo bash -c 'cat > /etc/systemd/system/ric.service' << EOF
+[Unit]
+Description=RIC service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=ubuntu
+ExecStart=/usr/local/bin/ric
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+sudo systemctl enable ric
