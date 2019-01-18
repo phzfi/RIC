@@ -13,7 +13,7 @@ services:
       - ./mount/RIC_image_repository:/mnt/RIC_image_repository
       - ./mount/RIC_image_repository_test:/mnt/RIC_image_repository_test
       - ./mount/etc/ric/:/etc/ric
-      - ./mount/config/:/mnt/config
+      - ./mount/config/:/mnt/RIC_image_repository/config
     security_opt:
       - apparmor:unconfined
     cap_add:
