@@ -10,7 +10,7 @@ import (
 )
 
 
-func DecodeFilename(filename string) (decodedPath string, md5Filename string, err error) {
+func DecodeFilename(filename string) (remoteUrl string, md5Filename string, err error) {
 	if len(filename[1:]) == 0 {
 		err = errors.New("encoded filename missing")
 		return
@@ -21,14 +21,14 @@ func DecodeFilename(filename string) (decodedPath string, md5Filename string, er
 		err = encodeErr
 		return
 	}
-	decodedPath = string(decoded)
-	if len(decodedPath) == 0 {
+	remoteUrl = string(decoded)
+	if len(remoteUrl) == 0 {
 		err = errors.New("no filename could be extracted")
 		return
 	}
 
 	md5Hash := md5.New()
-	io.WriteString(md5Hash, decodedPath)
+	io.WriteString(md5Hash, remoteUrl)
 	md5Filename = fmt.Sprintf("%x", md5Hash.Sum(nil))
 
 	return

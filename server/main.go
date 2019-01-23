@@ -40,66 +40,30 @@ type MyHandler struct {
 
 // ServeHTTP is called whenever there is a new request.
 // This is quite similar to JavaEE Servlet interface.
-func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
+func (handler *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 	// In the future we can use requester can detect request spammers!
 	// requester := ctx.RemoteAddr()
 
 	// Increase request count
-	count := &(h.requests)
+	count := &(handler.requests)
 	atomic.AddUint64(count, 1)
 	if ctx.IsGet() {
 
 		// Special case for status check.
 		// TODO: Consider implementing routing?
+
 		path := string(ctx.Path())
 		// "SPECIAL routes"
 		if path == "/favicon.ico" {
-			logging.Debug("Requested url /favicon.ico, returning 404")
-			ctx.SetStatusCode(404)
-			return
-		}
-		if path == "/status" {
-			_, err := ctx.WriteString("OK")
-			if err != nil{
-				ctx.Error("Failed to write output", 500)
-			}
-			return
-		}
-
-		uri := ctx.URI()
-		filename, fileErr := HandleReceiveFile(uri, h.imageSource, h.serverConfig.HostWhitelistConfig)
-		if fileErr != nil {
-			logging.Debug(fileErr)
-			ctx.Error("Failed to handle file", 400)
-			return
-		}
-
-		operations, format, err, invalid := CreateOperations(filename, uri, h.imageSource, h.watermarker)
-		if err != nil {
-			ctx.NotFound()
-			logging.Debug(err)
-			return
-		}
-		if invalid != nil {
-			ctx.Error(invalid.Error(), 400)
-			return
-		}
-
-		blob, err := h.operator.GetBlob(filename, operations...)
-		if err != nil {
-			ctx.NotFound()
-			logging.Debug(err)
+			handleFavicon(ctx)
+		} else if path == "/status" {
+			handleGetStatus(ctx)
 		} else {
-			ctx.SetContentType("image/" + format)
-
-			length, err := ctx.Write(blob)
-			if err != nil {
-				ctx.Error("Failed to write output", 500)
-				return
-			}
-			logging.Debug(fmt.Sprintf("Blob returned with length: %d", length))
+			handleGetFile(handler, ctx)
 		}
+
+		return
 
 
 	} else if ctx.IsDelete() {
@@ -107,8 +71,8 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		logging.Debug("Delete request received")
 		uri := ctx.URI()
 
-		h.operator.DeleteCacheNamespace(uri, h.imageSource)
-		deleteErr:= DeleteFile(uri, h.imageSource)
+		handler.operator.DeleteCacheNamespace(uri, handler.imageSource)
+		deleteErr:= DeleteFile(uri, handler.imageSource)
 
 		if deleteErr != nil {
 			ctx.Error("failed to delete file", 400)
@@ -116,6 +80,72 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		} else {
 			ctx.SetStatusCode(200)
 		}
+	} else if ctx.IsHead() {
+		logging.Debug("Head request received")
+
+		handleFileExists(handler, ctx)
+
+	}
+}
+func handleFileExists(handler *MyHandler, ctx *fasthttp.RequestCtx) {
+	uri := ctx.URI()
+	fileSize, fileErr := GetFileSize(uri, handler.imageSource)
+	if fileErr != nil {
+		logging.Debug(fileErr)
+		HandleRequestExternalFile(uri, handler.imageSource, handler.serverConfig.HostWhitelistConfig)
+		ctx.SetStatusCode(404)
+		return
+	}
+	ctx.Response.Header.SetContentLength(int(fileSize))
+	ctx.SetStatusCode(200)
+
+}
+
+func handleGetFile(handler *MyHandler, ctx *fasthttp.RequestCtx) {
+
+	uri := ctx.URI()
+	filename, fileErr := HandleReceiveFile(uri, handler.imageSource, handler.serverConfig.HostWhitelistConfig)
+	if fileErr != nil {
+		logging.Debug(fileErr)
+		ctx.Error("Failed to handle file", 400)
+		return
+	}
+
+	operations, format, err, invalid := CreateOperations(filename, uri, handler.imageSource, handler.watermarker)
+	if err != nil {
+		ctx.NotFound()
+		logging.Debug(err)
+		return
+	}
+	if invalid != nil {
+		ctx.Error(invalid.Error(), 400)
+		return
+	}
+
+	blob, err := handler.operator.GetBlob(filename, operations...)
+	if err != nil {
+		ctx.NotFound()
+		logging.Debug(err)
+	} else {
+		ctx.SetContentType("image/" + format)
+
+		length, err := ctx.Write(blob)
+		if err != nil {
+			ctx.Error("Failed to write output", 500)
+			return
+		}
+		logging.Debug(fmt.Sprintf("Blob returned with length: %d", length))
+	}
+}
+func handleFavicon(ctx *fasthttp.RequestCtx) {
+	logging.Debug("Requested url /favicon.ico, returning 404")
+	ctx.SetStatusCode(404)
+}
+
+func handleGetStatus(ctx *fasthttp.RequestCtx) {
+	_, err := ctx.WriteString("OK")
+	if err != nil{
+		ctx.Error("Failed to write output", 500)
 	}
 }
 

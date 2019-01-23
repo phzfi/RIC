@@ -16,42 +16,64 @@ import (
 )
 
 func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, serverWhitelistConfigPath string) (filename string, err error) {
-	rawFilename := string(uri.Path())
 
-	decodedPath, md5Filename, decodeErr := ric_file.DecodeFilename(rawFilename)
-	if decodeErr != nil {
-		logging.Debug(decodeErr)
-		err = decodeErr
+	filePath, md5Filename, _, filePathErr := getFilePathInSystem(uri, source)
+	if filePathErr != nil {
+		err = filePathErr
 		return
 	}
-
-	logging.Debug(fmt.Sprintf("Processing file: %s (%s) ", md5Filename, decodedPath))
-	rootDir, rootErr := source.GetDefaultRoot()
-	if rootErr != nil {
-		logging.Debug(err)
-		err = rootErr
-		return
-	}
-	//TODO: Check that the domain/url is allowed (we don't want to work as a proxy)
-	filePath := rootDir + "/" + md5Filename
 
 	if !fileExists(filePath) {
-		 requestUrl, uriErr := url.ParseRequestURI(decodedPath)
+		err = errors.New(fmt.Sprintf("file does not exist: %v", filePath))
+		HandleRequestExternalFile(uri, source, serverWhitelistConfigPath)
+
+		return
+	}
+
+	filename = md5Filename
+
+	return
+}
+
+func HandleRequestExternalFile(uri *fasthttp.URI, source ops.ImageSource, serverWhitelistConfigPath string) (filename string, err error) {
+
+	filePath, md5Filename, remoteUrl, filePathErr := getFilePathInSystem(uri, source)
+	if filePathErr != nil {
+		err = filePathErr
+		return
+	}
+
+	if !fileExists(filePath) {
+		 requestUrl, uriErr := url.ParseRequestURI(remoteUrl)
 		if uriErr != nil {
-			logging.Debugf("Invalid url given as parameter: %s", decodedPath)
+			logging.Debugf("Invalid url given as parameter: %s", remoteUrl)
 			err = uriErr
 			return
 		}
 
 		if !isPathAllowed(serverWhitelistConfigPath, requestUrl.Host) {
-			logging.Debugf("unauthorized url given: %v", decodedPath)
+			logging.Debugf("unauthorized url given: %v", remoteUrl)
 			err = errors.New("unauthorized url given")
 			return
 		}
-		response, httpErr := http.Get(decodedPath)
+		getRemoteFile(remoteUrl, filePath)
+	}
+
+	filename = md5Filename
+
+	return
+}
+
+
+func getRemoteFile(url string, filePath string) (err error) {
+
+	go func(url string) {
+		fmt.Printf("Fetching %s \n", url)
+		response, httpErr := http.Get(url)
+
 		if httpErr != nil {
 			//log.Fatal(httpErr)
-			logging.Debug(fmt.Sprintf("failed to retrieve external image: %s , %s , %s", decodedPath, filename, httpErr))
+			logging.Debug(fmt.Sprintf("failed to retrieve external image: %s, %s", url, httpErr))
 			err = httpErr
 			return
 		}
@@ -66,14 +88,54 @@ func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, serverWhitelis
 		file, copyErr := os.Create(filePath)
 		defer file.Close()
 
-		 _, copyErr = io.Copy(file, response.Body)
+		_, copyErr = io.Copy(file, response.Body)
 		if copyErr != nil {
 			err = copyErr
 			return
 		}
+	}(url)
+
+	return
+}
+
+
+func getFilePathInSystem(uri *fasthttp.URI, source ops.ImageSource) (filePath string, md5Filename string, remoteUrl string, err error) {
+	rawFilename := string(uri.Path())
+
+	remoteUrl, md5Filename, decodeErr := ric_file.DecodeFilename(rawFilename)
+	if decodeErr != nil {
+		logging.Debug(decodeErr)
+		err = decodeErr
+		return
+	}
+	rootDir, rootErr := source.GetDefaultRoot()
+	if rootErr != nil {
+		logging.Debug(err)
+		err = rootErr
+		return
+	}
+	//TODO: Check that the domain/url is allowed (we don't want to work as a proxy)
+	filePath = rootDir + "/" + md5Filename
+
+	return
+}
+
+func GetFileSize(uri *fasthttp.URI, source ops.ImageSource) (fileSize int64, err error) {
+
+	filePath, _, _, filePathErr := getFilePathInSystem(uri, source)
+	if filePathErr != nil {
+		err = filePathErr
+		return
 	}
 
-	filename = md5Filename
+	stat, fileErr := os.Stat(filePath)
+
+	if fileErr != nil {
+		err = fileErr
+		return
+	}
+
+	fileSize = stat.Size()
 
 	return
 }
@@ -381,7 +443,8 @@ func isPathAllowed(configPath string, host string) (allowed bool){
 	}
 	for _, allowedHost := range allowedHosts {
 		if allowedHost == host {
-			logging.Debugf("Permission fot host %v found", host)
+
+			logging.Debugf("Permission for host %v found", host)
 			return true
 		}
 	}

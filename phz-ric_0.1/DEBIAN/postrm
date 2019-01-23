@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+RIC_HOME=/var/lib/ric
+RIC_USER=ric
+
+systemctl stop ric
+systemctl disable ric
+
+deluser --system "$RIC_USER"
+
+
