@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  ric-build:
+    container_name: ric_build
+    build: .
+    volumes:
+      - ./:/root/go/src/phzfi/RIC
+
+    command: tail -f /dev/null

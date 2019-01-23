@@ -9,24 +9,27 @@ pipeline {
     }
     stage('Build') {
       steps {
-        echo "Build steps here"
+        sh '''docker-compose -f docker-compose.build.yml up -d --build --force-recreate'''
+        sh '''docker exec -i  ric_build /bin/bash /root/go/src/phzfi/RIC/scripts/build.sh'''
+
       }
     }
     stage('Test') {
       steps {
-        echo 'TODO: add tests'
+        sh '''docker exec -i  ric_build  go test '''
       }
     }
     stage('Build .deb') {
       steps {
         echo "build .deb here"
+        sh '''docker exec -i  ric_build /bin/bash /root/go/src/phzfi/RIC/scripts/build_deb.sh'''
       }
     }
   }
   post {
     always {
       sh '''
-       echo "Clean up here!"
+        docker-compose -f docker-compose.build.yml down --rmi all
       '''
     }
     failure {

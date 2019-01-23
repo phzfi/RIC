@@ -22,5 +22,5 @@ RIC.iml
 aws/credentials
 RIC_image_repository
 !RIC_image_repository/.gitkeep
-phz-ric_*.deb
+*.deb
 RIC_image_repository_test
