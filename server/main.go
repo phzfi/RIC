@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/phzfi/RIC/server/config"
@@ -16,7 +17,6 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
-	"errors"
 )
 
 // MyHandler type is used to encompass HandlerFunc interface.
@@ -35,7 +35,6 @@ type MyHandler struct {
 	watermarker ops.Watermarker
 
 	serverConfig config.Server
-
 }
 
 // ServeHTTP is called whenever there is a new request.
@@ -65,14 +64,13 @@ func (handler *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 		return
 
-
 	} else if ctx.IsDelete() {
 
 		logging.Debug("Delete request received")
 		uri := ctx.URI()
 
 		handler.operator.DeleteCacheNamespace(uri, handler.imageSource)
-		deleteErr:= DeleteFile(uri, handler.imageSource)
+		deleteErr := DeleteFile(uri, handler.imageSource)
 
 		if deleteErr != nil {
 			ctx.Error("failed to delete file", 400)
@@ -144,7 +142,7 @@ func handleFavicon(ctx *fasthttp.RequestCtx) {
 
 func handleGetStatus(ctx *fasthttp.RequestCtx) {
 	_, err := ctx.WriteString("OK")
-	if err != nil{
+	if err != nil {
 		ctx.Error("Failed to write output", 500)
 	}
 }
@@ -158,7 +156,7 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 	// Add roots
 	logging.Debug("Adding roots")
 	if conf.Server.ImageFolder == "" {
-		log.Fatal(fmt.Sprintf("Required configuration ImageFolder not found. Exiting",))
+		log.Fatal(fmt.Sprintf("Required configuration ImageFolder not found. Exiting"))
 	}
 
 	// Assert image folder
@@ -186,10 +184,10 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 	// Configure handler
 	logging.Debug("Configuring handler")
 	handler := &MyHandler{
-		requests:    0,
-		imageSource: imageSource,
-		operator:    operator.MakeWithDefaultCacheSet(maxMemory, conf.Server.CacheFolder, conf.Server.Tokens),
-		watermarker: watermarker,
+		requests:     0,
+		imageSource:  imageSource,
+		operator:     operator.MakeWithDefaultCacheSet(maxMemory, conf.Server.CacheFolder, conf.Server.Tokens),
+		watermarker:  watermarker,
 		serverConfig: conf.Server,
 	}
 
@@ -224,10 +222,10 @@ func main() {
 	imagick.Initialize()
 	defer imagick.Terminate()
 
-	log.Println(fmt.Sprintf("Server starting. Listening to port %d...", conf.Server.Port ))
+	log.Println(fmt.Sprintf("Server starting. Listening to port %d...", conf.Server.Port))
 	logging.Debug("Debug enabled")
 
-	server, handler, ln := NewServer( conf.Server.Port, *mem, conf)
+	server, handler, ln := NewServer(conf.Server.Port, *mem, conf)
 
 	handler.started = time.Now()
 	err := server.Serve(ln)
@@ -250,19 +248,30 @@ func locateConfig() (location string, err error) {
 
 	// Default location
 	location = "/etc/ric/ric_config.ini"
-	if _, err = os.Stat(location); err == nil  {
+	if _, err = os.Stat(location); err == nil {
 		return
 	}
 
 	// Location of binary file
 	location, _ = filepath.Abs(getBinaryFileDirectory() + "/ric_config.ini")
-	if _, err = os.Stat(location); err == nil  {
+	if _, err = os.Stat(location); err == nil {
 		return
 	}
 
 	// Location of binary file started
 	location, _ = filepath.Abs(filepath.Dir(os.Args[0]) + "/ric_config.ini")
-	if _, err = os.Stat(location); err == nil  {
+	if _, err = os.Stat(location); err == nil {
+		return
+	}
+
+	return "", errors.New("failed to locate config")
+}
+
+func locateTestConfig() (location string, err error) {
+
+	// Default location
+	location = "/ric/config/testconfig.ini"
+	if _, err = os.Stat(location); err == nil {
 		return
 	}
 

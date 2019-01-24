@@ -2,17 +2,17 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/ops"
-	"github.com/valyala/fasthttp"
-	"strings"
-	"fmt"
-	"net/http"
-	"os"
-	"io"
 	"github.com/phzfi/RIC/server/ric_file"
+	"github.com/valyala/fasthttp"
+	"io"
+	"net/http"
 	"net/url"
-	"github.com/phzfi/RIC/server/config"
+	"os"
+	"strings"
 )
 
 func HandleReceiveFile(uri *fasthttp.URI, source ops.ImageSource, serverWhitelistConfigPath string) (filename string, err error) {
@@ -44,7 +44,7 @@ func HandleRequestExternalFile(uri *fasthttp.URI, source ops.ImageSource, server
 	}
 
 	if !fileExists(filePath) {
-		 requestUrl, uriErr := url.ParseRequestURI(remoteUrl)
+		requestUrl, uriErr := url.ParseRequestURI(remoteUrl)
 		if uriErr != nil {
 			logging.Debugf("Invalid url given as parameter: %s", remoteUrl)
 			err = uriErr
@@ -64,7 +64,6 @@ func HandleRequestExternalFile(uri *fasthttp.URI, source ops.ImageSource, server
 	return
 }
 
-
 func getRemoteFile(url string, filePath string) (err error) {
 
 	go func(url string) {
@@ -80,7 +79,7 @@ func getRemoteFile(url string, filePath string) (err error) {
 		defer response.Body.Close()
 
 		if response.StatusCode != 200 || !strings.Contains(response.Header.Get("Content-Type"), "image/") {
-			logging.Debug(fmt.Sprintf("invalid response received: status code: %v , Content-type:%v", response.StatusCode , response.Header.Get("Content-Type")))
+			logging.Debug(fmt.Sprintf("invalid response received: status code: %v , Content-type:%v", response.StatusCode, response.Header.Get("Content-Type")))
 			err = errors.New("invalid response received")
 			return
 		}
@@ -97,7 +96,6 @@ func getRemoteFile(url string, filePath string) (err error) {
 
 	return
 }
-
 
 func getFilePathInSystem(uri *fasthttp.URI, source ops.ImageSource) (filePath string, md5Filename string, remoteUrl string, err error) {
 	rawFilename := string(uri.Path())
@@ -159,7 +157,6 @@ func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource
 	}
 
 	operations = []ops.Operation{source.LoadImageOp(filename)}
-
 
 	adjustWidth := func() {
 		width = roundedIntegerDivision(height*ow, oh)
@@ -278,7 +275,7 @@ func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource
 	return
 }
 
-func DeleteFile(uri *fasthttp.URI, source ops.ImageSource) (error){
+func DeleteFile(uri *fasthttp.URI, source ops.ImageSource) error {
 	filename := string(uri.Path())
 
 	decodedPath, md5Filename, decodeErr := ric_file.DecodeFilename(filename)
@@ -327,16 +324,15 @@ var stringToMode = map[string]mode{
 }
 
 var supportedFormats = map[string]string{
-	"":					"jpeg",
-	"jpg":			"jpeg",
-	"jpeg":			"jpeg",
-	"gif":			"gif",
-	"webp":			"webp",
-	"bmp":			"bmp",
-	"png":			"png",
-	"tiff":			"tiff",
+	"":     "jpeg",
+	"jpg":  "jpeg",
+	"jpeg": "jpeg",
+	"gif":  "gif",
+	"webp": "webp",
+	"bmp":  "bmp",
+	"png":  "png",
+	"tiff": "tiff",
 }
-
 
 type mode int
 
@@ -358,7 +354,6 @@ const (
 
 // returns validated parameters from request and error if invalid
 func getParams(a *fasthttp.Args) (width int, height int, cropX int, cropY int, mode mode, format, url string, err error) {
-
 
 	if strings.Contains(a.String(), "%3F") { // %3F = ?
 		err = errors.New("Invalid characters in request!")
@@ -435,7 +430,7 @@ func fileExists(name string) bool {
 	return true
 }
 
-func isPathAllowed(configPath string, host string) (allowed bool){
+func isPathAllowed(configPath string, host string) (allowed bool) {
 	allowedHosts, err := config.ReadHostWhitelist(configPath)
 
 	if err != nil {

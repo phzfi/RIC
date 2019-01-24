@@ -1,13 +1,13 @@
 package ops
 
 import (
+	"errors"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"errors"
 )
 
 type dim [2]int
@@ -124,7 +124,7 @@ func (i *ImageSource) RemoveRoot(root string) error {
 	return i.roots.Remove(abspath)
 }
 
-func (i ImageSource) GetDefaultRoot () (string, error)  {
+func (i ImageSource) GetDefaultRoot() (string, error) {
 	if len(i.roots) > 0 {
 		return i.roots[0], nil
 	}

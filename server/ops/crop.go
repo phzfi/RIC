@@ -11,7 +11,7 @@ type Crop struct {
 
 func (c Crop) Marshal() string {
 	return string(cropID) + int32ToString(uint32(c.Width)) + int32ToString(uint32(c.Height)) +
-          int32ToString(uint32(c.X)) + int32ToString(uint32(c.Y))
+		int32ToString(uint32(c.X)) + int32ToString(uint32(c.Y))
 }
 
 func (c Crop) Apply(img images.Image) error {

@@ -2,14 +2,14 @@ package config
 
 import (
 	"bitbucket.org/classroomsystems/ini"
+	"errors"
 	"fmt"
+	"github.com/phzfi/RIC/server/logging"
 	"log"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
-	"path/filepath"
-	"os"
-	"github.com/phzfi/RIC/server/logging"
-	"errors"
 )
 
 type Conf struct {
@@ -22,12 +22,12 @@ type ConfValues struct {
 }
 
 type Server struct {
-	Tokens int `ini:"concurrency"`
-	Memory uint64
-	ImageFolder string
-	CacheFolder string
+	Tokens              int `ini:"concurrency"`
+	Memory              uint64
+	ImageFolder         string
+	CacheFolder         string
 	HostWhitelistConfig string
-	Port int
+	Port                int
 }
 
 type Watermark struct {
@@ -42,7 +42,6 @@ type Watermark struct {
 	AddMark    bool
 }
 
-
 var defaults = ConfValues{
 	Watermark{
 		MinHeight:  200,
@@ -55,12 +54,12 @@ var defaults = ConfValues{
 		Horizontal: 1.0,
 	},
 	Server{
-		Tokens: 1,
-		Memory: 2048 * 1024 * 1024,
-		ImageFolder: "",
-		CacheFolder: "",
+		Tokens:              1,
+		Memory:              2048 * 1024 * 1024,
+		ImageFolder:         "",
+		CacheFolder:         "",
 		HostWhitelistConfig: "",
-		Port: 8005,
+		Port:                8005,
 	},
 }
 
@@ -106,20 +105,18 @@ func ReadConfig(path string) (c *ConfValues) {
 	return
 }
 
-
-
 func ReadHostWhitelist(configPath string) (hosts []string, err error) {
 	//config := ReadConfig(configPath)
 
 	location, err := filepath.Abs(configPath)
-	if _, err = os.Stat(location); os.IsNotExist(err)  {
+	if _, err = os.Stat(location); os.IsNotExist(err) {
 		return
 	}
 
 	configData, err := ini.LoadFile(location)
 	configValue, ok := configData.Get("hosts", "allowed")
 
-	if  !ok {
+	if !ok {
 		logging.Debug("Could not get server whitelist")
 		err = errors.New("no server whitelist")
 		fmt.Println("Failed to read server whitelist configuration file. Check 'HostWhitelistConfig'-entry in ric_config.ini")

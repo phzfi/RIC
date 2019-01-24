@@ -8,26 +8,14 @@ services:
       - "8005:8005"
       - "40000:40000"
     volumes:
-      # project_gopath/src/github.com/phzfi/RIC Folder structure assumed
-      - ./../../../../:/root/go
-      - ./mount/RIC_image_repository:/mnt/RIC_image_repository
-      - ./mount/RIC_image_repository_test:/mnt/RIC_image_repository_test
-      - ./mount/etc/ric/:/etc/ric
-      - ./mount/config/:/mnt/RIC_image_repository/config
+      - ./:/ric
+      - ./docker/go:/root/go
+      - ./docker/go/src/github.com/phzfi/RIC/server:/root/go/src/github.com/phzfi/RIC/server
+      - ./config/host_whitelist.ini:/var/lib/ric/config/host_whitelist.ini
+      - ./config/ric_config.ini:/etc/ric/ric_config.ini
+
     security_opt:
       - apparmor:unconfined
     cap_add:
       - SYS_PTRACE
-
-    command: tail -f /dev/null # Keeps docker-compose from terminating process
-
-  ric-prod:
-    container_name: ric_prod
-    build: ./deploy_server
-    ports:
-      - "8006:8006"
-    volumes:
-      # project_gopath/src/github.com/phzfi/RIC Folder structure assumed
-      - ./:/ric
-
     command: tail -f /dev/null # Keeps docker-compose from terminating process

@@ -24,3 +24,7 @@ RIC_image_repository
 !RIC_image_repository/.gitkeep
 *.deb
 RIC_image_repository_test
+
+assets/test_assets/testresults/*/*
+!docker/go/src/github.com/phzfi/RIC/server
+docker/go/

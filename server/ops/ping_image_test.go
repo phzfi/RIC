@@ -1,13 +1,12 @@
 package ops
 
 import (
-	"testing"
-	"time"
+	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"fmt"
+	"testing"
+	"time"
 )
-
 
 func TestPingRoots(t *testing.T) {
 	logging.Debugf("Testing PingRoots...")

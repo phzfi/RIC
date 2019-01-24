@@ -1,6 +1,0 @@
-Package: phz-ric
-Version: 0.1.0.3
-Maintainer: PHZ Full Stack Oy
-Architecture: all
-Depends: file,imagemagick(>> 6.9.10),libmagickwand-dev,libmagickcore-dev
-Description: RIC - Responsive Image Cache

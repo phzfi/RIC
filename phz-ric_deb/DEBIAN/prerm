@@ -1,7 +1,0 @@
-#!/bin/sh
-set -e
-
-RIC_HOME=/var/lib/ric
-RIC_USER=ric
-
-rm /usr/local/bin/ric

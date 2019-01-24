@@ -2,11 +2,11 @@ package operator
 
 import (
 	"github.com/phzfi/RIC/server/cache"
-	"github.com/phzfi/RIC/server/ops"
-	"sync"
-	"github.com/valyala/fasthttp"
-	"github.com/phzfi/RIC/server/ric_file"
 	"github.com/phzfi/RIC/server/logging"
+	"github.com/phzfi/RIC/server/ops"
+	"github.com/phzfi/RIC/server/ric_file"
+	"github.com/valyala/fasthttp"
+	"sync"
 )
 
 type Operator struct {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/phzfi/RIC/server/config"
@@ -11,26 +12,30 @@ import (
 	"github.com/valyala/fasthttp"
 	"net"
 	"time"
-	"encoding/base64"
 
-	"log"
-	"os"
-	"io/ioutil"
+	"bufio"
 	"crypto/md5"
 	"io"
-	"bufio"
+	"io/ioutil"
+	"log"
+	"os"
 )
 
 // Port will be incremented for each server created in the test
 var increment = 0
 var port int
 var tokens = 3
-var configPath = "config/testconfig.ini"
+var configPath = "/var/lib/config/testconfig.ini"
 
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, listener net.Listener, serverErr chan error) {
 	// Start the server
-	conf := config.ReadConfig(configPath)
+	configLocation, configErr := locateTestConfig()
+	if configErr != nil {
+		fmt.Printf("%v", configErr)
+		return
+	}
+	conf := config.ReadConfig(configLocation)
 	port = conf.Server.Port + increment
 	increment++
 	logging.Debugf("Starting a new server on port %v", port)
@@ -59,16 +64,21 @@ func stopServer(server *fasthttp.Server, ln net.Listener, srverr chan error) err
 // uses the cache and ImageSource operation with current working dir as root.
 // Returns the operator and the source operation.
 func SetupOperatorSource() (o operator.Operator, src ops.ImageSource) {
-	conf := config.ReadConfig(configPath)
+	configLocation, configErr := locateTestConfig()
+	if configErr != nil {
+		fmt.Printf("%v", configErr)
+		return
+	}
+	conf := config.ReadConfig(configLocation)
 	o = operator.MakeWithDefaultCacheSet(512*1024*1024, conf.Server.CacheFolder, tokens)
 	src = ops.MakeImageSource()
-	src.AddRoot("./")
+	src.AddRoot("/")
 	return
 }
 
 // Gets blob from server. package variable port is used as port and localhost as address
-func getBlobFromServer(getname string) (blob []byte, err error)  {
-	requestURL := fmt.Sprintf("http://localhost:%d/", port)+getname
+func getBlobFromServer(getname string) (blob []byte, err error) {
+	requestURL := fmt.Sprintf("http://localhost:%d/", port) + getname
 	logging.Debugf("Requesting URL: %v", requestURL)
 	statusCode, blob, httpErr := fasthttp.Get(nil, requestURL)
 	logging.Debugf("STATUS CODE: %v; ERR: %v", statusCode, httpErr)
@@ -122,15 +132,19 @@ func testGetImages(cases []testutils.TestCaseAll) (err error) {
 	return
 }
 
-
 func createTestImageFolderStructure() {
 
-	conf := config.ReadConfig(configPath)
+	configLocation, configErr := locateTestConfig()
+	if configErr != nil {
+		fmt.Printf("%v", configErr)
+		return
+	}
+	conf := config.ReadConfig(configLocation)
 
 	emptyDirectory(conf.Server.CacheFolder)
 	//emptyDirectory(conf.Server.ImageFolder)
 
-	testFolder := "testimages/server/"
+	testFolder := "/ric/assets/test_assets/testimages/server/"
 	files, err := ioutil.ReadDir(testFolder)
 	if err != nil {
 		logging.Debug("Could not read test image source files")
@@ -146,7 +160,6 @@ func createTestImageFolderStructure() {
 		file, copyErr := os.Create(conf.Server.ImageFolder + "/" + md5Filename)
 		f, _ := os.Open(sourcePath)
 		_, copyErr = io.Copy(file, bufio.NewReader(f))
-
 
 		if copyErr != nil {
 			fmt.Printf("Failed to copy file: %s: %s", sourcePath, copyErr)

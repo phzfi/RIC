@@ -9,6 +9,7 @@ import (
 )
 
 const cacheFolder = "/tmp/operatortests"
+
 var tokens = 3
 
 func prepare() Operator {

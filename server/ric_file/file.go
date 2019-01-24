@@ -1,14 +1,13 @@
 package ric_file
 
 import (
-	"encoding/base64"
-	"github.com/phzfi/RIC/server/logging"
-	"fmt"
-	"errors"
 	"crypto/md5"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"github.com/phzfi/RIC/server/logging"
 	"io"
 )
-
 
 func DecodeFilename(filename string) (remoteUrl string, md5Filename string, err error) {
 	if len(filename[1:]) == 0 {

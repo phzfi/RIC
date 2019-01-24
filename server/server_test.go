@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/phzfi/RIC/server/testutils"
-	"testing"
-	"github.com/valyala/fasthttp"
-	"fmt"
 	"bytes"
-	"github.com/phzfi/RIC/server/images"
-	"strings"
 	"encoding/base64"
+	"fmt"
+	"github.com/phzfi/RIC/server/images"
+	"github.com/phzfi/RIC/server/testutils"
+	"github.com/valyala/fasthttp"
 	"os"
+	"strings"
+	"testing"
 )
 
 func TestMain(m *testing.M) {
@@ -39,14 +39,14 @@ func TestHello(t *testing.T) {
 // Test GETting different sizes and formats
 func TestGetImageBySize(t *testing.T) {
 
-	testFolder := "testimages/server/"
-	resultFolder := "testresults/server/"
+	testFolder := "/ric/assets/test_assets/testimages/server/"
+	resultFolder := "/ric/assets/test_assets/testresults/server/"
 
 	cases := []testutils.TestCaseAll{
-		{testutils.TestCase{testFolder + "01.jpg", "?width=100&height=100", testFolder + "01_100x100.jpg", resultFolder + "01_100x100.jpg"},"JPEG", 100, 100},
+		{testutils.TestCase{testFolder + "01.jpg", "?width=100&height=100", testFolder + "01_100x100.jpg", resultFolder + "01_100x100.jpg"}, "JPEG", 100, 100},
 		{testutils.TestCase{testFolder + "01.jpg", "?width=200&height=100", testFolder + "01_200x100.jpg", resultFolder + "01_200x100.jpg"}, "JPEG", 200, 100},
 		{testutils.TestCase{testFolder + "01.jpg", "?width=300&height=100", testFolder + "01_300x100.jpg", resultFolder + "01_300x100.jpg"}, "JPEG", 300, 100},
-		{testutils.TestCase{testFolder + "01.jpg", "?width=300&height=50", testFolder + "01_300x50.jpg", resultFolder + "01_300x50.jpg"},"JPEG", 300, 50},
+		{testutils.TestCase{testFolder + "01.jpg", "?width=300&height=50", testFolder + "01_300x50.jpg", resultFolder + "01_300x50.jpg"}, "JPEG", 300, 50},
 		//{testutils.TestCase{testFolder + "01.jpg", "?format=webp&width=100&height=100", testFolder + "01_100x100.webp", resultFolder + "01_100x100.webp"}, "WEBP", 100, 100},
 		//{testutils.TestCase{testFolder + "01.jpg", "?format=webp&width=200&height=100", testFolder + "01_200x100.webp", resultFolder + "01_200x100.webp"}, "WEBP", 200, 100},
 		//{testutils.TestCase{testFolder + "01.jpg", "?format=webp&width=300&height=100", testFolder + "01_300x100.webp", resultFolder + "01_300x100.webp"}, "WEBP", 300, 100},
@@ -70,8 +70,8 @@ func TestGetImageBySize(t *testing.T) {
 // Test GETting different sized and formats with mode=fit
 func TestGetImageFit(t *testing.T) {
 
-	testfolder := "testimages/server/"
-	resfolder := "testresults/server/"
+	testfolder := "/ric/assets/test_assets/testimages/server/"
+	resfolder := "/ric/assets/test_assets/testresults/server/"
 
 	createTestImageFolderStructure()
 
@@ -102,8 +102,8 @@ func TestGetImageFit(t *testing.T) {
 
 // Test GETting few liquid rescaled images
 func TestGetImageSingleParam(t *testing.T) {
-	testfolder := "testimages/server/"
-	resfolder := "testresults/server/"
+	testfolder := "/ric/assets/test_assets/testimages/server/"
+	resfolder := "/ric/assets/test_assets/testresults/server/"
 
 	createTestImageFolderStructure()
 
@@ -134,8 +134,8 @@ func TestGetImageSingleParam(t *testing.T) {
 
 // Test GETting different sized and formats with mode=liquid
 func TestGetLiquid(t *testing.T) {
-	testfolder := "testimages/server/"
-	resfolder := "testresults/server/"
+	testfolder := "/ric/assets/test_assets/testimages/server/"
+	resfolder := "/ric/assets/test_assets/testresults/server/"
 
 	cases := []testutils.TestCaseAll{
 		{testutils.TestCase{testfolder + "01.jpg", "?width=143&height=100&mode=liquid", testfolder + "liquid_01_143x100.jpg", resfolder + "liquid_01_143x100.jpg"}, "JPEG", 143, 100},
@@ -152,8 +152,8 @@ func TestGetLiquid(t *testing.T) {
 
 // Test GETting different sized images with mode=crop and mode=cropmid
 func TestGetCrop(t *testing.T) {
-	testfolder := "testimages/server/"
-	resfolder := "testresults/server/"
+	testfolder := "/ric/assets/test_assets/testimages/server/"
+	resfolder := "/ric/assets/test_assets/testresults/server/"
 
 	cases := []testutils.TestCaseAll{
 		{testutils.TestCase{testfolder + "02.jpg", "?width=200&height=100&mode=crop", testfolder + "crop_200x100.jpg", resfolder + "crop_200x100.jpg"}, "JPEG", 200, 100},
@@ -179,10 +179,10 @@ func TestMIMEtype(t *testing.T) {
 	response := fasthttp.AcquireResponse()
 	request := fasthttp.AcquireRequest()
 	cases := []string{"", "?format=jpeg", "?format=png", "?format=tiff", "?format=bmp", "?format=gif"} //"?format=webp",
-	folder := "testimages/server/"
+	folder := "/ric/assets/test_assets/testimages/server/"
 
 	for _, c := range cases {
-		str := fmt.Sprintf("http://localhost:%d/", port) + base64.StdEncoding.EncodeToString([]byte(folder + "01.jpg")) + c
+		str := fmt.Sprintf("http://localhost:%d/", port) + base64.StdEncoding.EncodeToString([]byte(folder+"01.jpg")) + c
 		request.SetRequestURI(str)
 		fasthttp.Do(request, response)
 		MIME := string(response.Header.ContentType())
@@ -207,7 +207,7 @@ func TestInvalidParams(t *testing.T) {
 	response := fasthttp.AcquireResponse()
 	request := fasthttp.AcquireRequest()
 
-	base := fmt.Sprintf("http://localhost:%d/", port) + base64.StdEncoding.EncodeToString([]byte("testimages/server/01.jpg"))
+	base := fmt.Sprintf("http://localhost:%d/", port) + base64.StdEncoding.EncodeToString([]byte("/ric/assets/test_assets/testimages/server/01.jpg"))
 	cases := []string{
 		"?width=abc&height=200",
 		"?width=200&height=abc",

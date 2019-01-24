@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"sync"
 	"errors"
+	"sync"
 )
 
 type LRU struct {
@@ -89,4 +89,3 @@ func (l list) remove() {
 	l.prev.next = l.next
 	l.next.prev = l.prev
 }
-

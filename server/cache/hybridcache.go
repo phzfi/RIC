@@ -28,8 +28,7 @@ func (caches HybridCache) AddBlob(namespace string, identifier string, blob []by
 	}
 }
 
-
-func (caches HybridCache) DeleteNamespace(namespace string)  {
+func (caches HybridCache) DeleteNamespace(namespace string) {
 	for _, cache := range caches {
 		cache.DeleteNamespace(namespace)
 	}

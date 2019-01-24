@@ -8,9 +8,9 @@ import (
 
 func TestImageWatermark(t *testing.T) {
 
-	testfolder := "testimages/watermark/"
+	testfolder := "/ric/assets/test_assets/testimages/watermark/"
 	testimage := testfolder + "towatermark.jpg"
-	resfolder := "testresults/images/"
+	resfolder := "/ric/assets/test_assets/testresults/images/"
 	tolerance := 0.002
 
 	wmimage := images.NewImage()
@@ -24,9 +24,9 @@ func TestImageWatermark(t *testing.T) {
 	vertical := 0.0
 
 	cases := []testutils.TestCase{
-		{testimage, "",testfolder + "marked1.jpg", resfolder + "marked1.jpg"},
-		{testimage, "",testfolder + "marked2.jpg", resfolder + "marked2.jpg"},
-		{testimage, "",testfolder + "marked3.jpg", resfolder + "marked3.jpg"},
+		{testimage, "", testfolder + "marked1.jpg", resfolder + "marked1.jpg"},
+		{testimage, "", testfolder + "marked2.jpg", resfolder + "marked2.jpg"},
+		{testimage, "", testfolder + "marked3.jpg", resfolder + "marked3.jpg"},
 	}
 
 	for _, c := range cases {

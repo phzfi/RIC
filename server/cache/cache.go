@@ -18,7 +18,7 @@ type Storer interface {
 	Load(string, string) ([]byte, bool)
 	Store(string, string, []byte)
 	Delete(string, string) uint64
-	DeleteNamespace(string) (error)
+	DeleteNamespace(string) error
 }
 
 type Cache struct {
@@ -85,7 +85,6 @@ func (c *Cache) deleteOne() {
 	logging.Debugf("Cache delete: %v:%v", namespace, stringToBase64(identifier))
 	c.currentMemory -= c.storer.Delete(namespace, identifier)
 }
-
 
 func (c *Cache) DeleteNamespace(namespace string) {
 	c.storer.DeleteNamespace(namespace)

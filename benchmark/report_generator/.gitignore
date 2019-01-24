@@ -1,0 +1,16 @@
+__pycache__/
+.project
+.pydevproject
+*.pyc
+results/*
+log/error.log
+raw/*
+temp/*
+graph.html
+!results/test.csv
+!raw/test.txt
+!temp/empty.txt
+urls.txt_temp.txt
+turls.txt_temp.txt
+html_tables/*
+!html_tables/tablestyle.css

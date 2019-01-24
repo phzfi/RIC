@@ -2,16 +2,16 @@ package cache
 
 import (
 	"encoding/base64"
+	"errors"
+	"fmt"
+	"github.com/phzfi/RIC/server/logging"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
-	"fmt"
-	"github.com/phzfi/RIC/server/logging"
-	"errors"
-	"strings"
 )
 
 // initializes cache with images found in given folder
@@ -32,7 +32,6 @@ func NewDiskCache(folder string, mm uint64, policy Policy) *Cache {
 	if err != nil {
 		log.Println("Error reading previously cached files from disk:", err)
 	}
-
 
 	for _, folderPath := range folders {
 		folder := filepath.Base(folderPath)

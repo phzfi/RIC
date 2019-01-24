@@ -36,12 +36,13 @@ func TestOperatorConvert(t *testing.T) {
 
 	operator, src := SetupOperatorSource()
 
-	testfolder := "testimages/convert/"
+
+	testfolder := "/ric/assets/test_assets/testimages/convert/"
 	testimage := testfolder + "toconvert.jpg"
 	testimage2 := testfolder + "toconvert2.jpg"
 	testimage3 := testfolder + "toconvert3.jpg"
 	testimage4 := testfolder + "toconvert4.jpg"
-	resfolder := "testresults/common/"
+	resfolder := "/ric/assets/test_assets/testresults/common/"
 	tolerance := 0.002
 
 	var conv = func(a, b, c, d string) CommonTestCase {
@@ -66,6 +67,7 @@ func TestOperatorConvert(t *testing.T) {
 	}
 
 	var test = func(c CommonTestCase) (err error) {
+
 		var vt = c.test
 		var vo = c.op.(ops.Convert)
 		logging.Debug(fmt.Sprintf("Testing convert: %v, %v, %v, %v", vt.TestFilename, vt.ReferenceFilename, vt.Format, vt.ResultFilename))
@@ -75,7 +77,7 @@ func TestOperatorConvert(t *testing.T) {
 			return
 		}
 
-		var ft = testutils.FormatTestCase{testutils.TestCase{vt.TestFilename, "",vt.ReferenceFilename, vt.ResultFilename}, vt.Format}
+		var ft = testutils.FormatTestCase{testutils.TestCase{vt.TestFilename, "", vt.ReferenceFilename, vt.ResultFilename}, vt.Format}
 		err = testutils.FormatTest(ft, blob, tolerance)
 		return
 	}
@@ -90,12 +92,12 @@ func TestOperatorResize(t *testing.T) {
 
 	operator, src := SetupOperatorSource()
 
-	testfolder := "testimages/resize/"
+	testfolder := "/ric/assets/test_assets/testimages/resize/"
 	testimage := testfolder + "toresize.jpg"
 	testimage2 := testfolder + "toresize2.jpg"
 	testimage3 := testfolder + "toresize3.jpg"
 	testimage4 := testfolder + "toresize4.jpg"
-	resfolder := "testresults/common/"
+	resfolder := "/ric/assets/test_assets/testresults/common/"
 	tolerance := 0.002
 
 	var res = func(a, b, c string, d, e int) CommonTestCase {
@@ -129,7 +131,7 @@ func TestOperatorResize(t *testing.T) {
 			return
 		}
 
-		var rt = testutils.SizeTestCase{testutils.TestCase{vt.TestFilename, "",vt.ReferenceFilename, vt.ResultFilename}, vt.W, vt.H}
+		var rt = testutils.SizeTestCase{testutils.TestCase{vt.TestFilename, "", vt.ReferenceFilename, vt.ResultFilename}, vt.W, vt.H}
 		err = testutils.SizeTest(rt, blob, tolerance)
 		return
 	}
@@ -144,14 +146,14 @@ func TestOperatorLiquidRescale(t *testing.T) {
 
 	operator, src := SetupOperatorSource()
 
-	testfolder := "testimages/resize/"
+	testfolder := "/ric/assets/test_assets/testimages/resize/"
 	testimage := testfolder + "toresize.jpg"
 	testimage2 := testfolder + "toresize2.jpg"
-	resfolder := "testresults/common/"
+	resfolder := "/ric/assets/test_assets/testresults/common/"
 	tolerance := 0.05
 
 	var res = func(a, b, c string, d, e int) CommonTestCase {
-		va := testutils.TestCase{a, "",testfolder + b, resfolder + c}
+		va := testutils.TestCase{a, "", testfolder + b, resfolder + c}
 		vb := testutils.TestCaseAll{va, "Whatever", d, e}
 		return CommonTestCase{vb, ops.LiquidRescale{d, e}}
 	}
@@ -172,7 +174,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 			return
 		}
 
-		var rt = testutils.SizeTestCase{testutils.TestCase{vt.TestFilename, "",vt.ReferenceFilename, vt.ResultFilename}, vt.W, vt.H}
+		var rt = testutils.SizeTestCase{testutils.TestCase{vt.TestFilename, "", vt.ReferenceFilename, vt.ResultFilename}, vt.W, vt.H}
 		err = testutils.SizeTest(rt, blob, tolerance)
 		return
 	}

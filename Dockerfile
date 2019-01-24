@@ -8,7 +8,9 @@ RUN apt-get -y install golang-go
 
 # Set environment variables
 ENV GOPATH=$HOME
-ENV PATH="${PATH}:$GOPATH/go/bin"
+RUN echo 'export GOPATH=$HOME/go' >> $HOME/.bashrc
+RUN echo 'export PATH=$PATH:$GOPATH/bin' >> $HOME/.bashrc
+
 ENV CGO_ENABLED 1
 
 # Update package handler packages
@@ -22,4 +24,4 @@ RUN apt-get -y install file
 RUN apt-get -y install imagemagick
 RUN apt-get -y install libmagickwand-dev
 
-WORKDIR /root/go/src/github.com/phzfi/RIC/server
+#WORKDIR /root/go/src/github.com/phzfi/RIC/server
