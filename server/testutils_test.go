@@ -13,11 +13,11 @@ import (
 	"time"
 	"encoding/base64"
 
-	"io/ioutil"
 	"log"
+	"os"
+	"io/ioutil"
 	"crypto/md5"
 	"io"
-	"os"
 	"bufio"
 )
 

@@ -10,7 +10,7 @@ pipeline {
     stage('Build') {
       steps {
         sh '''docker-compose -f docker-compose.build.yml up -d --build --force-recreate'''
-        sh '''docker exec -i  ric_build /bin/bash /root/go/src/phzfi/RIC/scripts/build.sh'''
+        sh '''docker exec -i  ric_build /bin/bash /root/go/src/github.com/phzfi/RIC/scripts/build.sh'''
 
       }
     }
