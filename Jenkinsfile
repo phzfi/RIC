@@ -22,7 +22,7 @@ pipeline {
     stage('Build .deb') {
       steps {
         echo "build .deb here"
-        sh '''docker exec -i  ric_build /bin/bash /root/go/src/phzfi/RIC/scripts/build_deb.sh'''
+        sh '''docker exec -i  ric_build /bin/bash /root/go/src/github.com/phzfi/RIC/scripts/build_deb.sh'''
       }
     }
   }
