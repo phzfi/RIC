@@ -27,7 +27,7 @@
     {
       "type": "shell",
       "scripts": [
-        "./scripts/provision/packer_install_ric.sh"
+        "./setup.sh"
       ]
     }
   ]

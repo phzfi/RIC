@@ -1,42 +1,37 @@
 # RIC
 Responsive image cache
 
-TODO: Update development environment setup
+Project structure attempts to follow the tructure defined at: `https://github.com/golang-standards/project-layout`
 
 
 
 ### Development environment
 
-Create folder structure `ric_project_gopath/src/github.com/phzfi`
-```bash
-mkdir -p ric_project_gopath/src/github.com/phzfi
-cd ric_project_gopath/src/github.com/phzfi
 
-git clone <REPO_URL>
+```bash
+git clone https://github.com/phzfi/RIC.git
 
 ```
 
 Run docker-composer and login
 ```bash
-docker-compose up --build --force-recreate
+docker-compose up
 docker exec -i -t ric_dev /bin/bash
 ```
 
 Inside docker container
 ```bash
-scripts/provision/docker_install_go_dependencies.sh
+/ric/scripts/build_dev.sh
 
-go build
-
-./server
+/ric/server/server
 
 ```
 
 #Configuration
 
-Default location of ric config is `/etc/ric/ric_config.ini.`
+Default location of ric config is `/etc/ric/ric_config.ini`
 In configuration file, remote server whitelist configuration file path must be defined.
-Default location is `/mnt/config/host_whitelist.ini`
+Default location is `/var/lib/ric/config/host_whitelist.ini`
 
 
 Test that server returns status page:
@@ -56,7 +51,7 @@ Test that server returns status page:
 #Compile and run delve
 Ide must be configured to respond to connection
 ```bash
-
+cd /root/go/src/github.com/phzfi/RIC/server
 go build -tags debug -v -gcflags "all=-N -l" && /root/go/bin/dlv --headless --listen=:40000 --api-version=2 exec ./server
 
 ```
