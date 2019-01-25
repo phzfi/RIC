@@ -4,8 +4,6 @@ set -e
 RIC_HOME=/var/lib/ric
 RIC_USER=ric
 
-
-echo "$RIC_HOME $RIC_USER"
 adduser --system --group --home "$RIC_HOME" "$RIC_USER"
 
 systemctl enable ric

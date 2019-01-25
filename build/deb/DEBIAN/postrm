@@ -4,9 +4,10 @@ set -e
 RIC_HOME=/var/lib/ric
 RIC_USER=ric
 
-systemctl stop ric
-systemctl disable ric
+APT_VERB="$1"
+echo "$APT_VERB"
 
-deluser --system "$RIC_USER"
-
-
+if [ "$APT_VERB" = 'remove' ]; then
+    echo "DELETING USER"
+    deluser --system "$RIC_USER"
+fi
