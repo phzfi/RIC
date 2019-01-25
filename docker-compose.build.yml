@@ -5,6 +5,14 @@ services:
     container_name: ric_build
     build: .
     volumes:
-      - ./:/root/go/src/github.com/phzfi/RIC
+      - ./:/ric
+      - ./docker/go:/root/go
+      - ./docker/go/src/github.com/phzfi/RIC/server:/root/go/src/github.com/phzfi/RIC/server
+      - ./config/host_whitelist.ini:/var/lib/ric/config/host_whitelist.ini
+      - ./config/ric_config.ini:/etc/ric/ric_config.ini
+    security_opt:
+      - apparmor:unconfined
+    cap_add:
+      - SYS_PTRACE
 
     command: tail -f /dev/null

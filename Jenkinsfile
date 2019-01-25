@@ -10,19 +10,19 @@ pipeline {
     stage('Build') {
       steps {
         sh '''docker-compose -f docker-compose.build.yml up -d --build --force-recreate'''
-        sh '''docker exec -i  ric_build /bin/bash /root/go/src/github.com/phzfi/RIC/scripts/build.sh'''
+        sh '''docker exec -i  ric_build /bin/bash /ric/scripts/build.sh'''
 
       }
     }
     stage('Test') {
       steps {
-        sh '''docker exec -i  ric_build  go test '''
+        sh '''docker exec -i  ric_build  /bin/bash /ric/scripts/run_tests.sh'''
       }
     }
     stage('Build .deb') {
       steps {
         echo "build .deb here"
-        sh '''docker exec -i  ric_build /bin/bash /root/go/src/github.com/phzfi/RIC/scripts/build_deb.sh'''
+        sh '''docker exec -i  ric_build /bin/bash /ric/scripts/build_deb.sh'''
       }
     }
   }
