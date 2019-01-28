@@ -17,6 +17,8 @@ pipeline {
     stage('Test') {
       steps {
         sh '''docker exec -i  ric_build  /bin/bash /ric/scripts/run_tests.sh'''
+        cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '${WORKSPACE}/server/coverage.xml', conditionalCoverageTargets: '70, 0, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '80, 0, 0', maxNumberOfBuilds: 0, methodCoverageTargets: '80, 0, 0', onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false
+        junit '${WORKSPACE}/server/junit.xml'
       }
     }
     stage('Build .deb') {
