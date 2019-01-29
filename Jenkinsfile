@@ -25,6 +25,7 @@ pipeline {
       steps {
         echo "build .deb here"
         sh '''docker exec -i  ric_build /bin/bash /ric/scripts/build_deb.sh'''
+        archiveArtifacts artifacts: 'build/phz-ric.deb', onlyIfSuccessful: true
       }
     }
   }
