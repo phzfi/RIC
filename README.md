@@ -1,7 +1,7 @@
 # RIC
 Responsive image cache
 
-Project structure attempts to follow the tructure defined at: `https://github.com/golang-standards/project-layout`
+Project structure attempts to follow the structure defined at: `https://github.com/golang-standards/project-layout`
 
 
 
