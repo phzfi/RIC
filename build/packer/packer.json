@@ -27,7 +27,7 @@
     {
       "type": "shell",
       "scripts": [
-        "./setup.sh"
+        "./build/packer/setup.sh"
       ]
     }
   ]

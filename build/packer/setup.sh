@@ -11,4 +11,4 @@ sudo apt-get -y install phz-ric
 sudo apt-get -y install nfs-common
 
 
-sed -i 's|/var/lib/ric|/mnt/RIC_image_repository|g' /etc/ric/ric_config.ini
+sudo sed -i 's|/var/lib/ric|/mnt/RIC_image_repository|g' /etc/ric/ric_config.ini

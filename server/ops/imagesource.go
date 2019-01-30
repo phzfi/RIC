@@ -17,6 +17,7 @@ type ImageSource struct {
 	roots, webroots roots
 	sizes           idToSize
 	mutex           *sync.RWMutex
+	fileType		string
 }
 
 func MakeImageSource() ImageSource {
@@ -89,6 +90,32 @@ func (i ImageSource) ImageSize(fn string) (w int, h int, err error) {
 
 	i.mutex.Lock()
 	i.sizes[fn] = dim{w, h}
+	i.mutex.Unlock()
+
+	return
+}
+
+// Get image size
+func (i ImageSource) ImageType(fileName string) (fileType string, err error) {
+	i.mutex.RLock()
+	fileType = i.fileType
+	i.mutex.RUnlock()
+
+	if fileType != "" {
+		return
+	}
+
+	image := images.NewImage()
+	defer image.Destroy()
+
+	err = i.pingRoots(fileName, image)
+	if err != nil {
+		return
+	}
+
+	fileType = strings.ToLower(image.GetImageFormat())
+	i.mutex.Lock()
+	i.fileType = fileType
 	i.mutex.Unlock()
 
 	return

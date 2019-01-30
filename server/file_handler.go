@@ -151,19 +151,21 @@ func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource
 		source.AddRoot(requestUrl)
 	}
 
-	ow, oh, err := source.ImageSize(filename)
-	if err != nil {
+	originalWidth, originalHeight, err := source.ImageSize(filename)
+	fileType, fileTypeErr := source.ImageType(filename)
+	if fileTypeErr != nil {
+		err = fileTypeErr
 		return
 	}
 
 	operations = []ops.Operation{source.LoadImageOp(filename)}
 
 	adjustWidth := func() {
-		width = roundedIntegerDivision(height*ow, oh)
+		width = roundedIntegerDivision(height*originalWidth, originalHeight)
 	}
 
 	adjustHeight := func() {
-		height = roundedIntegerDivision(width*oh, ow)
+		height = roundedIntegerDivision(width*originalHeight, originalWidth)
 	}
 
 	adjustSize := func() {
@@ -172,20 +174,20 @@ func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource
 		} else if height != 0 && width == 0 {
 			adjustWidth()
 		} else if width == 0 && height == 0 {
-			width, height = ow, oh
+			width, height = originalWidth, originalHeight
 		}
 	}
 
 	denyUpscale := func() {
 		h0 := height
 		w0 := width
-		if width > ow {
-			height = roundedIntegerDivision(ow*h0, w0)
-			width = ow
+		if width > originalWidth {
+			height = roundedIntegerDivision(originalWidth*h0, w0)
+			width = originalWidth
 		}
-		if height > oh || height > h0 {
-			width = roundedIntegerDivision(oh*w0, h0)
-			height = oh
+		if height > originalHeight || height > h0 {
+			width = roundedIntegerDivision(originalHeight*w0, h0)
+			height = originalHeight
 		}
 	}
 
@@ -203,37 +205,37 @@ func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource
 
 	crop := func() {
 		if width == 0 {
-			width = ow
+			width = originalWidth
 		}
 		if height == 0 {
-			height = oh
+			height = originalHeight
 		}
 		operations = append(operations, ops.Crop{width, height, cropX, cropY})
 	}
 
 	cropmid := func() {
-		if width == 0 || width > ow {
-			width = ow
+		if width == 0 || width > originalWidth {
+			width = originalWidth
 		}
-		if height == 0 || height > oh {
-			height = oh
+		if height == 0 || height > originalHeight {
+			height = originalHeight
 		}
-		midW := roundedIntegerDivision(ow, 2)
-		midH := roundedIntegerDivision(oh, 2)
+		midW := roundedIntegerDivision(originalWidth, 2)
+		midH := roundedIntegerDivision(originalHeight, 2)
 		cropx := midW - roundedIntegerDivision(width, 2)
 		cropy := midH - roundedIntegerDivision(height, 2)
 		operations = append(operations, ops.Crop{width, height, cropx, cropy})
 	}
 
 	fit := func() {
-		if width > ow {
-			width = ow
+		if width > originalWidth {
+			width = originalWidth
 		}
-		if height > oh {
-			height = oh
+		if height > originalHeight {
+			height = originalHeight
 		}
 		if width != 0 && height != 0 {
-			if ow*height > width*oh {
+			if originalWidth*height > width*originalHeight {
 				adjustHeight()
 			} else {
 				adjustWidth()
@@ -269,7 +271,9 @@ func CreateOperations(filename string, uri *fasthttp.URI, source ops.ImageSource
 	if true == false {
 		watermark()
 	}
-
+	if format == "" {
+		format = fileType
+	}
 	operations = append(operations, ops.Convert{format})
 
 	return
@@ -324,7 +328,7 @@ var stringToMode = map[string]mode{
 }
 
 var supportedFormats = map[string]string{
-	"":     "jpeg",
+	"":     "",
 	"jpg":  "jpeg",
 	"jpeg": "jpeg",
 	"gif":  "gif",
@@ -353,9 +357,9 @@ const (
 )
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (width int, height int, cropX int, cropY int, mode mode, format, url string, err error) {
+func getParams(args *fasthttp.Args) (width int, height int, cropX int, cropY int, mode mode, format, url string, err error) {
 
-	if strings.Contains(a.String(), "%3F") { // %3F = ?
+	if strings.Contains(args.String(), "%3F") { // %3F = ?
 		err = errors.New("Invalid characters in request!")
 		return
 	}
@@ -366,38 +370,38 @@ func getParams(a *fasthttp.Args) (width int, height int, cropX int, cropY int, m
 		}
 	}()
 
-	width = getUint(a, widthParam)
-	height = getUint(a, heightParam)
+	width = getUint(args, widthParam)
+	height = getUint(args, heightParam)
 
-	cropX = getUint(a, cropxParam)
-	cropY = getUint(a, cropyParam)
+	cropX = getUint(args, cropxParam)
+	cropY = getUint(args, cropyParam)
 
-	mode = stringToMode[string(a.Peek(modeParam))]
+	mode = stringToMode[string(args.Peek(modeParam))]
 	if mode == 0 {
 		err = errors.New("Invalid mode!")
 		return
 	}
 
-	format, formatFound := supportedFormats[strings.ToLower(string(a.Peek(formatParam)))]
+	format, formatFound := supportedFormats[strings.ToLower(string(args.Peek(formatParam)))]
 	if !formatFound {
-		err = errors.New("Invalid format '" + string(a.Peek(formatParam)) + "'!")
+		err = errors.New("Invalid format '" + string(args.Peek(formatParam)) + "'!")
 		return
 	}
 	// TODO: verify that the format is one we support.
 	// We do not want to support TXT, for instance
 
-	url = string(a.Peek(urlParam))
+	url = string(args.Peek(urlParam))
 
-	a.Del(widthParam)
-	a.Del(heightParam)
-	a.Del(modeParam)
-	a.Del(formatParam)
-	a.Del(cropxParam)
-	a.Del(cropyParam)
-	a.Del(urlParam)
+	args.Del(widthParam)
+	args.Del(heightParam)
+	args.Del(modeParam)
+	args.Del(formatParam)
+	args.Del(cropxParam)
+	args.Del(cropyParam)
+	args.Del(urlParam)
 
-	if a.Len() != 0 {
-		err = errors.New("Invalid parameter " + a.String())
+	if args.Len() != 0 {
+		err = errors.New("Invalid parameter " + args.String())
 		return
 	}
 
