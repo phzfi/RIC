@@ -121,6 +121,7 @@ func handleGetFile(handler *MyHandler, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	ctx.Response.Header.Set("Cache-Control", "max-age=31536000") // 1 year
 	// Check ETag
 	noneMatch := string(ctx.Request.Header.Peek("If-None-Match"))
 	key := base64.RawURLEncoding.EncodeToString([]byte(operator.ToKey(operations)))
