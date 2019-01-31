@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
+	"encoding/base64"
 )
 
 // MyHandler type is used to encompass HandlerFunc interface.
@@ -120,12 +121,22 @@ func handleGetFile(handler *MyHandler, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	// Check ETag
+	noneMatch := string(ctx.Request.Header.Peek("If-None-Match"))
+	key := base64.RawURLEncoding.EncodeToString([]byte(operator.ToKey(operations)))
+	etag := filename + ":" + key
+	if noneMatch == etag {
+		ctx.SetStatusCode(304)
+		return
+	}
+
 	blob, err := handler.operator.GetBlob(filename, operations...)
 	if err != nil {
 		ctx.NotFound()
 		logging.Debug(err)
 	} else {
 		ctx.SetContentType("image/" + format)
+		ctx.Response.Header.Set("ETag", etag)
 
 		length, err := ctx.Write(blob)
 		if err != nil {

@@ -46,14 +46,14 @@ func MakeWithDefaultCacheSet(mm uint64, cacheFolder string, tokens int) Operator
 
 func (o *Operator) GetBlob(namespace string, operations ...ops.Operation) (blob []byte, err error) {
 
-	key := toKey(operations)
+	key := ToKey(operations)
 
 	var startimage []byte
 	var start int
 
 	for start = len(operations); start > 0; start-- {
 		var found bool
-		startimage, found = o.cache.GetBlob(namespace, toKey(operations[:start]))
+		startimage, found = o.cache.GetBlob(namespace, ToKey(operations[:start]))
 		if found {
 			break
 		}
