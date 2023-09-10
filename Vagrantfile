@@ -36,11 +36,11 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
       # Headless box named RIC
       vb.gui = false
-        vb.name = "RIC"
+      vb.name = "RIC"
 
       # 2 CPU:s with 2GB of RAM
-	     vb.memory = 2048
-	     vb.cpus = 2
+      vb.memory = 2048
+      vb.cpus = 4
   end
 
   # Enable provisioning with a shell script. Additional provisioners such as
@@ -51,4 +51,3 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup_imagemagick.sh"
   config.vm.provision "shell", path: "scripts/provision/vagrant_setup_go.sh"
 end
-

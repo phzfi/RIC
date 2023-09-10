@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#Poka-Yoke to ensure this is not run as root
+if test `whoami` = 'root'; then
+    echo "Much to learn, you still have, my young padawan"
+    echo "See https://memegenerator.net/img/instances/45131296.jpg"
+    exit 1
+fi
+
+WD=`pwd`
+
+#If not on CI
+if [ -z $METADATA_DIR ]; then
+    METADATA_DIR=~/workspace/vagrant/phz-vagrant-metadata
+fi
+
+#Clone metadata
+echo 'Please provide your git.in.phz.fi credentials'
+if [ ! -e $METADATA_DIR ]; then
+        echo "git clone phz-vagrant-metadata from git.in.phz.fi"
+        #TODO how to fix?
+        #Note! This fails on Jenkins since the dir is .../workspace or something, if it's not already cloned
+        # Fix attempt 20200505, seems OK
+        METADATA_DIR_UP_1_LEVEL="${METADATA_DIR%/*}"
+        cd ${METADATA_DIR_UP_1_LEVEL}
+        git clone http://git.in.phz.fi/phz/phz-vagrant-metadata.git
+else
+        cd $METADATA_DIR
+        echo "git pull phz-vagrant-metadata from git.in.phz.fi"
+        git checkout master
+        git pull origin master
+        cd ..
+fi
+
+cd $WD
+echo "Updating dev env boxes"
+$METADATA_DIR/scripts/update-box.sh
+$METADATA_DIR/scripts/vagrantup
+$METADATA_DIR/scripts/purge-boxes.sh
+
