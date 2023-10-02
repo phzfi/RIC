@@ -19,11 +19,11 @@ if [ -z "$SERVICE_NAME" ] || [ -z "$IMAGE_VERSION" ]; then
     exit 1
 fi
 
-if test -z "$DOCKER_REGISTRY_USERNAME"; then
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z "$DOCKER_REGISTRY_USERNAME"; then
     echo "ERROR: Building manually (outside Jenkins?). Please export DOCKER_REGISTRY_USERNAME to env from phz.kdbx"
     exit 1
 fi
-if test -z "$DOCKER_REGISTRY_PASSWORD"; then
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z "$DOCKER_REGISTRY_PASSWORD"; then
     echo "ERROR: Building manually (outside Jenkins?). Please export DOCKER_REGISTRY_PASSWORD to env from phz.kdbx"
     exit 1
 fi
