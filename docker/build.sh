@@ -13,11 +13,11 @@ if ! ( [ "$BUILD_ENV" == "dev" ] || [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" 
     exit 1
 fi
 
-if test -z $DOCKER_REGISTRY_USERNAME; then
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z $DOCKER_REGISTRY_USERNAME; then
     echo "Please provide docker-registry.in.phz.fi password in environment by variable DOCKER_REGISTRY_USERNAME from phz.kdbx, if you build this manually"
     exit 1
 fi
-if test -z $DOCKER_REGISTRY_PASSWORD; then
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z $DOCKER_REGISTRY_PASSWORD; then
     echo "Please provide docker-registry.in.phz.fi password in environment by variable DOCKER_REGISTRY_PASSWORD from phz.kdbx, if you build this manually"
     exit 1
 fi
