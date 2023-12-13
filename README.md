@@ -3,7 +3,12 @@ Responsive image cache
 
 
 ### Development environment
+
+## Vagrant
 ```bash
+# update vagrant stuff
+./vagrant_up.sh
+
 # start virtual machine
 vagrant up
 
@@ -18,7 +23,20 @@ go build
 
 # check that script was run, to detach `ctrl + a` and `d`
 screen -list
+
+# shutdown vagrant
+./vagrant_down.sh
 ```
+
+## Docker
+```bash
+# build and start docker container
+./up.sh
+
+# shutdown docker container
+./down.sh
+```
+
 
 Test that server returns test images:
 `http://localhost:8005/01.jpg`

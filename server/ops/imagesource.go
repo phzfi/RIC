@@ -51,8 +51,9 @@ func (i ImageSource) searchRootsInternal(filename string, visitPath, visitURL fu
 	}
 
 	for _, root := range i.webroots {
-		logging.Debugf("Attempting to load %s", root+filename)
-		err = visitURL(root + filename)
+                weburl := strings.TrimSuffix(root+filename, "/")
+		logging.Debugf("Attempting to load %s", weburl)
+		err = visitURL(weburl)
 		if err == nil {
 			return
 		}

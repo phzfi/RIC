@@ -28,9 +28,11 @@ echo "Building $TAG"
 
 echo $BUILD_ENV-$VERSION > ../VERSION
 
-docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD \
-    && docker build -f Dockerfile --build-arg BUILD_ENV="$BUILD_ENV" -t $TAG . \
+if test "$BUILD_ENV" != "dev"; then
+  docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+fi
 
+docker build -f Dockerfile --build-arg BUILD_ENV="$BUILD_ENV" -t $TAG .
 
 # We don't want to push dev images to registry, just test if building works
 if test "$BUILD_ENV" == "stg" || test "$BUILD_ENV" == "prod"; then
@@ -45,4 +47,3 @@ if test "$BUILD_ENV" == "prod"; then
     docker tag "$TAG" "$NAME":latest \
       && docker push $NAME:latest
 fi
-
