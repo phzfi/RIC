@@ -3,8 +3,6 @@ set -e
 
 # ImageMagick 6.9.13-1 (2023-12-10)
 ORIGIN="https://imagemagick.org/archive/ImageMagick-6.9.13-1.tar.bz2"
-# RELEASE="d21fb1eaf6e444ecd6228f2a58d6d0e24692f53f"
-# ORIGIN="http://git.imagemagick.org/repos/ImageMagick/repository/archive.tar.bz2?ref=${RELEASE}"
 FILE="imagemagick.tar.bz2"
 SOURCE="imagemagick-source"
 BUILD="imagemagick-build"
