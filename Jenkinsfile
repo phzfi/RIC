@@ -76,9 +76,10 @@ pipeline {
 
     stage("Provision") {
       steps {
-        timeout(time: 30, unit: 'MINUTES') {
-          sh script: "./up.sh", returnStatus: true
-        }
+        echo "Build -stage does all the necessary steps"
+        //timeout(time: 30, unit: 'MINUTES') {
+          //sh script: "./up.sh", returnStatus: true
+        //}
       }
     }
 
