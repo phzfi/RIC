@@ -25,7 +25,7 @@ RUN go get -t ./...
 RUN go get -u ./...
 RUN go mod download
 
-# build image
+# build Go application
 RUN cd server; go build -v -tags debug -a -installsuffix cgo .
 
 
