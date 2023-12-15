@@ -1,50 +1,62 @@
-# Use the latest Ubuntu image as the base
-FROM ubuntu:latest
+# Stage 1: Build the Go application
+FROM golang:1.17 as go-builder
 
-# Update the package repository
-RUN apt-get update
+# Install ImageMagick dependencies
+RUN apt-get update && apt-get install -y imagemagick libmagickwand-dev
 
-# Install any necessary packages
-# GLIB
-RUN apt-get install -y libglib2.0-bin libglib2.0-dev
-# DEVEL
-RUN apt-get install -y automake autoconf gcc git g++ binutils make mercurial tar pkg-config vim wget bash git
-# OPENCL
-RUN apt-get install -y ocl-icd-opencl-dev opencl-headers ocl-icd-libopencl1  
-# IMAGELIBS
-RUN apt-get install -y libwebp-dev libtiff-dev libpng-dev libjpeg-dev liblqr-1-0-dev libltdl-dev
-# GO
-RUN apt-get install -y golang-go golang-golang-x-tools golang-golang-x-tools-dev \
-  && rm -rf /var/lib/apt/lists/*
+# set go compiler options
+ENV CGO_ENABLED=1
+ENV GOOS=linux
 
-
-
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the local files to the container's working directory
-COPY install_imagemagick.sh /app/
-
-RUN chmod +x /app/install_imagemagick.sh
-
-RUN /app/install_imagemagick.sh
-
+# copy local files to build container
 COPY . .
 
-RUN go mod init github.com/phzfi/RIC
-RUN go get -t ./...
-RUN go list -u -m all
-RUN go get -u ./...
-
-# build with debug
-# RUN cd server; go build -tags debug .
-
-# build production
-RUN cd server; go build .
-
+# make directories
 RUN mkdir -p /var/www
+RUN mkdir -p /tmp
 
-WORKDIR /app/server
+# initialise go project
+RUN go mod init github.com/phzfi/RIC
 
-# Command to run when the container starts
-CMD ["./server"]
+# download necessary go libraries
+RUN go get -t ./...
+RUN go get -u ./...
+RUN go mod download
+
+# build image
+RUN cd server; go build -v -tags debug -a -installsuffix cgo .
+
+
+# Stage 2: Get certificates
+FROM alpine:latest as certs
+RUN apk update
+RUN apk add --no-cache ca-certificates openssl-dev
+RUN echo 'hosts: files dns' > /etc/nsswitch.conf
+
+
+# Stage 3: Final stage, create the final image using Scratch
+FROM scratch
+
+# Copy SSL certs
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=certs /etc/nsswitch.conf /etc/nsswitch.conf
+
+# Copy Go app
+COPY --from=go-builder /app/server/server /ric-server
+COPY --from=go-builder /app/server/config.ini /config.ini
+COPY --from=go-builder /app/server/testimages/ /testimages/
+COPY --from=go-builder /app/server/watermark.png /watermark.png
+COPY --from=go-builder /app/server/testwm.png /testwm.png
+COPY --from=go-builder /app/server/testresults /testresults
+COPY --from=go-builder /app/server/config/testconfig.ini /config/testconfig.ini
+COPY --from=go-builder /var/www /var/www
+COPY --from=go-builder /tmp /tmp
+
+# Copy any necessary libraries
+COPY --from=go-builder /usr/lib/ /usr/lib/
+COPY --from=go-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
+COPY --from=go-builder /lib64/ /lib64/
+
+ENTRYPOINT ["./ric-server"]
