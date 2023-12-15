@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  phz-ric:
+    build:
+      context: .
+    ports:
+      - 8005:8005
