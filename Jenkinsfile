@@ -14,7 +14,7 @@ pipeline {
     SLACK_CHANNEL = "#marketing"
 
     //Multibranch pipeline
-    BUILD_ENV = [master: 'prod', develop: 'stg'].get(env.BRANCH_NAME, 'dev')
+    BUILD_ENV = ['master': 'prod', 'develop': 'stg'].get(env.BRANCH_NAME, 'dev')
     VERSION = "${currentBuild.id}"
   }
 
