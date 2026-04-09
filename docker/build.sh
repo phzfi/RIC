@@ -1,7 +1,7 @@
 #!/bin/bash
 #Note! Publish only staging and prod images, do not push dev images to docker-registry (but build dev version locally)
 
-NAME=phz/ric
+NAME=phzfi/ric
 
 #No need to change anything below this line
 BUILD_ENV=$1

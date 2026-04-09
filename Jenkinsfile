@@ -1,9 +1,10 @@
+#!/usr/bin/env groovy
 def BUILD_ENV
 //def VERSION // Note! in regular pipeline it seems that introducing VERSION as def causes VERSION to be set as null.
 def CHANGELOG
 def SLACK_CHANNEL
 
-//Declarative pipeline example
+//Note! This project uses declarative pipeline syntax on Jenkins
 pipeline {
   agent { label 'slave && vagrant' }
 
@@ -13,9 +14,10 @@ pipeline {
     //and is able and willing to fix errors on CI immediately, receiving notifications on project channel
     SLACK_CHANNEL = "#marketing"
 
-    //Multibranch pipeline
-    BUILD_ENV = ['master': 'prod', 'develop': 'stg'].get(env.BRANCH_NAME, 'dev')
-    VERSION = "${currentBuild.id}"
+    BRANCH_NAME = "${GIT_BRANCH.contains('/') ? GIT_BRANCH.split('/')[1] : GIT_BRANCH}"
+    // For some reason BRANCH_NAME cannot be used on the next line...
+    BUILD_ENV = [main: 'prod', develop: 'stg'].get(GIT_BRANCH.contains('/') ? GIT_BRANCH.split('/')[1] : GIT_BRANCH, 'dev')
+    VERSION = "${currentBuild.number}"
   }
 
   options {
@@ -23,6 +25,7 @@ pipeline {
     ansiColor('xterm')
     //set default pipeline timeout to 3hours if there is a jam, it will abort automatically
     timeout(time: 180, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '50'))
   }
 
   triggers {
@@ -146,6 +149,27 @@ pipeline {
         }
       }
     }
+
+    stage("Tag") {
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'git-ssh-ci', keyFileVariable: 'SSH_KEY')]) {
+          script {
+            if (env.BUILD_ENV != 'dev') {
+              sshagent(credentials: ['git-ssh-ci']) {
+                sh('set +x && '
+                + 'TAG_NAME="' + env.BUILD_ENV + '-' + env.VERSION + '" && '
+                + 'git tag -d $TAG_NAME || true && ' // delete 'exists' tag from local git repository. (if previous push faile>
+                + 'git tag -a $TAG_NAME -m Jenkins && '   // create new tag.
+                + 'git push origin $TAG_NAME --no-verify' // push the new tag.
+                )
+              }
+            } else {
+              echo "Skipping Git Tag and Push for git development branches..."
+            }
+          }
+        }
+      }
+    }
   }
 
   post {
@@ -155,6 +179,8 @@ pipeline {
         if (getContext(hudson.FilePath)) {
           sh "./clean.sh || true"
         }
+        // Workaround to the clean issue, can't delete folder as folder is owned by docker user 'root'.
+        sh "sudo chown -R jenkins:jenkins ${workspace}"
       }
     }
 
