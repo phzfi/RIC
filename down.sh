@@ -2,7 +2,7 @@
 #Shutdown/destroy the dev env
 
 function docker_down() {
-    docker-compose down --remove-orphans
+    docker compose down --remove-orphans
     exit 0
 }
 
