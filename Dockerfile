@@ -1,5 +1,5 @@
 # Stage 1: Build the Go application
-FROM golang:1.17 as go-builder
+FROM golang:1.23-bookworm as go-builder
 
 # Install ImageMagick dependencies
 RUN apt-get update && apt-get install -y imagemagick libmagickwand-dev
