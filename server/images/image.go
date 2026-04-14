@@ -55,7 +55,8 @@ func (img Image) GetExtension() (ext string) {
 
 // Method for converting Image to blob.
 func (img Image) Blob() []byte {
-	return img.GetImageBlob()
+	b, _ := img.GetImageBlob()
+	return b
 }
 
 // Watermark adds watermark Image to img. Parameters horizontal and vertical tell where

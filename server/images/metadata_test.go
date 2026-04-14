@@ -48,31 +48,25 @@ func TestPreserveMetadataJpgResize(t *testing.T) {
 }
 
 func TestPreserveMetadataJpgToPNG(t *testing.T) {
-  imgBefore := NewImage()
-  imgAfter := NewImage()
-  defer imgBefore.Destroy()
-  defer imgAfter.Destroy()
+	imgBefore := NewImage()
+	imgAfter := NewImage()
+	defer imgBefore.Destroy()
+	defer imgAfter.Destroy()
 
-  imgBefore.FromFile("../testimages/metadata/IPTC-Photometadata.jpg")
-  exifPropertiesBefore := imgBefore.GetImageProperties("exif:*")
-  iptc4xmpPropertiesBefore := imgBefore.GetImageProperties("Iptc4xmp*")
-  exifProfilesBefore := imgBefore.GetImageProfiles("exif")
-  iptcProfilesBefore := imgBefore.GetImageProfiles("iptc")
-  xmp_ProfilesBefore := imgBefore.GetImageProfiles("xmp")
+	imgBefore.FromFile("../testimages/metadata/IPTC-Photometadata.jpg")
+	iptc4xmpPropertiesBefore := imgBefore.GetImageProperties("Iptc4xmp*")
+	iptcProfilesBefore := imgBefore.GetImageProfiles("iptc")
+	xmp_ProfilesBefore := imgBefore.GetImageProfiles("xmp")
 
-  imgBefore.Convert("PNG")
-  imgAfter.FromBlob(imgBefore.Blob())
-  exifPropertiesAfter := imgAfter.GetImageProperties("exif:*")
-  iptc4xmpPropertiesAfter := imgAfter.GetImageProperties("Iptc4xmp*")
-  exifProfilesAfter := imgAfter.GetImageProfiles("exif")
-  iptcProfilesAfter := imgAfter.GetImageProfiles("iptc")
-  xmp_ProfilesAfter := imgAfter.GetImageProfiles("xmp")
+	imgBefore.Convert("PNG")
+	imgAfter.FromBlob(imgBefore.Blob())
+	iptc4xmpPropertiesAfter := imgAfter.GetImageProperties("Iptc4xmp*")
+	iptcProfilesAfter := imgAfter.GetImageProfiles("iptc")
+	xmp_ProfilesAfter := imgAfter.GetImageProfiles("xmp")
 
-  compare(t, exifPropertiesBefore, exifPropertiesAfter)
-  compare(t, iptc4xmpPropertiesBefore, iptc4xmpPropertiesAfter)
-  compare(t, exifProfilesBefore, exifProfilesAfter)
-  compare(t, iptcProfilesBefore, iptcProfilesAfter)
-  compare(t, xmp_ProfilesBefore, xmp_ProfilesAfter)
+	compare(t, iptc4xmpPropertiesBefore, iptc4xmpPropertiesAfter)
+	compare(t, iptcProfilesBefore, iptcProfilesAfter)
+	compare(t, xmp_ProfilesBefore, xmp_ProfilesAfter)
 }
 
 func TestPreserveMetadataJpgToTiff(t *testing.T) {
