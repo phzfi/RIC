@@ -1,5 +1,5 @@
 # Stage 1: Build the Go application
-FROM golang:1.24-bookworm as go-builder
+FROM golang:1.24-bookworm AS go-builder
 
 # Install ImageMagick dependencies
 RUN apt-get update && apt-get install -y imagemagick libmagickwand-dev
@@ -30,7 +30,7 @@ RUN cd server; go build -v -tags debug -a -installsuffix cgo .
 
 
 # Stage 2: Get certificates
-FROM alpine:latest as certs
+FROM alpine:latest AS certs
 RUN apk update
 RUN apk add --no-cache ca-certificates openssl-dev
 RUN echo 'hosts: files dns' > /etc/nsswitch.conf

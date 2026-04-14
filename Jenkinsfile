@@ -16,7 +16,9 @@ pipeline {
 
     BRANCH_NAME = "${GIT_BRANCH.contains('/') ? GIT_BRANCH.split('/')[1] : GIT_BRANCH}"
     // For some reason BRANCH_NAME cannot be used on the next line...
-    BUILD_ENV = [main: 'prod', develop: 'stg'].get(GIT_BRANCH.contains('/') ? GIT_BRANCH.split('/')[1] : GIT_BRANCH, 'dev')
+    // Note: The ternary needs parentheses for correct operator precedence with .get()
+    def branchKey = BRANCH_NAME ?: 'dev'
+    BUILD_ENV = [main: 'prod', develop: 'stg'].get(branchKey, 'dev')
     VERSION = "${currentBuild.number}"
   }
 
