@@ -14,9 +14,9 @@ pipeline {
     //and is able and willing to fix errors on CI immediately, receiving notifications on project channel
     SLACK_CHANNEL = "#marketing"
 
-    BRANCH_NAME = "${GIT_BRANCH.contains('/') ? GIT_BRANCH.split('/')[1] : GIT_BRANCH}"
+    BRANCH = "${GIT_BRANCH.contains('/') ? GIT_BRANCH.split('/')[1] : GIT_BRANCH}"
     // For some reason BRANCH_NAME cannot be used on the next line...
-    BUILD_ENV = (BRANCH_NAME == 'main' ? 'prod' : BRANCH_NAME == 'develop' ? 'stg' : 'dev')
+    BUILD_ENV = (BRANCH == 'main' ? 'prod' : BRANCH == 'develop' ? 'stg' : 'dev')
     VERSION = "${currentBuild.number}"
   }
 
