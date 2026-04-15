@@ -16,7 +16,7 @@ pipeline {
 
     BRANCH = "${GIT_BRANCH.contains('/') ? GIT_BRANCH.split('/')[1] : GIT_BRANCH}"
     // For some reason BRANCH_NAME cannot be used on the next line...
-    BUILD_ENV = BRANCH == 'main' ? 'prod' : BRANCH == 'develop' ? 'stg' : 'dev'
+    BUILD_ENV = [main: 'prod', develop: 'stg'].get(BRANCH.contains('/') ? BRANCH.split('/')[1] : BRANCH, 'dev')
     VERSION = "${currentBuild.number}"
   }
 
