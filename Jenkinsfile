@@ -15,7 +15,7 @@ pipeline {
     SLACK_CHANNEL = "#marketing"
 
     BRANCH = "${env.GIT_BRANCH.contains('/') ? env.GIT_BRANCH.split('/')[1] : env.GIT_BRANCH}"
-    BUILD_ENV = [main: 'prod', develop: 'stg'].get(BRANCH, 'dev')
+    BUILD_ENV = [main: 'prod', develop: 'stg'].get("$BRANCH", 'dev')
 
     VERSION = "${currentBuild.number}"
   }
