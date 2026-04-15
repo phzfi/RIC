@@ -42,6 +42,8 @@ pipeline {
 
         //If building custom branch, the BUILD_ENV setting above returns null, revert to dev
         script {
+          echo "Branch: ${BRANCH}"
+          echo "Build Env: ${BUILD_ENV}"
           if (BUILD_ENV == null) {
             BUILD_ENV = 'dev'
           }
