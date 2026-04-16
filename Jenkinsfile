@@ -45,6 +45,7 @@ pipeline {
           echo "Branch: ${BRANCH}"
           echo "Build Env: ${BUILD_ENV}"
           if (BUILD_ENV == null) {
+            echo "BUILD_ENV is null, revert to dev"
             BUILD_ENV = 'dev'
           }
         }
