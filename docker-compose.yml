@@ -4,6 +4,14 @@ services:
       context: .
     ports:
       - 8005:8005
+    #Enable GPU -support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # alternatively, use `count: all` for all GPUs
+              capabilities: [gpu]
 
   test:
     build:
@@ -11,3 +19,11 @@ services:
       target: go-builder
     command: go test ./server/... -v
     working_dir: /app
+    #Enable GPU -support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # alternatively, use `count: all` for all GPUs
+              capabilities: [gpu]
