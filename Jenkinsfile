@@ -15,7 +15,6 @@ pipeline {
     SLACK_CHANNEL = "#marketing"
 
     BRANCH = "${env.GIT_BRANCH.contains('/') ? env.GIT_BRANCH.split('/')[1] : env.GIT_BRANCH}"
-    BUILD_ENV = 'dev'
 
     VERSION = "${currentBuild.number}"
   }
@@ -43,6 +42,7 @@ pipeline {
         //If building custom branch, the BUILD_ENV setting above returns null, revert to dev
         script {
           echo "Branch: ${BRANCH}"
+          def BUILD_ENV = 'dev'
           if (BRANCH == 'main') {
             BUILD_ENV = 'prod'
           } else if (BRANCH == 'develop') {
