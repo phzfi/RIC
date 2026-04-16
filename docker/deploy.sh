@@ -7,8 +7,6 @@ SERVICE_NAME=ric-$ENV
 #No need to change anything below this line
 export IMAGE_VERSION=$2
 COMPOSE_FILE="docker-compose.${ENV}.yml"
-#DOCKER_REGISTRY_PASSWORD=${DOCKER_REGISTRY}
-#export CONFIG_VERSION=`date +%Y%m%d%H%m`
 export CONFIG_VERSION=$IMAGE_VERSION
 
 if [ -z "$SERVICE_NAME" ] || [ -z "$IMAGE_VERSION" ]; then
@@ -16,19 +14,19 @@ if [ -z "$SERVICE_NAME" ] || [ -z "$IMAGE_VERSION" ]; then
     exit 1
 fi
 
-if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z "$DOCKER_REGISTRY_USERNAME"; then
-    echo "ERROR: Building manually (outside Jenkins?). Please export DOCKER_REGISTRY_USERNAME to env from phz.kdbx"
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z "$DOCKER_HUB_USERNAME"; then
+    echo "ERROR: Building manually (outside Jenkins?). Please export DOCKER_HUB_USERNAME to env"
     exit 1
 fi
-if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z "$DOCKER_REGISTRY_PASSWORD"; then
-    echo "ERROR: Building manually (outside Jenkins?). Please export DOCKER_REGISTRY_PASSWORD to env from phz.kdbx"
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z "$DOCKER_HUB_PASSWORD"; then
+    echo "ERROR: Building manually (outside Jenkins?). Please export DOCKER_HUB_PASSWORD to env"
     exit 1
 fi
 
 #Do not deploy dev images
 if test "$BUILD_ENV" == "stg" || test "$BUILD_ENV" == "prod"; then
     echo "Deploying $IMAGE_VERSION to $ENV"
-    docker login -u $DOCKER_REGISTRY_USERNAME -p $DOCKER_REGISTRY_PASSWORD
+    docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
 
     #Deploy to Swarm
     export DOCKER_HOST=docker-swarm-master.in.phz.fi
