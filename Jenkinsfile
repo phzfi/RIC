@@ -42,7 +42,7 @@ pipeline {
         //If building custom branch, the BUILD_ENV setting above returns null, revert to dev
         script {
           echo "Branch: ${BRANCH}"
-          def BUILD_ENV = 'dev'
+          BUILD_ENV = 'dev'
           if (BRANCH == 'main') {
             BUILD_ENV = 'prod'
           } else if (BRANCH == 'develop') {
