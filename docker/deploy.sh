@@ -1,6 +1,6 @@
 #!/bin/bash
 #Deploy to prod/stg
-ENV=$1
+BUILD_ENV=$1
 
 SERVICE_NAME=ric-$ENV
 
