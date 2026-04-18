@@ -3,8 +3,13 @@ services:
     build:
       context: .
     ports:
-      - 8005:8005
+      - 8105:8105
     env_file: .env.dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8105/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     #Enable GPU -support
     deploy:
       resources:

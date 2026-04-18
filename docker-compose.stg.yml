@@ -3,18 +3,11 @@ services:
 
   # Convention: frontend containers first, databases last
   servicename:
-    image: docker-registry-in.phz.fi/phz/TODO:${IMAGE_VERSION}                  # replace TODO by your own docker image name
+    image: phzfi/ric:${IMAGE_VERSION}
     ports:
-      - 1234:8080                       # TODO Update the port numbers. See and update the (first) port from https://wiki.phz.fi/Docker#Ports to avoid conflicts
+      - 8106:8105
     env_file:
-      - .env.prod
-#    configs:
-#      - source: htpasswd
-#        target: /etc/nginx/.htpasswd
-#    volumes:
-#      # Ask devops team to create the NFS volume for persistent and shared files. 
-#      # Use hdd for large and infrequently accessed files, ssd for small and frequent. Use nvme (mysql-zfs volume) for databases
-#      - /mnt/share/hdd/share/TODO_MY_SERVICE-prod/images:/usr/share/nginx/html/images
+      - .env.stg
     deploy:
       mode: replicated                  # replicated is required, do not change
       replicas: 2
@@ -30,15 +23,7 @@ services:
         failure_action: rollback
         delay: 5s
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
-      interval: 1m30s
-      timeout: 10s
+      test: ["CMD", "curl", "-f", "http://localhost:8105/health"]
+      interval: 30s
+      timeout: 5s
       retries: 3
-
-#Docker Swarm Configs are distributed on the nodes by the swarm master
-#configs:
-#  htpasswd:
-#    # export CONFIG_VERSION in up.sh/deploy.sh to deploy/update the stack without rm or less downtime
-#    name: project_name-prod-htpasswd-${CONFIG_VERSION}
-#    file: /todo/path/to/local/config/file
-
