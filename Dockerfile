@@ -20,7 +20,7 @@ RUN cd /tmp && \
     rm -rf /tmp/ImageMagick-*
 
 ENV PATH="/usr/local/bin:$PATH"
-ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 # set go compiler options
 ENV CGO_ENABLED=1
@@ -80,8 +80,8 @@ COPY --from=go-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
 COPY --from=go-builder /lib64/ /lib64/
 COPY --from=go-builder /etc/OpenCL/ /etc/OpenCL/
 
-ENV PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
-ENV LD_LIBRARY_PATH="/usr/local/lib:/lib:/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+ENV PATH="/usr/local/bin:/usr/bin:/bin"
+ENV LD_LIBRARY_PATH="/usr/local/lib:/lib:/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu"
 ENV MAGICK_OCL_DEVICE=GPU
 
 ENTRYPOINT ["./ric-server"]
