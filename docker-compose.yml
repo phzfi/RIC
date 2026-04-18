@@ -24,10 +24,11 @@ services:
       context: .
       target: go-builder
     env_file: .env.dev
-    command: go test ./server/... -v
+    command: go test -v -coverprofile=/app/reports/coverage/coverage.out ./server/... && go tool cover -html=/app/reports/coverage/coverage.out -o=/app/reports/coverage/coverage.html
     working_dir: /app
     volumes:
       - ./reports/coverage:/app/reports/coverage
+      - ./server:/app/server
     #Enable GPU -support
     deploy:
       resources:
