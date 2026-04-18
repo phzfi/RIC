@@ -2,8 +2,8 @@
 services:
 
   # Convention: frontend containers first, databases last
-  ric:
-    image: phzfi/ric:${IMAGE_VERSION}                  # replace TODO by your own docker image name
+  cache:
+    image: phzfi/ric:${IMAGE_VERSION}
     ports:
       - 8107:8105
     env_file:

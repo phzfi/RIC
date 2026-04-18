@@ -2,7 +2,7 @@
 services:
 
   # Convention: frontend containers first, databases last
-  servicename:
+  cache:
     image: phzfi/ric:${IMAGE_VERSION}
     ports:
       - 8106:8105
