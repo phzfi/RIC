@@ -216,3 +216,31 @@ func TestInvalidParams(t *testing.T) {
 	fasthttp.ReleaseRequest(request)
 	fasthttp.ReleaseResponse(response)
 }
+
+func TestHealthEndpoint(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+
+	_, body, err := fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/health", port))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(body) != `{"status":"ok"}` {
+		t.Fatalf("Expected {\"status\":\"ok\"}, got %s", string(body))
+	}
+}
+
+func TestHealthzEndpoint(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+
+	_, body, err := fasthttp.Get(nil, fmt.Sprintf("http://localhost:%d/healthz", port))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(body) != `{"status":"ok"}` {
+		t.Fatalf("Expected {\"status\":\"ok\"}, got %s", string(body))
+	}
+}
