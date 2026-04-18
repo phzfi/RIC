@@ -3,7 +3,7 @@ services:
     build:
       context: .
     ports:
-      - 8105:8105
+      - 8105:8005
     env_file: .env.dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8105/health"]

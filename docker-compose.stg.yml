@@ -5,7 +5,7 @@ services:
   cache:
     image: phzfi/ric:${IMAGE_VERSION}
     ports:
-      - 8106:8105
+      - 8106:8005
     env_file:
       - .env.stg
     deploy:
