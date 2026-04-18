@@ -50,6 +50,7 @@ pipeline {
           } else {
             BUILD_ENV = 'dev'
           }
+          env.BUILD_ENV = BUILD_ENV
           echo "Build Env: ${BUILD_ENV}"
         }
 
@@ -161,7 +162,7 @@ pipeline {
         withCredentials([sshUserPrivateKey(credentialsId: 'git-ssh-ci', keyFileVariable: 'SSH_KEY')]) {
           script {
             if (env.BUILD_ENV != 'dev') {
-              sshagent(credentials: ['git-ssh-ci']) {
+              sshagent(credentials: ['github-phz-ci']) {
                 sh('set +x && '
                 + 'TAG_NAME="' + env.BUILD_ENV + '-' + env.VERSION + '" && '
                 + 'git tag -d $TAG_NAME || true && ' // delete 'exists' tag from local git repository. (if previous push faile>
