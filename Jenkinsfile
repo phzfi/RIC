@@ -102,16 +102,29 @@ pipeline {
 
     stage("Test") {
       steps {
-        echo "TODO: Please add a task to implement CI-7 https://wiki.phz.fi/NonFunctionalRequirements#CI"
-        //sh "docker-compose run app yarn test-ci"
-        //junit 'results/*.xml'
-        step([
-            $class: 'CloverPublisher',
-            cloverReportDir: 'reports/coverage',
-            cloverReportFileName: 'clover.xml',
-            healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
-            unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
-            failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+        echo "Running tests with coverage"
+        script {
+          sh "./coverage.sh"
+        }
+        script {
+          def cloverExists = sh(script: "test -f ${workspace}/reports/coverage/clover.xml && echo 'yes' || echo 'no'", returnStdout: true).trim() == "yes"
+          if (cloverExists) {
+            step([
+                $class: 'CloverPublisher',
+                cloverReportDir: '${workspace}/reports/coverage',
+                cloverReportFileName: 'clover.xml',
+                healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
+                unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
+                failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+            ])
+          } else {
+            echo "No Clover report found - skipping CloverPublisher"
+          }
+        }
+        publishHTML(target: [
+            reportDir: '${workspace}/reports/coverage',
+            reportFiles: 'coverage.html',
+            reportName: 'Coverage Report'
         ])
       }
     }

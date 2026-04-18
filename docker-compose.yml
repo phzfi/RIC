@@ -26,6 +26,8 @@ services:
     env_file: .env.dev
     command: go test ./server/... -v
     working_dir: /app
+    volumes:
+      - ./reports/coverage:/app/reports/coverage
     #Enable GPU -support
     deploy:
       resources:

@@ -106,7 +106,7 @@ Status
 
 Test that server returns test images:
 
-    http://localhost:8005/01.jpg
+    http://localhost:8105/01.jpg
 
 #### Accepted RIC HTTP query parameters
 
@@ -117,7 +117,7 @@ Test that server returns test images:
 * watermark: text
 * url: webroot url of source images
 
-For example http://localhost:8005/01.jpg?width=200&height=300&mode=liquid&watermark=PHZ.fi
+For example http://localhost:8105/01.jpg?width=200&height=300&mode=liquid&watermark=PHZ.fi
 
 ### 3.4. Run Tests
 
