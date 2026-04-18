@@ -165,9 +165,9 @@ pipeline {
               sshagent(credentials: ['github-phz-ci']) {
                 sh('set +x && '
                 + 'TAG_NAME="' + env.BUILD_ENV + '-' + env.VERSION + '" && '
-                + 'git tag -d $TAG_NAME || true && ' // delete 'exists' tag from local git repository. (if previous push faile>
-                + 'git tag -a $TAG_NAME -m Jenkins && '   // create new tag.
-                + 'git push origin $TAG_NAME --no-verify' // push the new tag.
+                + 'git tag -d $TAG_NAME 2>/dev/null; '
+                + 'git tag -a $TAG_NAME -m Jenkins && '
+                + 'git push git@github.com:phzfi/ric refs/tags/$TAG_NAME --no-verify'
                 )
               }
             } else {
