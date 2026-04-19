@@ -107,11 +107,11 @@ pipeline {
           sh "./coverage.sh"
         }
         script {
-          def cloverExists = sh(script: "test -f ${env.WORKSPACE}/reports/coverage/clover.xml && echo 'yes' || echo 'no'", returnStdout: true).trim() == "yes"
+          def cloverExists = sh(script: "test -f ${WORKSPACE}/reports/coverage/clover.xml && echo 'yes' || echo 'no'", returnStdout: true).trim() == "yes"
           if (cloverExists) {
             step([
                 $class: 'CloverPublisher',
-                cloverReportDir: '${env.WORKSPACE}/reports/coverage',
+                cloverReportDir: "${WORKSPACE}/reports/coverage",
                 cloverReportFileName: 'clover.xml',
                 healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
                 unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
@@ -122,7 +122,7 @@ pipeline {
           }
         }
         publishHTML(target: [
-            reportDir: '${env.WORKSPACE}/reports/coverage',
+            reportDir: "${WORKSPACE}/reports/coverage",
             reportFiles: 'coverage.html',
             reportName: 'Coverage Report'
         ])
@@ -200,7 +200,7 @@ pipeline {
           sh "./clean.sh || true"
         }
         // Workaround to the clean issue, can't delete folder as folder is owned by docker user 'root'.
-        sh "sudo chown -R jenkins:jenkins ${env.WORKSPACE}"
+        sh "sudo chown -R jenkins:jenkins $WORKSPACE"
       }
     }
 
