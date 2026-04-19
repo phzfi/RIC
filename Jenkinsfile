@@ -165,6 +165,10 @@ pipeline {
             } else {
               echo "FAIL: Not deploying because currentBuild.result = ${currentBuild.result}"
             }
+        currentBuild.result = hudson.model.Result.SUCCESS.toString()
+        if (currentBuild.result!='SUCCESS') {
+          echo "FAIL: After Deploy currentBuild.result = ${currentBuild.result}"
+        }
           }
         }
       }
@@ -186,6 +190,10 @@ pipeline {
             } else {
               echo "Skipping Git Tag and Push for git development branches..."
             }
+        currentBuild.result = hudson.model.Result.SUCCESS.toString()
+        if (currentBuild.result!='SUCCESS') {
+          echo "FAIL: After Tag currentBuild.result = ${currentBuild.result}"
+        }
           }
         }
       }
@@ -198,10 +206,6 @@ pipeline {
         //See https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/troubleshooting-guides/how-to-troubleshoot-hudson-filepath-is-missing-in-pipeline-run
         if (getContext(hudson.FilePath)) {
           sh "./clean.sh || true"
-        }
-        currentBuild.result = hudson.model.Result.SUCCESS.toString()
-        if (currentBuild.result!='SUCCESS') {
-          echo "FAIL: Post action beginning currentBuild.result = ${currentBuild.result}"
         }
         // Workaround to the clean issue, can't delete folder as folder is owned by docker user 'root'.
         sh "sudo chown -R jenkins:jenkins $WORKSPACE"
