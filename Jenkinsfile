@@ -215,7 +215,7 @@ pipeline {
         recipientProviders: [[$class: 'DevelopersRecipientProvider']]
       )
       script {
-        sh "./down.sh"
+        sh './down.sh > /dev/null 2>&1 || true'
       }
     }
 
