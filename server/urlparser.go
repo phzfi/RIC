@@ -185,7 +185,8 @@ const (
 	formatParam = "format"
 	cropxParam  = "cropx"
 	cropyParam  = "cropy"
-	urlParam    = "url"
+	urlParam     = "url"
+	watermarkParam = "watermark"
 )
 
 // returns validated parameters from request and error if invalid
@@ -223,6 +224,7 @@ func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url
 	// We do not want to support TXT, for instance
 
 	url = string(a.Peek(urlParam))
+	_ = string(a.Peek(watermarkParam))
 
 	a.Del(widthParam)
 	a.Del(heightParam)
@@ -231,6 +233,7 @@ func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url
 	a.Del(cropxParam)
 	a.Del(cropyParam)
 	a.Del(urlParam)
+	a.Del(watermarkParam)
 
 	if a.Len() != 0 {
 		err = errors.New("Invalid parameter " + a.String())
