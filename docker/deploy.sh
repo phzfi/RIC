@@ -5,7 +5,7 @@ BUILD_ENV=$1
 SERVICE_NAME=ric-$BUILD_ENV
 
 #No need to change anything below this line
-export IMAGE_VERSION=$2
+export IMAGE_VERSION=$BUILD_ENV-$2
 COMPOSE_FILE="docker-compose.${ENV}.yml"
 export CONFIG_VERSION=$IMAGE_VERSION
 
