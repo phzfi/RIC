@@ -6,7 +6,7 @@ services:
       - 8105:8005
     env_file: .env.dev
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8105/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
       interval: 30s
       timeout: 5s
       retries: 3
