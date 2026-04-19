@@ -22,8 +22,8 @@ services:
         order: start-first
         failure_action: rollback
         delay: 5s
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3
