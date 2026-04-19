@@ -199,12 +199,16 @@ pipeline {
         if (getContext(hudson.FilePath)) {
           sh "./clean.sh || true"
         }
+        currentBuild.result = hudson.model.Result.SUCCESS.toString()
+        if (currentBuild.result!='SUCCESS') {
+          echo "FAIL: Post action beginning currentBuild.result = ${currentBuild.result}"
+        }
         // Workaround to the clean issue, can't delete folder as folder is owned by docker user 'root'.
         sh "sudo chown -R jenkins:jenkins $WORKSPACE"
 
         currentBuild.result = hudson.model.Result.SUCCESS.toString()
         if (currentBuild.result!='SUCCESS') {
-          echo "FAIL: Post action currentBuild.result = ${currentBuild.result}"
+          echo "FAIL: Post action end currentBuild.result = ${currentBuild.result}"
         }
       }
     }
