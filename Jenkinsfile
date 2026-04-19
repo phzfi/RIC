@@ -43,7 +43,7 @@ pipeline {
         script {
           echo "Branch: ${BRANCH}"
           BUILD_ENV = 'dev'
-          if (BRANCH == 'main') {
+          if (BRANCH == 'master') {
             BUILD_ENV = 'prod'
           } else if (BRANCH == 'develop') {
             BUILD_ENV = 'stg'
