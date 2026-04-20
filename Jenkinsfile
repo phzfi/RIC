@@ -3,6 +3,7 @@
 //def VERSION // Note! in regular pipeline it seems that introducing VERSION as def causes VERSION to be set as null.
 def CHANGELOG
 def SLACK_CHANNEL
+def BUILD_ENV
 
 //Note! This project uses declarative pipeline syntax on Jenkins
 pipeline {
