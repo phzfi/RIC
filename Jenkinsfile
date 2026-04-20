@@ -165,10 +165,6 @@ pipeline {
             } else {
               echo "FAIL: Not deploying because currentBuild.result = ${currentBuild.result}"
             }
-        currentBuild.result = hudson.model.Result.SUCCESS.toString()
-        if (currentBuild.result!='SUCCESS') {
-          echo "FAIL: After Deploy currentBuild.result = ${currentBuild.result}"
-        }
           }
         }
       }
@@ -190,10 +186,6 @@ pipeline {
             } else {
               echo "Skipping Git Tag and Push for git development branches..."
             }
-        currentBuild.result = hudson.model.Result.SUCCESS.toString()
-        if (currentBuild.result!='SUCCESS') {
-          echo "FAIL: After Tag currentBuild.result = ${currentBuild.result}"
-        }
           }
         }
       }
@@ -203,6 +195,10 @@ pipeline {
   post {
     always {
       script {
+        currentBuild.result = hudson.model.Result.SUCCESS.toString()
+        if (currentBuild.result!='SUCCESS') {
+          echo "FAIL: At Post beginning currentBuild.result = ${currentBuild.result}"
+        }
         //See https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/troubleshooting-guides/how-to-troubleshoot-hudson-filepath-is-missing-in-pipeline-run
         if (getContext(hudson.FilePath)) {
           sh "./clean.sh || true"
