@@ -173,6 +173,7 @@ pipeline {
 
     stage("Tag") {
       steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'github', keyFileVariable: 'SSH_KEY')]) {
           script {
             if (env.BUILD_ENV != 'dev') {
               sshagent(credentials: ['github']) {
@@ -190,6 +191,7 @@ pipeline {
               echo "Skipping Git Tag and Push for git development branches..."
             }
           }
+        }
       }
     }
   }
