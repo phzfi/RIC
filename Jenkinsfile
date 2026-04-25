@@ -177,11 +177,15 @@ pipeline {
           script {
             if (env.BUILD_ENV != 'dev') {
               sshagent(credentials: ['github-phz-ci']) {
+                withEnv(["SSH_AUTH_SOCK=${env.SSH_AUTH_SOCK}"]) { // explicitly propagate ssh auth sock
+
                 sh('TAG_NAME="' + env.BUILD_ENV + '-' + env.VERSION + '" && '
-                + 'git tag -d $TAG_NAME 2>/dev/null; '
-                + 'git tag -a $TAG_NAME -m Jenkins && '
-                + 'git push git@github.com:phzfi/ric refs/tags/$TAG_NAME --no-verify'
+                + 'git tag -d $TAG_NAME || true && ' // delete 'existing' tag from local git repository. (if previous push failed)
+                + 'git tag -a $TAG_NAME -m Jenkins && ' // create new tag
+                + 'sleep 2 && ' // wait ssh-agent to initialize
+                + 'git push -v git@github.com:phzfi/ric refs/tags/$TAG_NAME --no-verify' // push the new tag via SSH
                 )
+                }
               }
             } else {
               echo "Skipping Git Tag and Push for git development branches..."
