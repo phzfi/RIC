@@ -173,10 +173,9 @@ pipeline {
 
     stage("Tag") {
       steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'git-ssh-ci', keyFileVariable: 'SSH_KEY')]) {
           script {
             if (env.BUILD_ENV != 'dev') {
-              sshagent(credentials: ['github-phz-ci']) {
+              sshagent(credentials: ['github']) {
                 withEnv(["SSH_AUTH_SOCK=${env.SSH_AUTH_SOCK}"]) { // explicitly propagate ssh auth sock
 
                 sh('TAG_NAME="' + env.BUILD_ENV + '-' + env.VERSION + '" && '
@@ -191,7 +190,6 @@ pipeline {
               echo "Skipping Git Tag and Push for git development branches..."
             }
           }
-        }
       }
     }
   }
