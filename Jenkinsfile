@@ -173,10 +173,10 @@ pipeline {
 
     stage("Tag") {
       steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'github', keyFileVariable: 'SSH_KEY')]) {
+        withCredentials([sshUserPrivateKey(credentialsId: '92a50886-a5e8-4ae8-b459-f49712019f06', keyFileVariable: 'SSH_KEY')]) {
           script {
             if (env.BUILD_ENV != 'dev') {
-              sshagent(credentials: ['github']) {
+              sshagent(credentials: ['92a50886-a5e8-4ae8-b459-f49712019f06']) {
                 withEnv(["SSH_AUTH_SOCK=${env.SSH_AUTH_SOCK}"]) { // explicitly propagate ssh auth sock
 
                 sh('TAG_NAME="' + env.BUILD_ENV + '-' + env.VERSION + '" && '
