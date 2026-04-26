@@ -1,6 +1,8 @@
 package ops
 
 import (
+	"strconv"
+
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 )
@@ -10,7 +12,7 @@ type Resize struct {
 }
 
 func (r Resize) Marshal() string {
-	return string(resizeID) + int32ToString(uint32(r.Width)) + int32ToString(uint32(r.Height))
+	return strconv.Itoa(int(resizeID)) + int32ToString(uint32(r.Width)) + int32ToString(uint32(r.Height))
 }
 
 func (r Resize) Apply(img images.Image) error {

@@ -20,13 +20,13 @@
     "optimize",
     "cache"
   ],
-  "author": "Pharazon AB",
+  "author": "Pharazon AB / PHZ.fi Full Stack",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/phzfi/RIC/issues"
   },
   "homepage": "https://github.com/phzfi/RIC#readme",
   "devDependencies": {
-    "serve": "7.1.3"
+    "serve": ">=10.1.2"
   }
 }

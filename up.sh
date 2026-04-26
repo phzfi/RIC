@@ -7,5 +7,5 @@
 #either docker-compose or vagrant. Let's NOT use program language specific tools
 #such as pyenv or nvm since they are not language agnostic
 
-docker-compose up -d
+docker compose up -d
 exit $?

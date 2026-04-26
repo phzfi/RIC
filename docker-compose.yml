@@ -1,8 +1,46 @@
-version: '3.8'
-
 services:
   phz-ric:
     build:
       context: .
     ports:
-      - 8005:8005
+      - 8105:8005
+    env_file: .env.dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    #Enable GPU -support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # alternatively, use `count: all` for all GPUs
+              capabilities: [gpu]
+
+  test:
+    build:
+      context: .
+      target: go-builder
+    env_file: .env.dev
+    command:
+      - /bin/sh
+      - -c
+      - |
+        go install github.com/codeofthrone/goclover@latest;
+        go test -v -coverprofile=/app/reports/coverage/coverage.out ./server/...;
+        go tool cover -html=/app/reports/coverage/coverage.out -o=/app/reports/coverage/coverage.html;
+        goclover -f /app/reports/coverage/coverage.out -o /app/reports/coverage/clover.xml
+    working_dir: /app
+    volumes:
+      - ./reports/coverage:/app/reports/coverage
+      - ./server:/app/server
+    #Enable GPU -support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # alternatively, use `count: all` for all GPUs
+              capabilities: [gpu]

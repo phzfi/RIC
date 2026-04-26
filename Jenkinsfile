@@ -1,9 +1,11 @@
-def BUILD_ENV
+#!/usr/bin/env groovy
+//def BUILD_ENV
 //def VERSION // Note! in regular pipeline it seems that introducing VERSION as def causes VERSION to be set as null.
 def CHANGELOG
 def SLACK_CHANNEL
+def BUILD_ENV
 
-//Declarative pipeline example
+//Note! This project uses declarative pipeline syntax on Jenkins
 pipeline {
   agent { label 'slave && vagrant' }
 
@@ -13,9 +15,9 @@ pipeline {
     //and is able and willing to fix errors on CI immediately, receiving notifications on project channel
     SLACK_CHANNEL = "#marketing"
 
-    //Multibranch pipeline
-    BUILD_ENV = [master: 'prod', develop: 'stg'].get(env.BRANCH_NAME, 'dev')
-    VERSION = "${currentBuild.id}"
+    BRANCH = "${env.GIT_BRANCH.contains('/') ? env.GIT_BRANCH.split('/')[1] : env.GIT_BRANCH}"
+
+    VERSION = "${currentBuild.number}"
   }
 
   options {
@@ -23,6 +25,7 @@ pipeline {
     ansiColor('xterm')
     //set default pipeline timeout to 3hours if there is a jam, it will abort automatically
     timeout(time: 180, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '50'))
   }
 
   triggers {
@@ -39,9 +42,17 @@ pipeline {
 
         //If building custom branch, the BUILD_ENV setting above returns null, revert to dev
         script {
-          if (BUILD_ENV == null) {
+          echo "Branch: ${BRANCH}"
+          BUILD_ENV = 'dev'
+          if (BRANCH == 'master') {
+            BUILD_ENV = 'prod'
+          } else if (BRANCH == 'develop') {
+            BUILD_ENV = 'stg'
+          } else {
             BUILD_ENV = 'dev'
           }
+          env.BUILD_ENV = BUILD_ENV
+          echo "Build Env: ${BUILD_ENV}"
         }
 
         //parse CHANGELOG
@@ -92,16 +103,29 @@ pipeline {
 
     stage("Test") {
       steps {
-        echo "TODO: Please add a task to implement CI-7 https://wiki.phz.fi/NonFunctionalRequirements#CI"
-        //sh "docker-compose run app yarn test-ci"
-        //junit 'results/*.xml'
-        step([
-            $class: 'CloverPublisher',
-            cloverReportDir: 'reports/coverage',
-            cloverReportFileName: 'clover.xml',
-            healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
-            unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
-            failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+        echo "Running tests with coverage"
+        script {
+          sh "./coverage.sh"
+        }
+        script {
+          def cloverExists = sh(script: "test -f ${WORKSPACE}/reports/coverage/clover.xml && echo 'yes' || echo 'no'", returnStdout: true).trim() == "yes"
+          if (cloverExists) {
+            step([
+                $class: 'CloverPublisher',
+                cloverReportDir: "${WORKSPACE}/reports/coverage",
+                cloverReportFileName: 'clover.xml',
+                healthyTarget: [methodCoverage: 70, conditionalCoverage: 80, statementCoverage: 80],
+                unhealthyTarget: [methodCoverage: 50, conditionalCoverage: 50, statementCoverage: 50],
+                failingTarget: [methodCoverage: 0, conditionalCoverage: 0, statementCoverage: 0]
+            ])
+          } else {
+            echo "No Clover report found - skipping CloverPublisher"
+          }
+        }
+        publishHTML(target: [
+            reportDir: "${WORKSPACE}/reports/coverage",
+            reportFiles: 'coverage.html',
+            reportName: 'Coverage Report'
         ])
       }
     }
@@ -146,14 +170,49 @@ pipeline {
         }
       }
     }
+
+    stage("Tag") {
+      steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'github-phz-ci-ssh', keyFileVariable: 'SSH_KEY')]) {
+          script {
+            if (env.BUILD_ENV != 'dev') {
+              sshagent(credentials: ['github-phz-ci-ssh']) {
+                withEnv(["SSH_AUTH_SOCK=${env.SSH_AUTH_SOCK}"]) { // explicitly propagate ssh auth sock
+
+                sh('TAG_NAME="' + env.BUILD_ENV + '-' + env.VERSION + '" && '
+                + 'git tag -d $TAG_NAME || true && ' // delete 'existing' tag from local git repository. (if previous push failed)
+                + 'git tag -a $TAG_NAME -m Jenkins && ' // create new tag
+                + 'sleep 2 && ' // wait ssh-agent to initialize
+                + 'git push -v git@github.com:phzfi/ric refs/tags/$TAG_NAME --no-verify' // push the new tag via SSH
+                )
+                }
+              }
+            } else {
+              echo "Skipping Git Tag and Push for git development branches..."
+            }
+          }
+        }
+      }
+    }
   }
 
   post {
     always {
       script {
+        currentBuild.result = hudson.model.Result.SUCCESS.toString()
+        if (currentBuild.result!='SUCCESS') {
+          echo "FAIL: At Post beginning currentBuild.result = ${currentBuild.result}"
+        }
         //See https://docs.cloudbees.com/docs/cloudbees-ci-kb/latest/troubleshooting-guides/how-to-troubleshoot-hudson-filepath-is-missing-in-pipeline-run
         if (getContext(hudson.FilePath)) {
           sh "./clean.sh || true"
+        }
+        // Workaround to the clean issue, can't delete folder as folder is owned by docker user 'root'.
+        sh "sudo chown -R jenkins:jenkins $WORKSPACE || true"
+
+        currentBuild.result = hudson.model.Result.SUCCESS.toString()
+        if (currentBuild.result!='SUCCESS') {
+          echo "FAIL: Post action end currentBuild.result = ${currentBuild.result}"
         }
       }
     }
@@ -169,7 +228,7 @@ pipeline {
         recipientProviders: [[$class: 'DevelopersRecipientProvider']]
       )
       script {
-        sh "./down.sh"
+        sh './down.sh > /dev/null 2>&1 || true'
       }
     }
 

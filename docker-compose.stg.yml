@@ -1,0 +1,29 @@
+#Note! If IMAGE_VERSION and CONFIG_VERSION are used, you need to export them (in deploy.sh) before running docker stack deploy
+services:
+
+  # Convention: frontend containers first, databases last
+  cache:
+    image: phzfi/ric:${IMAGE_VERSION}
+    ports:
+      - 8106:8005
+    env_file:
+      - .env.stg
+    deploy:
+      mode: replicated                  # replicated is required, do not change
+      replicas: 2
+      placement:
+        constraints:
+          - node.labels.type==worker    # use worker for most, db for databases
+        preferences:
+          - spread: node.labels.region
+          - spread: node.labels.host
+        max_replicas_per_node: 1
+      update_config:                    # rolling update to reduce downtime
+        order: start-first
+        failure_action: rollback
+        delay: 5s
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+#      interval: 30s
+#      timeout: 5s
+#      retries: 3

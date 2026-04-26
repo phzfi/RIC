@@ -1,0 +1,51 @@
+## Health Check Endpoint Policy
+
+**Purpose:**
+To ensure consistent health monitoring of all APIs.
+
+**Endpoint Path:**
+All APIs MUST implement a health check endpoint at `/health`.
+`/healthz` is permitted for Kubernetes or container-based environments.
+
+**HTTP Method:**
+GET
+
+**Response Codes:**
+- **200 OK**: API is healthy and functioning normally.
+- **503 Service Unavailable**: API is unhealthy and unable to serve requests.
+
+**Authentication:**
+Health check endpoints MUST NOT require authentication.
+
+**Response Body (Mandatory):**
+The response body MUST be minimal and MUST NOT expose internal system details.
+
+On success (HTTP 200), the response body MUST be:
+
+    {
+      "status": "ok"
+    }
+
+On failure (HTTP 503), the response body MAY be:
+
+    {
+      "status": "error"
+    }
+
+No additional fields (e.g., database status, version, dependencies, timestamps) are allowed.
+
+**Performance Requirements:**
+Health check responses MUST be fast and lightweight, with a recommended timeout of ≤ 5 seconds.
+
+**Docker Integration:**
+Services SHOULD define a container health check, for example:
+
+    HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost/health || exit 1
+
+**Monitoring Integration:**
+Monitoring systems (e.g., Zabbix) SHOULD:
+- Poll the `/health` endpoint
+- Alert on non-200 responses or timeouts
+
+**Rate Limiting:**
+Health check endpoints SHOULD NOT be strictly rate-limited but MUST tolerate frequent polling from monitoring systems.

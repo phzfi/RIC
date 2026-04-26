@@ -1,6 +1,8 @@
 package ops
 
 import (
+	"strconv"
+
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 )
@@ -11,7 +13,7 @@ type loadImageOp struct {
 }
 
 func (i loadImageOp) Marshal() string {
-	return string(loadID) + i.id + string(0)
+	return strconv.Itoa(int(loadID)) + i.id + "0"
 }
 
 func (i loadImageOp) Apply(img images.Image) error {

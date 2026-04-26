@@ -45,6 +45,12 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 
 	if ctx.IsGet() {
 
+		if string(ctx.Path()) == "/health" || string(ctx.Path()) == "/healthz" {
+			ctx.SetContentType("application/json")
+			ctx.WriteString(`{"status":"ok"}`)
+			return
+		}
+
 		url := ctx.URI()
 		operations, format, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
 		if err != nil {

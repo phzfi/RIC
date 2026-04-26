@@ -15,3 +15,5 @@
 !/**/placeholder
 
 node_modules/
+reports/**
+.playwright-mcp/

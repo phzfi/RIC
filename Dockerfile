@@ -1,8 +1,26 @@
 # Stage 1: Build the Go application
-FROM golang:1.17 as go-builder
+FROM golang:1.24-bookworm AS go-builder
 
-# Install ImageMagick dependencies
-RUN apt-get update && apt-get install -y imagemagick libmagickwand-dev
+# Install ImageMagick dependencies with OpenCL support
+RUN apt-get update && apt-get install -y \
+    imagemagick libmagickwand-dev \
+    ocl-icd-libopencl1 opencl-headers clinfo \
+    build-essential pkg-config libltdl-dev libjpeg-dev libpng-dev libtiff-dev libgif-dev libfreetype6-dev libwebp-dev libheif-dev libzip-dev \
+    pocl-opencl-icd
+
+# Build ImageMagick with OpenCL support
+RUN cd /tmp && \
+    wget -q https://imagemagick.org/archive/ImageMagick.tar.gz && \
+    tar -xzf ImageMagick.tar.gz && \
+    cd ImageMagick-* && \
+    ./configure --prefix=/usr --enable-shared --enable-opencl --with-modules && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig /usr/local/lib && \
+    rm -rf /tmp/ImageMagick-*
+
+ENV PATH="/usr/local/bin:$PATH"
+ENV LD_LIBRARY_PATH="/usr/local/lib"
 
 # set go compiler options
 ENV CGO_ENABLED=1
@@ -30,7 +48,7 @@ RUN cd server; go build -v -tags debug -a -installsuffix cgo .
 
 
 # Stage 2: Get certificates
-FROM alpine:latest as certs
+FROM alpine:latest AS certs
 RUN apk update
 RUN apk add --no-cache ca-certificates openssl-dev
 RUN echo 'hosts: files dns' > /etc/nsswitch.conf
@@ -55,8 +73,15 @@ COPY --from=go-builder /var/www /var/www
 COPY --from=go-builder /tmp /tmp
 
 # Copy any necessary libraries
+COPY --from=go-builder /usr/local/bin/ /usr/local/bin/
+COPY --from=go-builder /usr/local/lib/ /usr/local/lib/
 COPY --from=go-builder /usr/lib/ /usr/lib/
 COPY --from=go-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
 COPY --from=go-builder /lib64/ /lib64/
+COPY --from=go-builder /etc/OpenCL/ /etc/OpenCL/
+
+ENV PATH="/usr/local/bin:/usr/bin:/bin"
+ENV LD_LIBRARY_PATH="/usr/local/lib:/lib:/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu"
+ENV MAGICK_OCL_DEVICE=GPU
 
 ENTRYPOINT ["./ric-server"]

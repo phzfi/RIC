@@ -1,6 +1,8 @@
 package ops
 
 import (
+	"strconv"
+
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 )
@@ -10,7 +12,7 @@ type LiquidRescale struct {
 }
 
 func (r LiquidRescale) Marshal() string {
-	return string(liquidRescaleID) + int32ToString(uint32(r.Width)) + int32ToString(uint32(r.Height))
+	return strconv.Itoa(int(liquidRescaleID)) + int32ToString(uint32(r.Width)) + int32ToString(uint32(r.Height))
 }
 
 func (r LiquidRescale) Apply(img images.Image) error {

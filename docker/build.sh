@@ -1,24 +1,24 @@
 #!/bin/bash
-#Note! Publish only staging and prod images, do not push dev images to docker-registry (but build dev version locally)
+#Note! Publish only staging and prod images, do not push dev images to Docker Hub (but build dev version locally)
 
-NAME=phz/ric
+NAME=phzfi/ric
 
 #No need to change anything below this line
 BUILD_ENV=$1
 VERSION=$2
-TAG=$NAME:$VERSION
+TAG=$NAME:$BUILD_ENV-$VERSION
 
 if ! ( [ "$BUILD_ENV" == "dev" ] || [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) || [ -z "$VERSION" ]; then
     echo "Usage: ./build.sh [dev|stg|prod] <version>, e.g. ./build.sh stg stg-123"
     exit 1
 fi
 
-if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z $DOCKER_REGISTRY_USERNAME; then
-    echo "Please provide docker-registry.in.phz.fi password in environment by variable DOCKER_REGISTRY_USERNAME from phz.kdbx, if you build this manually"
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z $DOCKER_HUB_USERNAME; then
+    echo "Please provide Docker Hub password in environment by variable DOCKER_HUB_USERNAME, if you build this manually"
     exit 1
 fi
-if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z $DOCKER_REGISTRY_PASSWORD; then
-    echo "Please provide docker-registry.in.phz.fi password in environment by variable DOCKER_REGISTRY_PASSWORD from phz.kdbx, if you build this manually"
+if ( [ "$BUILD_ENV" == "stg" ] || [ "$BUILD_ENV" == "prod" ] ) && test -z $DOCKER_HUB_PASSWORD; then
+    echo "Please provide Docker Hub password in environment by variable DOCKER_HUB_PASSWORD, if you build this manually"
     exit 1
 fi
 

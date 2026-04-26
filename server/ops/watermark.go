@@ -1,9 +1,11 @@
 package ops
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
-	"math"
 )
 
 type watermark struct {
@@ -13,7 +15,7 @@ type watermark struct {
 }
 
 func (w watermark) Marshal() string {
-	return string(watermarkID) + float64ToString(w.vertical) + float64ToString(w.horizontal)
+	return strconv.Itoa(int(watermarkID)) + float64ToString(w.vertical) + float64ToString(w.horizontal)
 }
 
 func (w watermark) Apply(img images.Image) (err error) {

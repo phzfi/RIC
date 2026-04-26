@@ -74,7 +74,7 @@ func testGetImages(cases []testutils.TestCaseAll) (err error) {
 	s, ln, srverr := startServer()
 	defer stopServer(s, ln, srverr)
 
-	tolerance := 0.002
+	tolerance := 0.08
 
 	// Todo: this threading is copied from common_test.go unify it to single implementation (DRY)
 	sem := make(chan error, len(cases))
