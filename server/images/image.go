@@ -66,3 +66,39 @@ func (img Image) Watermark(watermark Image, horizontal, vertical float64) error 
 	y := int(float64((img.GetHeight() - watermark.GetHeight())) * vertical)
 	return img.CompositeImage(watermark.MagickWand, imagick.COMPOSITE_OP_OVER, x, y)
 }
+
+// WatermarkText adds text watermark to img. Parameters horizontal and vertical tell where
+// watermark is placed. 0.0, 0.0 for leftmost uppercorner and 1.0, 1.0 for rigthmost lower corner.
+// margin is a fraction (0.04 = 4%) of image dimensions for edge spacing.
+func (img Image) WatermarkText(text string, fontSize float64, color string, horizontal, vertical, margin float64) error {
+	pw := imagick.NewPixelWand()
+	defer pw.Destroy()
+
+	dw := imagick.NewDrawingWand()
+	defer dw.Destroy()
+
+	pw.SetColor("transparent")
+	twmw := imagick.NewMagickWand()
+	defer twmw.Destroy()
+
+	w := img.GetWidth()
+	h := img.GetHeight()
+
+	twmw.NewImage(uint(w), uint(h), pw)
+
+	if color == "" {
+		color = "rgba(255,255,255,0.7)"
+	}
+	pw.SetColor(color)
+	dw.SetFillColor(pw)
+	dw.SetFontSize(fontSize)
+	dw.SetFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+	dw.SetTextAlignment(imagick.ALIGN_RIGHT)
+
+	x := float64(w) * (1 - margin)
+	y := float64(h) * (1 - margin)
+
+	twmw.AnnotateImage(dw, x, y, 0, text)
+
+	return img.CompositeImage(twmw, imagick.COMPOSITE_OP_OVER, 0, 0)
+}

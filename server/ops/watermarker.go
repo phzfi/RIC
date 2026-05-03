@@ -18,6 +18,17 @@ func WatermarkOp(stamp images.Image, hor, ver float64) Operation {
 	}
 }
 
+func TextWatermarkOp(text string, hor, ver, margin float64, fontSize float64, color string) Operation {
+	return watermark{
+		text:       text,
+		horizontal: hor,
+		vertical:   ver,
+		margin:     margin,
+		fontSize:   fontSize,
+		color:      color,
+	}
+}
+
 func MakeWatermarker(settings config.Watermark) (wm Watermarker, err error) {
 	image := images.NewImage()
 	err = image.FromFile(settings.ImagePath)

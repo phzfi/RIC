@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, err, invalid error) {
+func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker) (operations []ops.Operation, format string, watermark string, err, invalid error) {
 	filename := string(uri.Path())
 
-	w, h, cropx, cropy, mode, format, url, invalid := getParams(uri.QueryArgs())
+	w, h, cropx, cropy, mode, format, url, watermark, invalid := getParams(uri.QueryArgs())
 	if invalid != nil {
 		return
 	}
@@ -113,12 +113,20 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 		}
 	}
 
-	watermark := func() {
+	addWatermark := func() {
+		shouldAddMark := marker.AddMark
+		if watermark == "false" || watermark == "0" {
+			shouldAddMark = false
+		}
 		heightOK := h > marker.MinHeight && h < marker.MaxHeight
 		widthOK := w > marker.MinWidth && w < marker.MaxWidth
-		if marker.AddMark && heightOK && widthOK {
+		if shouldAddMark && heightOK && widthOK {
 			logging.Debug("Adding watermarkOp")
-			operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))
+			if watermark == "" || watermark == "true" || watermark == "1" {
+				operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))
+			} else {
+				operations = append(operations, ops.TextWatermarkOp(watermark, 0.96, 0.96, 0.04, 24, "rgba(255,255,255,0.7)"))
+			}
 		}
 	}
 
@@ -134,7 +142,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	case cropmidMode:
 		cropmid()
 	}
-	watermark()
+	addWatermark()
 
 	operations = append(operations, ops.Convert{format})
 
@@ -190,7 +198,7 @@ const (
 )
 
 // returns validated parameters from request and error if invalid
-func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url string, err error) {
+func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url, watermark string, err error) {
 
 	if strings.Contains(a.String(), "%3F") { // %3F = ?
 		err = errors.New("Invalid characters in request!")
@@ -224,7 +232,7 @@ func getParams(a *fasthttp.Args) (w, h, cropx, cropy int, mode mode, format, url
 	// We do not want to support TXT, for instance
 
 	url = string(a.Peek(urlParam))
-	_ = string(a.Peek(watermarkParam))
+	watermark = string(a.Peek(watermarkParam))
 
 	a.Del(widthParam)
 	a.Del(heightParam)

@@ -16,7 +16,9 @@ Nice features include
 - Liquid rescale
 - text watermarks
 
-See also RIC Wordpress plugin.
+For client side see src/riclib.js for example usage by Javascript.
+
+See also RIC Wordpress plugin https://github.com/phzfi/ric-wordpress
 
 ### 1.2. Task Management
 
@@ -32,25 +34,26 @@ See also RIC Wordpress plugin.
 
 Mostly build in Golang.
 
-All PHZ Full Stack -projects should encapsulate all environments by virtualization. Choose one of the following for your project:
+All PHZ Full Stack -projects should encapsulate all environments by virtualization:
 
 Dev
 * (Vagrant/Virtualbox) - deprecated
-* Docker-compose/Docker
+* Docker Compose/Docker
 ** Images available at https://hub.docker.com/repository/docker/phzfi/ric
 
 CI
-* use dev -env on ci.in.phz.fi + Jenkins executors running Docker or Vagrant/Virtualbox.
+* use dev -env on ci.in.phz.fi + Jenkins executors running Docker Compose
 * Jenkins
-* Gitlab CI Autodevops
 * do not pin the projects down on any individual executor, but set up the builds so that they can be run on any executor machine
 
 Staging
 * PHZ Docker Swarm
+* Kubernetes
 
 Production
 * PHZ Docker Swarm (internal projects only)
-* AWS (customer projects, but customer needs to pay for it and there needs to be a contract in place with the customer before you start to set up the AWS env)
+* Kubernetes
+* AWS
 * or any other environment of your wish
 
 ### 2.2. Naming, Terms and Key Concepts
@@ -75,8 +78,6 @@ Directory structure
 ### 2.4. Development Guide
 
 Add here examples and hints of good ways how to code the project. Convert the silent knowledge as tacit knowledge here.
-* See https://en.wikipedia.org/wiki/Knowledge_management
-
 
 ## 3. Development Environment
 Note! PHZ Coding Convention: name this environment as dev.
@@ -85,10 +86,6 @@ Note! However, please use the default files for dev env, such as docker-compose.
 ### 3.1. Prerequisites
 
 ### 3.2. Start the Application
-
-Run
-
-# update vagrant stuff
 
 Start docker env
 

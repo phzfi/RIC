@@ -5,6 +5,8 @@ services:
     ports:
       - 8105:8005
     env_file: .env.dev
+    volumes:
+      - ./server/testimages/server:/var/www
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
       interval: 30s
@@ -28,14 +30,16 @@ services:
       - /bin/sh
       - -c
       - |
+        go mod vendor -e;
         go install github.com/codeofthrone/goclover@latest;
-        go test -v -coverprofile=/app/reports/coverage/coverage.out ./server/...;
+        go test -mod=mod -v -coverprofile=/app/reports/coverage/coverage.out ./server/...;
         go tool cover -html=/app/reports/coverage/coverage.out -o=/app/reports/coverage/coverage.html;
         goclover -f /app/reports/coverage/coverage.out -o /app/reports/coverage/clover.xml
     working_dir: /app
     volumes:
       - ./reports/coverage:/app/reports/coverage
       - ./server:/app/server
+      - ./vendor/autoresearch:/app/vendor/autoresearch
     #Enable GPU -support
     deploy:
       resources:

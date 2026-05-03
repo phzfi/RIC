@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
     imagemagick libmagickwand-dev \
     ocl-icd-libopencl1 opencl-headers clinfo \
     build-essential pkg-config libltdl-dev libjpeg-dev libpng-dev libtiff-dev libgif-dev libfreetype6-dev libwebp-dev libheif-dev libzip-dev \
-    pocl-opencl-icd
+    pocl-opencl-icd \
+    fontconfig fonts-dejavu-core
 
 # Build ImageMagick with OpenCL support
 RUN cd /tmp && \
@@ -39,8 +40,8 @@ RUN mkdir -p /tmp
 RUN go mod init github.com/phzfi/RIC
 
 # download necessary go libraries
-RUN go get -t ./...
-RUN go get -u ./...
+RUN cd server && go get -t ./...
+RUN go mod vendor
 RUN go mod download
 
 # build Go application
@@ -79,6 +80,9 @@ COPY --from=go-builder /usr/lib/ /usr/lib/
 COPY --from=go-builder /lib/x86_64-linux-gnu/ /lib/x86_64-linux-gnu/
 COPY --from=go-builder /lib64/ /lib64/
 COPY --from=go-builder /etc/OpenCL/ /etc/OpenCL/
+COPY --from=go-builder /etc/fonts /etc/fonts
+COPY --from=go-builder /usr/share/fonts/truetype/dejavu /usr/share/fonts/truetype/dejavu
+COPY --from=go-builder /var/cache/fontconfig /var/cache/fontconfig
 
 ENV PATH="/usr/local/bin:/usr/bin:/bin"
 ENV LD_LIBRARY_PATH="/usr/local/lib:/lib:/lib64:/usr/lib:/usr/lib/x86_64-linux-gnu"

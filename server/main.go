@@ -52,7 +52,7 @@ func (h *MyHandler) ServeHTTP(ctx *fasthttp.RequestCtx) {
 		}
 
 		url := ctx.URI()
-		operations, format, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
+		operations, format, _, err, invalid := ParseURI(url, h.imageSource, h.watermarker)
 		if err != nil {
 			ctx.NotFound()
 			logging.Debug(err)
@@ -101,6 +101,10 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 
 	if imageSource.AddRoot(".") != nil {
 		log.Println("Root not added .")
+	}
+
+	if imageSource.AddRoot("/testimages/server") != nil {
+		log.Println("Root not added /testimages/server")
 	}
 	logging.Debug("Reading server config")
 	//setting default values
