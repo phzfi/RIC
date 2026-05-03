@@ -39,7 +39,6 @@ services:
     volumes:
       - ./reports/coverage:/app/reports/coverage
       - ./server:/app/server
-      - ./vendor/autoresearch:/app/vendor/autoresearch
     #Enable GPU -support
     deploy:
       resources:
