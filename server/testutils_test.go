@@ -21,7 +21,7 @@ var tokens = 3
 // This is an utility function to launch a server.
 func startServer() (server *fasthttp.Server, ln net.Listener, srverr chan error) {
 	// Start the server
-	conf := config.ReadConfig("config/testconfig.ini")
+	conf := config.ReadConfig()
 
 	port++
 	server, _, ln = NewServer(port, 500000, conf)

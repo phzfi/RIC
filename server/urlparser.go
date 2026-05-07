@@ -114,18 +114,35 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	}
 
 	addWatermark := func() {
-		shouldAddMark := marker.AddMark
-		if watermark == "false" || watermark == "0" {
+		effectiveWatermark := watermark
+		shouldAddMark := false
+
+		if marker.ForceMark != "" {
+			if marker.ForceMark == "false" || marker.ForceMark == "0" {
+				shouldAddMark = false
+			} else {
+				shouldAddMark = true
+				effectiveWatermark = marker.ForceMark
+			}
+		} else if effectiveWatermark == "false" || effectiveWatermark == "0" {
 			shouldAddMark = false
+		} else if effectiveWatermark != "" {
+			shouldAddMark = true
+		} else {
+			shouldAddMark = marker.AddMark
+			if marker.Text != "" {
+				effectiveWatermark = marker.Text
+			}
 		}
+
 		heightOK := h > marker.MinHeight && h < marker.MaxHeight
 		widthOK := w > marker.MinWidth && w < marker.MaxWidth
 		if shouldAddMark && heightOK && widthOK {
 			logging.Debug("Adding watermarkOp")
-			if watermark == "" || watermark == "true" || watermark == "1" {
+			if effectiveWatermark == "" || effectiveWatermark == "true" || effectiveWatermark == "1" {
 				operations = append(operations, ops.WatermarkOp(marker.WatermarkImage, marker.Horizontal, marker.Vertical))
 			} else {
-				operations = append(operations, ops.TextWatermarkOp(watermark, 0.96, 0.96, 0.04, 24, "rgba(255,255,255,0.7)"))
+				operations = append(operations, ops.TextWatermarkOp(effectiveWatermark, 0.96, 0.96, 0.04, 24, "rgba(255,255,255,0.7)"))
 			}
 		}
 	}

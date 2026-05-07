@@ -64,12 +64,10 @@ COPY --from=certs /etc/nsswitch.conf /etc/nsswitch.conf
 
 # Copy Go app
 COPY --from=go-builder /app/server/server /ric-server
-COPY --from=go-builder /app/server/config.ini /config.ini
 COPY --from=go-builder /app/server/testimages/ /testimages/
 COPY --from=go-builder /app/server/watermark.png /watermark.png
 COPY --from=go-builder /app/server/testwm.png /testwm.png
 COPY --from=go-builder /app/server/testresults /testresults
-COPY --from=go-builder /app/server/config/testconfig.ini /config/testconfig.ini
 COPY --from=go-builder /var/www /var/www
 COPY --from=go-builder /tmp /tmp
 

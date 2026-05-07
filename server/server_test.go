@@ -244,3 +244,37 @@ func TestHealthzEndpoint(t *testing.T) {
 		t.Fatalf("Expected {\"status\":\"ok\"}, got %s", string(body))
 	}
 }
+
+func TestGetImageNotFound(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+
+	response := fasthttp.AcquireResponse()
+	request := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(request)
+	defer fasthttp.ReleaseResponse(response)
+
+	request.SetRequestURI(fmt.Sprintf("http://localhost:%d/testimages/server/nonexistent.jpg?width=200&height=200&mode=resize&format=jpeg", port))
+	fasthttp.Do(request, response)
+
+	if response.Header.StatusCode() != 404 {
+		t.Fatalf("Expected 404, got %d", response.Header.StatusCode())
+	}
+}
+
+func TestGetImageInvalidParams(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+
+	response := fasthttp.AcquireResponse()
+	request := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(request)
+	defer fasthttp.ReleaseResponse(response)
+
+	request.SetRequestURI(fmt.Sprintf("http://localhost:%d/testimages/server/01.jpg?width=200&height=200&mode=invalid&format=jpeg", port))
+	fasthttp.Do(request, response)
+
+	if response.Header.StatusCode() != 400 {
+		t.Fatalf("Expected 400, got %d", response.Header.StatusCode())
+	}
+}

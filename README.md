@@ -67,7 +67,7 @@ Environments and the configs should be named as
 ### 2.3. Coding Convention
 
 Directory structure
-* doc/ for UML documents
+* docs/ for documentation
 * etc/ for nginx, ssh etc configs. Can be cp -pr etc/ /etc to the virtual machine during provisioning and matches the os directory structure
 * results/ test results
 * reports/ for e.g. code coverage reports
@@ -100,6 +100,32 @@ Status
     ./status.sh
 
 ### 3.3. Access the Application
+
+#### Configuration
+
+All configuration is done via environment variables in `.env.dev` (development), `.env.stg` (staging), and `.env.prod` (production). The legacy `config.ini` files have been removed.
+
+**Watermark settings:**
+
+| Variable | Description | Default |
+|---|---|---|
+| `WATERMARK_PATH` | Path to watermark image | `""` |
+| `WATERMARK_HORIZONTAL` | Horizontal position (0.0-1.0) | `1.0` |
+| `WATERMARK_VERTICAL` | Vertical position (0.0-1.0) | `0.0` |
+| `WATERMARK_MAXWIDTH` | Max image width to apply watermark | `5000` |
+| `WATERMARK_MINWIDTH` | Min image width to apply watermark | `200` |
+| `WATERMARK_MAXHEIGHT` | Max image height to apply watermark | `5000` |
+| `WATERMARK_MINHEIGHT` | Min image height to apply watermark | `200` |
+| `WATERMARK_ADDMARK` | Enable watermark by default | `false` |
+| `WATERMARK_TEXT` | Default watermark text (used when AddMark=true and no URL param) | `""` |
+| `WATERMARK_FORCEMARK` | Force watermark (overrides URL params) | `""` |
+
+**Server settings:**
+
+| Variable | Description | Default |
+|---|---|---|
+| `SERVER_TOKENS` | Concurrency tokens | `1` |
+| `SERVER_MEMORY` | Memory limit in bytes | `2147483648` (2GB) |
 
 Test that server returns test images:
 

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/testutils"
+	"github.com/valyala/fasthttp"
 	"testing"
 )
 
@@ -49,5 +52,72 @@ func TestImageWatermark(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+	}
+}
+
+func TestTextWatermarkServer(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+
+	response := fasthttp.AcquireResponse()
+	request := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(request)
+	defer fasthttp.ReleaseResponse(response)
+
+	request.SetRequestURI(fmt.Sprintf("http://localhost:%d/testimages/server/01.jpg?width=500&height=500&mode=liquid&watermark=PHZ.fi", port))
+	fasthttp.Do(request, response)
+
+	if response.Header.StatusCode() != 200 {
+		t.Fatalf("Expected 200, got %d", response.Header.StatusCode())
+	}
+
+	body := response.Body()
+	if len(body) == 0 {
+		t.Fatal("Response body should not be empty")
+	}
+
+	img := images.NewImage()
+	defer img.Destroy()
+	err := img.FromBlob(body)
+	if err != nil {
+		t.Fatalf("Failed to parse response as image: %v", err)
+	}
+
+	if img.GetWidth() != 500 || img.GetHeight() != 500 {
+		t.Errorf("Image dimensions mismatch: got %dx%d, want 500x500", img.GetWidth(), img.GetHeight())
+	}
+}
+
+func TestWatermarkDisabledParam(t *testing.T) {
+	s, ln, srverr := startServer()
+	defer stopServer(s, ln, srverr)
+
+	response := fasthttp.AcquireResponse()
+	request := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(request)
+	defer fasthttp.ReleaseResponse(response)
+
+	request.SetRequestURI(fmt.Sprintf("http://localhost:%d/testimages/server/01.jpg?width=500&height=500&mode=liquid&watermark=false", port))
+	fasthttp.Do(request, response)
+
+	if response.Header.StatusCode() != 200 {
+		t.Fatalf("Expected 200, got %d", response.Header.StatusCode())
+	}
+
+	bodyWithFalse := response.Body()
+
+	request.Reset()
+	response.Reset()
+	request.SetRequestURI(fmt.Sprintf("http://localhost:%d/testimages/server/01.jpg?width=500&height=500&mode=liquid", port))
+	fasthttp.Do(request, response)
+
+	if response.Header.StatusCode() != 200 {
+		t.Fatalf("Expected 200, got %d", response.Header.StatusCode())
+	}
+
+	bodyWithout := response.Body()
+
+	if !bytes.Equal(bodyWithFalse, bodyWithout) {
+		t.Fatal("watermark=false should produce same result as no watermark param (both disabled)")
 	}
 }

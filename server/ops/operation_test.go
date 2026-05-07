@@ -210,3 +210,99 @@ func TestWatermarkOp(t *testing.T) {
 		t.Error("Marshal should return non-empty string")
 	}
 }
+
+func TestWatermarkOperation_Apply_Image(t *testing.T) {
+	img := images.NewImage()
+	defer img.Destroy()
+
+	err := img.FromFile("/app/server/testimages/loadimage/test.jpg")
+	if err != nil {
+		t.Fatalf("FromFile failed: %v", err)
+	}
+
+	wm := images.NewImage()
+	defer wm.Destroy()
+
+	err = wm.FromFile("/app/server/watermark.png")
+	if err != nil {
+		t.Fatalf("FromFile watermark failed: %v", err)
+	}
+
+	op := WatermarkOp(wm, 0.5, 0.5)
+
+	err = op.Apply(img)
+	if err != nil {
+		t.Fatalf("Watermark Apply failed: %v", err)
+	}
+
+	blob := img.Blob()
+	if len(blob) == 0 {
+		t.Error("Blob should not be empty after applying watermark")
+	}
+}
+
+func TestWatermarkOperation_Marshal_Text(t *testing.T) {
+	op := watermark{
+		text:       "PHZ.fi",
+		horizontal: 0.96,
+		vertical:   0.96,
+		margin:     0.04,
+		fontSize:   24,
+		color:      "rgba(255,255,255,0.7)",
+	}
+
+	marshaled := op.Marshal()
+	if marshaled == "" {
+		t.Fatal("Marshal should return non-empty string for text watermark")
+	}
+}
+
+func TestWatermarkOperation_Marshal_Image(t *testing.T) {
+	wm := images.NewImage()
+	defer wm.Destroy()
+
+	err := wm.FromFile("/app/server/watermark.png")
+	if err != nil {
+		t.Fatalf("FromFile watermark failed: %v", err)
+	}
+
+	op := watermark{
+		stamp:      wm,
+		horizontal: 0.5,
+		vertical:   0.5,
+	}
+
+	marshaled := op.Marshal()
+	if marshaled == "" {
+		t.Fatal("Marshal should return non-empty string for image watermark")
+	}
+}
+
+func TestWatermarkOperation_Apply_Text(t *testing.T) {
+	img := images.NewImage()
+	defer img.Destroy()
+
+	err := img.FromFile("/app/server/testimages/loadimage/test.jpg")
+	if err != nil {
+		t.Fatalf("FromFile failed: %v", err)
+	}
+
+	op := watermark{
+		text:       "Test",
+		horizontal: 0.96,
+		vertical:   0.96,
+		margin:     0.04,
+		fontSize:   24,
+		color:      "rgba(255,255,255,0.7)",
+	}
+
+	err = op.Apply(img)
+	if err != nil {
+		t.Fatalf("Text watermark Apply failed: %v", err)
+	}
+
+	blob := img.Blob()
+	if len(blob) == 0 {
+		t.Error("Blob should not be empty after applying text watermark")
+	}
+}

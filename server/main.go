@@ -139,13 +139,10 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 
 func main() {
 
-	cpath := flag.String("c", "config.ini", "Sets the configuration .ini file used.")
-	flag.Parse()
-	// CLI arguments
-
-	conf := config.ReadConfig(*cpath)
+	conf := config.ReadConfig()
 
 	mem := flag.Uint64("m", conf.Server.Memory, "Sets the maximum memory to be used for caching images in bytes. Does not account for memory consumption of other things.")
+	flag.Parse()
 	imagick.Initialize()
 	defer imagick.Terminate()
 
