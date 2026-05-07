@@ -22,6 +22,10 @@ See also RIC Wordpress plugin https://github.com/phzfi/ric-wordpress
 
 ### 1.2. Task Management
 
+Source code can be found from Github https://github.com/phzfi/RIC . Please feel free to contribute! 
+
+Licensed under permissive open source MIT -license. See LICENSE.
+
 ### 1.3. Personas
 
 ### 1.4. Use Cases
