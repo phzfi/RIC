@@ -61,13 +61,13 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	resize := func() {
 		denyUpscale()
 		adjustSize()
-		operations = append(operations, ops.Resize{w, h})
+		operations = append(operations, ops.Resize{Width: w, Height: h})
 	}
 
 	liquid := func() {
 		denyUpscale()
 		adjustSize()
-		operations = append(operations, ops.LiquidRescale{w, h})
+		operations = append(operations, ops.LiquidRescale{Width: w, Height: h})
 	}
 
 	crop := func() {
@@ -77,7 +77,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 		if h == 0 {
 			h = oh
 		}
-		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+		operations = append(operations, ops.Crop{Width: w, Height: h, X: cropx, Y: cropy})
 	}
 
 	cropmid := func() {
@@ -91,7 +91,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 		midH := roundedIntegerDivision(oh, 2)
 		cropx := midW - roundedIntegerDivision(w, 2)
 		cropy := midH - roundedIntegerDivision(h, 2)
-		operations = append(operations, ops.Crop{w, h, cropx, cropy})
+		operations = append(operations, ops.Crop{Width: w, Height: h, X: cropx, Y: cropy})
 	}
 
 	fit := func() {
@@ -107,7 +107,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 			} else {
 				adjustWidth()
 			}
-			operations = append(operations, ops.Resize{w, h})
+			operations = append(operations, ops.Resize{Width: w, Height: h})
 		} else {
 			resize()
 		}
@@ -161,7 +161,7 @@ func ParseURI(uri *fasthttp.URI, source ops.ImageSource, marker ops.Watermarker)
 	}
 	addWatermark()
 
-	operations = append(operations, ops.Convert{format})
+	operations = append(operations, ops.Convert{Format: format})
 
 	return
 }

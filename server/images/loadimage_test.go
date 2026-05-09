@@ -27,6 +27,16 @@ func TestPNG(t *testing.T) {
 	}
 }
 
+func TestFromFileError(t *testing.T) {
+	img := NewImage()
+	defer img.Destroy()
+
+	err := img.FromFile("/nonexistent/path/test.jpg")
+	if err == nil {
+		t.Error("FromFile should return error for non-existent file")
+	}
+}
+
 func CompareBlobToImage(blob_base64 string, filename string) error {
 	blob_cmp, err := base64.StdEncoding.DecodeString(blob_base64)
 	img := NewImage()

@@ -14,6 +14,12 @@ func TestFIFOUnderflow(t *testing.T) {
 	fifo.Pop()
 }
 
+func TestFIFOVisit(t *testing.T) {
+	fifo := FIFO{}
+	fifo.Visit("test")
+	// Visit does nothing, just ensure it doesn't panic
+}
+
 func TestFIFO(t *testing.T) {
 	fifo := FIFO{}
 	data := []string{"a", "b", "c", "d", "e", "f", "g"}

@@ -54,10 +54,11 @@ func TestImageConvertInvalidFormat(t *testing.T) {
 		t.Fatalf("FromFile failed: %v", err)
 	}
 
+	// Note: imagick's SetImageFormat doesn't return error for invalid formats
+	// It just keeps the current format or sets it silently
 	err = img.Convert("invalidformatthatdoesnotexist")
-	if err != nil {
-		t.Logf("Convert with invalid format returned error as expected: %v", err)
-	}
+	// Don't expect error - imagick behavior
+	t.Logf("Convert with invalid format result: %v", err)
 }
 
 func TestImageResize(t *testing.T) {
@@ -234,6 +235,26 @@ func TestNewImage(t *testing.T) {
 
 	if img.MagickWand == nil {
 		t.Error("NewImage should create non-nil MagickWand")
+	}
+}
+
+func TestImageConvertJPEG(t *testing.T) {
+	img := NewImage()
+	defer img.Destroy()
+
+	err := img.FromFile("/app/server/testimages/loadimage/test.jpg")
+	if err != nil {
+		t.Fatalf("FromFile failed: %v", err)
+	}
+
+	err = img.Convert("jpeg")
+	if err != nil {
+		t.Fatalf("Convert to jpeg failed: %v", err)
+	}
+
+	ext := img.GetExtension()
+	if ext != "jpg" {
+		t.Errorf("GetExtension() = %q, want %q", ext, "jpg")
 	}
 }
 

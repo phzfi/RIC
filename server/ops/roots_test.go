@@ -92,7 +92,6 @@ func TestRootsHasRoot(t *testing.T) {
 
 func TestRootsRemoveMultiple(t *testing.T) {
 	var r roots
-
 	r.Add("/path/one")
 	r.Add("/path/two")
 	r.Add("/path/three")
@@ -109,6 +108,46 @@ func TestRootsRemoveMultiple(t *testing.T) {
 	if !r.HasRoot("/path/one") || !r.HasRoot("/path/three") {
 		t.Error("Other roots should remain")
 	}
+}
+
+func TestAddRoot_WebRoot(t *testing.T) {
+	is := MakeImageSource()
+
+	// Add a web root
+	err := is.AddRoot("http://example.com/images/")
+	if err != nil {
+		t.Fatalf("AddRoot with web root failed: %v", err)
+	}
+
+	// Verify it was added (indirectly by trying to use it)
+	// We can't easily check internal state, but we can verify no error
+}
+
+func TestRemoveRoot_WebRoot(t *testing.T) {
+	is := MakeImageSource()
+
+	// Add and then remove a web root
+	err := is.AddRoot("http://example.com/images/")
+	if err != nil {
+		t.Fatalf("AddRoot with web root failed: %v", err)
+	}
+
+	err = is.RemoveRoot("http://example.com/images/")
+	if err != nil {
+		t.Fatalf("RemoveRoot with web root failed: %v", err)
+	}
+
+	// Try to remove non-existent web root
+	err = is.RemoveRoot("http://nonexistent.com/")
+	if err != ErrRootNotFound {
+		t.Fatalf("Expected ErrRootNotFound for non-existent web root, got: %v", err)
+	}
+}
+
+func TestAddRoot_AbsError(t *testing.T) {
+	// This is difficult to test directly since filepath.Abs rarely fails
+	// We'll skip this test as it requires a special filesystem state
+	t.Skip("Cannot easily test filepath.Abs error")
 }
 
 func TestInt32ToString(t *testing.T) {

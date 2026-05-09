@@ -5,7 +5,9 @@
 .vagrant
 .DS_Store
 /server/server
+/server/ric-server
 /server/server.exe
+/server/ric-server.exe
 /server/testresults/*/*
 /competing_product/debug.log
 /competing_product/.gradle/
@@ -17,3 +19,5 @@
 node_modules/
 reports/**
 .playwright-mcp/
+
+.opencode/

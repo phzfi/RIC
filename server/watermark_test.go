@@ -27,9 +27,9 @@ func TestImageWatermark(t *testing.T) {
 	vertical := 0.0
 
 	cases := []testutils.TestCase{
-		{testimage, testfolder + "marked1.jpg", resfolder + "marked1.jpg"},
-		{testimage, testfolder + "marked2.jpg", resfolder + "marked2.jpg"},
-		{testimage, testfolder + "marked3.jpg", resfolder + "marked3.jpg"},
+		{Testfn: testimage, Reffn: testfolder + "marked1.jpg", Resfn: resfolder + "marked1.jpg"},
+		{Testfn: testimage, Reffn: testfolder + "marked2.jpg", Resfn: resfolder + "marked2.jpg"},
+		{Testfn: testimage, Reffn: testfolder + "marked3.jpg", Resfn: resfolder + "marked3.jpg"},
 	}
 
 	for _, c := range cases {

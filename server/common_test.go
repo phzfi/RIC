@@ -45,9 +45,9 @@ func TestOperatorConvert(t *testing.T) {
 	tolerance := 0.002
 
 	var conv = func(a, b, c, d string) CommonTestCase {
-		va := testutils.TestCase{a, testfolder + b, resfolder + c}
-		vb := testutils.TestCaseAll{va, d, -1, -1}
-		return CommonTestCase{vb, ops.Convert{d}}
+		va := testutils.TestCase{Testfn: a, Reffn: testfolder + b, Resfn: resfolder + c}
+		vb := testutils.TestCaseAll{TestCase: va, Format: d, W: -1, H: -1}
+		return CommonTestCase{test: vb, op: ops.Convert{Format: d}}
 	}
 
 	cases := []CommonTestCase{
@@ -75,7 +75,7 @@ func TestOperatorConvert(t *testing.T) {
 			return
 		}
 
-		var ft = testutils.FormatTestCase{testutils.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.Format}
+		var ft = testutils.FormatTestCase{TestCase: testutils.TestCase{Testfn: vt.Testfn, Reffn: vt.Reffn, Resfn: vt.Resfn}, Format: vt.Format}
 		err = testutils.FormatTest(ft, blob, tolerance)
 		return
 	}
@@ -99,9 +99,9 @@ func TestOperatorResize(t *testing.T) {
 	tolerance := 0.002
 
 	var res = func(a, b, c string, d, e int) CommonTestCase {
-		va := testutils.TestCase{a, testfolder + b, resfolder + c}
-		vb := testutils.TestCaseAll{va, "Whatever", d, e}
-		return CommonTestCase{vb, ops.Resize{d, e}}
+		va := testutils.TestCase{Testfn: a, Reffn: testfolder + b, Resfn: resfolder + c}
+		vb := testutils.TestCaseAll{TestCase: va, Format: "Whatever", W: d, H: e}
+		return CommonTestCase{test: vb, op: ops.Resize{Width: d, Height: e}}
 	}
 
 	cases := []CommonTestCase{
@@ -129,7 +129,7 @@ func TestOperatorResize(t *testing.T) {
 			return
 		}
 
-		var rt = testutils.SizeTestCase{testutils.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.W, vt.H}
+		var rt = testutils.SizeTestCase{TestCase: testutils.TestCase{Testfn: vt.Testfn, Reffn: vt.Reffn, Resfn: vt.Resfn}, W: vt.W, H: vt.H}
 		err = testutils.SizeTest(rt, blob, tolerance)
 		return
 	}
@@ -153,7 +153,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 	var res = func(a, b, c string, d, e int) CommonTestCase {
 		va := testutils.TestCase{a, testfolder + b, resfolder + c}
 		vb := testutils.TestCaseAll{va, "Whatever", d, e}
-		return CommonTestCase{vb, ops.LiquidRescale{d, e}}
+		return CommonTestCase{test: vb, op: ops.LiquidRescale{Width: d, Height: e}}
 	}
 
 	cases := []CommonTestCase{
@@ -172,7 +172,7 @@ func TestOperatorLiquidRescale(t *testing.T) {
 			return
 		}
 
-		var rt = testutils.SizeTestCase{testutils.TestCase{vt.Testfn, vt.Reffn, vt.Resfn}, vt.W, vt.H}
+		var rt = testutils.SizeTestCase{TestCase: testutils.TestCase{Testfn: vt.Testfn, Reffn: vt.Reffn, Resfn: vt.Resfn}, W: vt.W, H: vt.H}
 		err = testutils.SizeTest(rt, blob, tolerance)
 		return
 	}

@@ -2,7 +2,6 @@ package cache
 
 import (
 	"encoding/base64"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -96,7 +95,7 @@ func (d *DiskStore) Load(string string) (blob []byte, ok bool) {
 
 	if ok {
 		var err error
-		blob, err = ioutil.ReadFile(entry.Path)
+		blob, err = os.ReadFile(entry.Path)
 		if err != nil {
 			log.Println("Error reading file from disk cache:", err)
 			ok = false
@@ -110,7 +109,7 @@ func (d *DiskStore) Store(string string, blob []byte) {
 	path := filepath.Join(filepath.FromSlash(d.folder), filename)
 
 	go func() {
-		err := ioutil.WriteFile(path, blob, os.ModePerm)
+		err := os.WriteFile(path, blob, os.ModePerm)
 		if err != nil {
 			log.Println("Unable to write file into disk cache:", err)
 		}

@@ -5,7 +5,11 @@ type FIFO struct {
 	head, tail int
 }
 
-func (q *FIFO) Visit(_ string) {}
+func (q *FIFO) Visit(key string) {
+	// FIFO policy doesn't need to track visits for eviction
+	// But we can log or track statistics if needed
+	_ = key
+}
 
 func (q *FIFO) Push(info string) {
 

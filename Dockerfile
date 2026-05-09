@@ -1,5 +1,5 @@
 # Stage 1: Build the Go application
-FROM golang:1.24-bookworm AS go-builder
+FROM golang:1.26.2-bookworm AS go-builder
 
 # Install ImageMagick dependencies with OpenCL support
 RUN apt-get update && apt-get install -y \

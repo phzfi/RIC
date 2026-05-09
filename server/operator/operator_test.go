@@ -4,22 +4,20 @@ import (
 	"errors"
 	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/ops"
-	"github.com/phzfi/RIC/server/testutils"
 	"testing"
 )
 
-const cacheFolder = "/tmp/operatortests"
 var tokens = 3
 
-func prepare() Operator {
-	testutils.RemoveContents(cacheFolder)
+func prepare(t *testing.T) Operator {
+	cacheFolder := t.TempDir()
 	return MakeDefault(1000, cacheFolder, tokens)
 }
 
 func TestAlreadyCached(t *testing.T) {
 	var log, log2 []int
 
-	operator := prepare()
+	operator := prepare(t)
 
 	operator.GetBlob(
 		&DummyOperation{&log, 9},
@@ -38,7 +36,7 @@ func TestAlreadyCached(t *testing.T) {
 func TestPartiallyCached(t *testing.T) {
 	var log, log2 []int
 
-	operator := prepare()
+	operator := prepare(t)
 
 	operator.GetBlob(&DummyOperation{&log, 9})
 	operator.GetBlob(
@@ -59,7 +57,7 @@ func TestOperator(t *testing.T) {
 		&DummyOperation{&log, 2},
 	}
 
-	operator := prepare()
+	operator := prepare(t)
 
 	_, err := operator.GetBlob(operations...)
 	if err != nil {
@@ -88,7 +86,7 @@ func TestDenyIdenticalOperations(t *testing.T) {
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 		{&DummyOperation{&log, 0}, &DummyOperation{&log, 0}},
 	}
-	operator := prepare()
+	operator := prepare(t)
 
 	// Channel to track amount of completed operations
 	c := make(chan bool, len(operations))
@@ -124,7 +122,7 @@ func (BrokenOperation) Apply(image images.Image) error {
 }
 
 func TestBrokenOperation(t *testing.T) {
-	operator := prepare()
+	operator := prepare(t)
 	_, err := operator.GetBlob(BrokenOperation{})
 	if err == nil {
 		t.Fatal("Broken operation did not return error")
