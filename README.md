@@ -67,6 +67,27 @@ http://localhost:8105/01.jpg?width=200&watermark=MyText
 http://localhost:8105/image.jpg?width=200&url=https://example.com/images/
 ```
 
+#### Image Sources
+
+RIC supports multiple types of image sources:
+
+**Local filesystem roots:**
+- Configured in `server/main.go` (AddRoot calls)
+- Default roots: `/var/www`, `.`, `/testimages/server`
+- Images are loaded from `filepath.Join(root, filename)`
+
+**Web roots (URL-based):**
+- Roots prefixed with `http://` or `https://`
+- Example: `https://example.com/images/`
+- Images are fetched via HTTP request
+
+**URL parameter:**
+```
+?url=https://example.com/images/
+```
+- Dynamically adds a web root for the request
+- Must be prefixed with `http://` or `https://`
+
 ### 1.5. Non-Functional Requirements
 
 ## 2. Architecture
@@ -140,6 +161,42 @@ Client -> fasthttp Server -> ParseURI -> Operator -> HybridCache
 - `server/cache/hybridcache.go` - LRU memory cache + disk cache (4GB disk, 1GB chunks)
 - `server/ops/roots.go` - Manages image file roots and loading
 - `server/ops/watermarker.go` - Image and text watermark operations
+
+#### Cache Types
+
+RIC uses a hybrid caching system with configurable eviction policies:
+
+**Cache Policies:**
+
+| Policy | Description | File |
+|--------|-------------|------|
+| `LRU` (default) | Least Recently Used - evicts least accessed items first | `cache/lru.go` |
+| `FIFO` | First In First Out - evicts oldest items first | `cache/fifo.go` |
+
+**Cache Layers:**
+
+| Layer | Description | Default Config |
+|-------|-------------|----------------|
+| Memory Cache | LRU-backed in-memory store | 2GB max (`SERVER_MEMORY`) |
+| Disk Cache | Persistent on-disk storage | 4GB max, folder `/tmp/RICdiskcache` |
+
+**How HybridCache Works:**
+```
+Request -> Memory Cache (LRU) -> Disk Cache (LRU) -> Image Processing
+                 |                      |
+                 +-- Cache Hit! --------+
+                 |
+                 +-- Cache Miss -> Process -> Store in both layers
+```
+
+**Eviction Behavior:**
+- Memory cache: LRU policy evicts least recently visited items when memory limit reached
+- Disk cache: Stores base64-encoded blobs in files, uses LRU policy
+- When image found in disk cache but not memory, it's promoted to memory cache
+
+**Configuration:**
+- `SERVER_MEMORY` - Memory cache limit in bytes (default: 2147483648 = 2GB)
+- Disk cache folder is set in `server/main.go` (default: `/tmp/RICdiskcache`)
 
 ## 3. Development Environment
 Note! PHZ Coding Convention: name this environment as dev.
