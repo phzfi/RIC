@@ -11,18 +11,22 @@ Instead of resizing small, medium, large images of the original (e.g. RAW media 
 - reduces wasted bandwidth and too large image sizes
 - reduces rendering time on client by skipping the need to resize the image by the browser
 
-Nice features include
-- GPU acceleration
-- Liquid rescale
-- text watermarks
+**Key Features:**
+- GPU acceleration via ImageMagick
+- Liquid rescale (content-aware scaling / seam carving)
+- Text and image watermarks
+- Multiple resize modes (resize, fit, crop, cropmid, liquid)
+- Format conversion (jpeg, gif, webp, bmp, png, tiff)
+- Hybrid caching (LRU memory + disk cache)
+- Concurrent request handling with configurable tokens
 
-For client side see src/riclib.js for example usage by Javascript.
+For client side usage see `src/riclib.js` for example usage by JavaScript.
 
-See also RIC Wordpress plugin https://github.com/phzfi/ric-wordpress
+See also RIC WordPress plugin https://github.com/phzfi/ric-wordpress
 
 ### 1.2. Task Management
 
-Source code can be found from Github https://github.com/phzfi/RIC . Please feel free to contribute! 
+Source code can be found from Github https://github.com/phzfi/RIC . Please feel free to contribute!
 
 Licensed under permissive open source MIT -license. See LICENSE.
 
@@ -30,13 +34,50 @@ Licensed under permissive open source MIT -license. See LICENSE.
 
 ### 1.4. Use Cases
 
+**Basic Image Resizing:**
+```
+http://localhost:8105/01.jpg?width=200
+http://localhost:8105/01.jpg?width=200&height=300
+http://localhost:8105/01.jpg?width=200&format=webp
+```
+
+**Resize Modes:**
+| Mode | Description | Example |
+|------|-------------|---------|
+| `resize` | Scale to fit (default) | `?width=200&height=300&mode=resize` |
+| `fit` | Fit within bounds, maintain aspect | `?width=200&height=300&mode=fit` |
+| `crop` | Crop from top-left corner | `?width=200&height=300&mode=crop&cropx=50&cropy=50` |
+| `cropmid` | Crop from center | `?width=200&height=300&mode=cropmid` |
+| `liquid` | Content-aware scaling | `?width=200&height=300&mode=liquid` |
+
+**Watermarks:**
+```
+# Enable watermark from URL parameter
+http://localhost:8105/01.jpg?width=200&watermark=true
+
+# Disable watermark
+http://localhost:8105/01.jpg?width=200&watermark=false
+
+# Add text watermark
+http://localhost:8105/01.jpg?width=200&watermark=MyText
+```
+
+**External Image Sources:**
+```
+http://localhost:8105/image.jpg?width=200&url=https://example.com/images/
+```
+
 ### 1.5. Non-Functional Requirements
 
 ## 2. Architecture
 
 ### 2.1. Technologies
 
-Mostly build in Golang.
+Mostly built in Golang with the following components:
+
+- **fasthttp** - High-performance HTTP server
+- **ImageMagick (imagick)** - Image processing with GPU acceleration
+- **Custom hybrid cache** - LRU memory + disk cache
 
 All PHZ Full Stack -projects should encapsulate all environments by virtualization:
 
@@ -81,13 +122,35 @@ Directory structure
 
 ### 2.4. Development Guide
 
-Add here examples and hints of good ways how to code the project. Convert the silent knowledge as tacit knowledge here.
+**Component Architecture:**
+```
+Client -> fasthttp Server -> ParseURI -> Operator -> HybridCache
+                              |
+                              +-> ImageSource (loads from roots: /var/www, .)
+                              |
+                              +-> Image Operations (Resize, Crop, LiquidRescale, Watermark, Convert)
+                              |
+                              +-> ImageMagick (GPU accelerated)
+```
+
+**Key Components:**
+- `server/main.go` - Server entry point, handles HTTP requests via MyHandler
+- `server/urlparser.go` - Parses query parameters, creates operation chain
+- `server/operator/operator.go` - Orchestrates image processing with caching and concurrency
+- `server/cache/hybridcache.go` - LRU memory cache + disk cache (4GB disk, 1GB chunks)
+- `server/ops/roots.go` - Manages image file roots and loading
+- `server/ops/watermarker.go` - Image and text watermark operations
 
 ## 3. Development Environment
 Note! PHZ Coding Convention: name this environment as dev.
 Note! However, please use the default files for dev env, such as docker-compose.yml (instead of docker-compose.dev.yml).
 
 ### 3.1. Prerequisites
+
+- Docker and Docker Compose
+- Go 1.21+ (for local development)
+- ImageMagick with Wand library
+- NVIDIA GPU and nvidia-container-toolkit (for GPU acceleration)
 
 ### 3.2. Start the Application
 
@@ -104,6 +167,15 @@ Status
     ./status.sh
 
 ### 3.3. Access the Application
+
+Test that server returns test images:
+
+    http://localhost:8105/01.jpg
+
+Health check endpoints:
+
+    http://localhost:8105/health
+    http://localhost:8105/healthz
 
 #### Configuration
 
@@ -131,22 +203,52 @@ All configuration is done via environment variables in `.env.dev` (development),
 | `SERVER_TOKENS` | Concurrency tokens | `1` |
 | `SERVER_MEMORY` | Memory limit in bytes | `2147483648` (2GB) |
 
-Test that server returns test images:
+#### Accepted RIC HTTP Query Parameters
 
-    http://localhost:8105/01.jpg
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `width` | int | Target width in pixels |
+| `height` | int | Target height in pixels |
+| `mode` | string | Resize mode: resize, fit, crop, cropmid, liquid |
+| `format` | string | Output format: jpeg, png, webp, gif, bmp, tiff |
+| `watermark` | string | Watermark control: true, false, or custom text |
+| `url` | string | External image source URL root |
+| `cropx` | int | X offset for crop mode |
+| `cropy` | int | Y offset for crop mode |
 
-#### Accepted RIC HTTP query parameters
+**Example requests:**
+```
+http://localhost:8105/01.jpg?width=200
+http://localhost:8105/01.jpg?width=200&height=300&mode=liquid
+http://localhost:8105/01.jpg?width=200&watermark=PHZ.fi
+```
 
-* width: int in px
-* height: int in px
-* mode: fit, liquid, crop
-* format: All that Imagemagic supports
-* watermark: text
-* url: webroot url of source images
+#### JavaScript Client (riclib.js)
 
-For example http://localhost:8105/01.jpg?width=200&height=300&mode=liquid&watermark=PHZ.fi
+```html
+<script>
+window.RICConfig = {
+    server_path: 'http://localhost:8105',
+    maxres: 1920,
+    quality: 85
+};
+</script>
+<script src="src/riclib.js"></script>
+```
+
+The library automatically processes all `<img>` tags on page load, converting them to use the RIC server for optimized delivery.
 
 ### 3.4. Run Tests
+
+```bash
+./test.sh
+```
+
+View coverage report:
+```bash
+./coverage.sh
+# Open reports/coverage/coverage.html
+```
 
 ### 3.5. IDE Setup and Debugging
 
@@ -214,4 +316,3 @@ Add here known information of estimates how fast the chosen technologies and ver
 
 Add here TODO and blockers that you have found related to upgrading to newer versions.
 List the library/framework/service, version, and then the error message.
-
