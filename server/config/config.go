@@ -7,13 +7,34 @@ import (
 )
 
 type ConfValues struct {
-	Watermark Watermark
-	Server    Server
+	Watermark    Watermark
+	Server       Server
+	Cache        CacheConfig
+	ImageSource  ImageSourceConfig
 }
 
 type Server struct {
 	Tokens int
 	Memory uint64
+}
+
+type CacheConfig struct {
+	DiskPath   string
+	DiskMaxMB  uint64
+	S3Enabled  bool
+	S3Bucket   string
+	S3Prefix   string
+	S3Region   string
+	S3Endpoint string
+	S3MaxMB    uint64
+}
+
+type ImageSourceConfig struct {
+	S3Enabled  bool
+	S3Bucket   string
+	S3Prefix   string
+	S3Region   string
+	S3Endpoint string
 }
 
 type Watermark struct {
@@ -30,7 +51,7 @@ type Watermark struct {
 }
 
 var defaults = ConfValues{
-	Watermark{
+	Watermark: Watermark{
 		MinHeight:  200,
 		MinWidth:   200,
 		MaxHeight:  5000,
@@ -40,9 +61,18 @@ var defaults = ConfValues{
 		Vertical:   0.0,
 		Horizontal: 1.0,
 	},
-	Server{
+	Server: Server{
 		Tokens: 1,
 		Memory: 2048 * 1024 * 1024,
+	},
+	Cache: CacheConfig{
+		DiskPath:  "/tmp/RICdiskcache",
+		DiskMaxMB: 4096,
+		S3Enabled: false,
+		S3MaxMB:   200,
+	},
+	ImageSource: ImageSourceConfig{
+		S3Enabled: false,
 	},
 }
 
@@ -120,6 +150,61 @@ func ReadConfig() *ConfValues {
 		} else {
 			log.Printf("Error parsing SERVER_MEMORY: %s\n", err)
 		}
+	}
+	if v := os.Getenv("CACHE_DISK_PATH"); v != "" {
+		c.Cache.DiskPath = v
+	}
+	if v := os.Getenv("CACHE_DISK_MAX_MB"); v != "" {
+		if val, err := strconv.ParseUint(v, 10, 64); err == nil {
+			c.Cache.DiskMaxMB = val
+		} else {
+			log.Printf("Error parsing CACHE_DISK_MAX_MB: %s\n", err)
+		}
+	}
+	if v := os.Getenv("CACHE_S3_ENABLED"); v != "" {
+		if val, err := strconv.ParseBool(v); err == nil {
+			c.Cache.S3Enabled = val
+		} else {
+			log.Printf("Error parsing CACHE_S3_ENABLED: %s\n", err)
+		}
+	}
+	if v := os.Getenv("CACHE_S3_BUCKET"); v != "" {
+		c.Cache.S3Bucket = v
+	}
+	if v := os.Getenv("CACHE_S3_PREFIX"); v != "" {
+		c.Cache.S3Prefix = v
+	}
+	if v := os.Getenv("CACHE_S3_REGION"); v != "" {
+		c.Cache.S3Region = v
+	}
+	if v := os.Getenv("CACHE_S3_ENDPOINT"); v != "" {
+		c.Cache.S3Endpoint = v
+	}
+	if v := os.Getenv("CACHE_S3_MAX_MB"); v != "" {
+		if val, err := strconv.ParseUint(v, 10, 64); err == nil {
+			c.Cache.S3MaxMB = val
+		} else {
+			log.Printf("Error parsing CACHE_S3_MAX_MB: %s\n", err)
+		}
+	}
+	if v := os.Getenv("SOURCE_S3_ENABLED"); v != "" {
+		if val, err := strconv.ParseBool(v); err == nil {
+			c.ImageSource.S3Enabled = val
+		} else {
+			log.Printf("Error parsing SOURCE_S3_ENABLED: %s\n", err)
+		}
+	}
+	if v := os.Getenv("SOURCE_S3_BUCKET"); v != "" {
+		c.ImageSource.S3Bucket = v
+	}
+	if v := os.Getenv("SOURCE_S3_PREFIX"); v != "" {
+		c.ImageSource.S3Prefix = v
+	}
+	if v := os.Getenv("SOURCE_S3_REGION"); v != "" {
+		c.ImageSource.S3Region = v
+	}
+	if v := os.Getenv("SOURCE_S3_ENDPOINT"); v != "" {
+		c.ImageSource.S3Endpoint = v
 	}
 
 	return &c

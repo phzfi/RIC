@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/phzfi/RIC/server/cache"
 	"github.com/phzfi/RIC/server/config"
+	"github.com/phzfi/RIC/server/images"
 	"github.com/phzfi/RIC/server/logging"
 	"github.com/phzfi/RIC/server/operator"
 	"github.com/phzfi/RIC/server/ops"
@@ -87,13 +89,55 @@ func (h *MyHandler) RetrieveHello(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+func buildHybridCache(cfg *config.ConfValues, memoryLimit uint64) cache.Cacher {
+	caches := []cache.Cacher{
+		cache.NewCache(cache.NewLRU(), memoryLimit),
+	}
+
+	if cfg.Cache.DiskPath != "" {
+		diskMaxBytes := cfg.Cache.DiskMaxMB * 1024 * 1024
+		disk := cache.NewDiskCache(cfg.Cache.DiskPath, diskMaxBytes, cache.NewLRU())
+		if disk != nil {
+			caches = append(caches, disk)
+			logging.Debugf("Added disk cache: %s (max %d MB)", cfg.Cache.DiskPath, cfg.Cache.DiskMaxMB)
+		}
+	}
+
+	if cfg.Cache.S3Enabled {
+		s3Cache, err := cache.NewS3Cache(cfg.Cache, cache.NewLRU())
+		if err == nil {
+			caches = append(caches, s3Cache)
+			logging.Debugf("Added S3 cache: bucket=%s, prefix=%s", cfg.Cache.S3Bucket, cfg.Cache.S3Prefix)
+		} else {
+			log.Printf("Warning: S3 cache unavailable: %v", err)
+		}
+	}
+
+	logging.Debugf("Hybrid cache created with %d tiers", len(caches))
+	return cache.HybridCache(caches)
+}
+
 // Create a new fasthttp server and configure it.
 // This does not run the server however.
 func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.Server, *MyHandler, net.Listener) {
 	logging.Debug("Creating server")
-	imageSource := ops.MakeImageSource()
-	// Add roots
-	// TODO: This must be externalized outside the source code.
+
+	var imageSource ops.ImageSource
+
+	if conf.ImageSource.S3Enabled {
+		s3client, err := images.NewS3Client(conf.ImageSource)
+		if err != nil {
+			log.Printf("Warning: S3 image source unavailable: %v", err)
+			imageSource = ops.MakeImageSource()
+		} else {
+			imageSource = ops.MakeImageSourceWithS3(s3client)
+			logging.Debugf("S3 image source configured: bucket=%s, prefix=%s", conf.ImageSource.S3Bucket, conf.ImageSource.S3Prefix)
+		}
+	} else {
+		imageSource = ops.MakeImageSource()
+	}
+
+	// Add local file roots
 	logging.Debug("Adding roots")
 	if imageSource.AddRoot("/var/www") != nil {
 		log.Fatal("Root not added /var/www")
@@ -114,12 +158,14 @@ func NewServer(port int, maxMemory uint64, conf *config.ConfValues) (*fasthttp.S
 		log.Printf("Error creating watermarker: %v\n", err.Error())
 	}
 
+	hc := buildHybridCache(conf, maxMemory)
+
 	// Configure handler
 	logging.Debug("Configuring handler")
 	handler := &MyHandler{
 		requests:    0,
 		imageSource: imageSource,
-		operator:    operator.MakeDefault(maxMemory, "/tmp/RICdiskcache", conf.Server.Tokens),
+		operator:    operator.Make(hc, conf.Server.Tokens),
 		watermarker: watermarker,
 	}
 

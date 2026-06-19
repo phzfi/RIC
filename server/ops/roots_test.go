@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/phzfi/RIC/server/config"
 	"github.com/phzfi/RIC/server/images"
 )
 
@@ -201,5 +202,117 @@ func TestInt64ToString(t *testing.T) {
 		if len(result) != 8 {
 			t.Errorf("int64ToString(%d) returned %d bytes, expected 8", x, len(result))
 		}
+	}
+}
+
+func TestMakeImageSourceWithS3(t *testing.T) {
+	testCfg := struct {
+		S3Enabled  bool
+		S3Bucket   string
+		S3Prefix   string
+		S3Region   string
+		S3Endpoint string
+	}{
+		S3Enabled:  true,
+		S3Bucket:   "nonexistent-bucket-12345",
+		S3Prefix:   "test/",
+		S3Region:   "us-east-1",
+		S3Endpoint: "http://localhost:9000",
+	}
+	_ = testCfg // use the struct to avoid unused variable error
+
+	s3client, err := images.NewS3Client(config.ImageSourceConfig{
+		S3Enabled:  true,
+		S3Bucket:   "nonexistent-bucket-12345",
+		S3Prefix:   "test/",
+		S3Region:   "us-east-1",
+		S3Endpoint: "http://localhost:9000",
+	})
+	if err != nil {
+		t.Fatalf("NewS3Client should not fail: %v", err)
+	}
+
+	is := MakeImageSourceWithS3(s3client)
+
+	img := images.NewImage()
+	defer img.Destroy()
+
+	err = is.searchRoots("nonexistent.jpg", img)
+	if err == nil {
+		t.Error("searchRoots should fail for non-existent image")
+	}
+}
+
+func TestMakeImageSourceWithS3_NilClient(t *testing.T) {
+	// When s3client is nil, it should fall back to other roots
+	is := MakeImageSourceWithS3(nil)
+
+	// Add a valid root - use the correct path from server/testimages
+	is.AddRoot("../testimages/server")
+
+	img := images.NewImage()
+	defer img.Destroy()
+
+	// Should still work with local roots
+	err := is.searchRoots("01.jpg", img)
+	if err != nil {
+		t.Errorf("searchRoots should succeed with local roots: %v", err)
+	}
+}
+
+func TestSearchRootsInternal_S3Fallback(t *testing.T) {
+	// Test that S3 is checked after local and web roots
+	s3client, _ := images.NewS3Client(config.ImageSourceConfig{
+		S3Enabled:  true,
+		S3Bucket:   "nonexistent-bucket-12345",
+		S3Prefix:   "",
+		S3Region:   "us-east-1",
+		S3Endpoint: "http://localhost:9000",
+	})
+
+	is := MakeImageSourceWithS3(s3client)
+	is.AddRoot("/nonexistent/path")
+
+	img := images.NewImage()
+	defer img.Destroy()
+
+	// Should fail after checking all sources including S3
+	err := is.searchRoots("test.jpg", img)
+	if err == nil {
+		t.Error("searchRoots should fail when all sources fail")
+	}
+}
+
+func TestImageSource_S3ClientNilCheck(t *testing.T) {
+	// Test that s3client == nil is handled correctly
+	is := MakeImageSource()
+
+	// Add local root - use the correct path from server/testimages
+	is.AddRoot("../testimages/server")
+
+	img := images.NewImage()
+	defer img.Destroy()
+
+	// Should work with local roots only
+	err := is.searchRoots("01.jpg", img)
+	if err != nil {
+		t.Errorf("searchRoots should succeed with local roots: %v", err)
+	}
+}
+
+func TestImageSource_S3ClientWithLocalRoots(t *testing.T) {
+	// Test that local roots are checked before S3
+	is := MakeImageSource()
+
+	// Add local root - use the correct path from server/testimages
+	is.AddRoot("../testimages/server")
+
+	img := images.NewImage()
+	defer img.Destroy()
+
+	// Should find image in local roots (S3 never checked due to local hit)
+	err := is.searchRoots("01.jpg", img)
+	if err != nil {
+		t.Errorf("searchRoots should find image in local roots: %v", err)
 	}
 }

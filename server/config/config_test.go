@@ -19,6 +19,19 @@ func TestReadConfigDefaults(t *testing.T) {
 	os.Unsetenv("WATERMARK_TEXT")
 	os.Unsetenv("SERVER_TOKENS")
 	os.Unsetenv("SERVER_MEMORY")
+	os.Unsetenv("CACHE_DISK_PATH")
+	os.Unsetenv("CACHE_DISK_MAX_MB")
+	os.Unsetenv("CACHE_S3_ENABLED")
+	os.Unsetenv("CACHE_S3_BUCKET")
+	os.Unsetenv("CACHE_S3_PREFIX")
+	os.Unsetenv("CACHE_S3_REGION")
+	os.Unsetenv("CACHE_S3_ENDPOINT")
+	os.Unsetenv("CACHE_S3_MAX_MB")
+	os.Unsetenv("SOURCE_S3_ENABLED")
+	os.Unsetenv("SOURCE_S3_BUCKET")
+	os.Unsetenv("SOURCE_S3_PREFIX")
+	os.Unsetenv("SOURCE_S3_REGION")
+	os.Unsetenv("SOURCE_S3_ENDPOINT")
 
 	conf := ReadConfig()
 	if *conf != defaults {
@@ -133,5 +146,122 @@ func TestReadConfigInvalidEnvVars(t *testing.T) {
 	}
 	if conf.Server.Memory != defaults.Server.Memory {
 		t.Fatalf("Expected Memory %d (default), got %d", defaults.Server.Memory, conf.Server.Memory)
+	}
+}
+
+func TestReadConfigCacheEnvVars(t *testing.T) {
+	os.Setenv("CACHE_DISK_PATH", "/custom/cache")
+	os.Setenv("CACHE_DISK_MAX_MB", "8192")
+	os.Setenv("CACHE_S3_ENABLED", "true")
+	os.Setenv("CACHE_S3_BUCKET", "my-cache-bucket")
+	os.Setenv("CACHE_S3_PREFIX", "cache/")
+	os.Setenv("CACHE_S3_REGION", "us-east-1")
+	os.Setenv("CACHE_S3_ENDPOINT", "http://minio:9000")
+	os.Setenv("CACHE_S3_MAX_MB", "500")
+
+	defer func() {
+		os.Unsetenv("CACHE_DISK_PATH")
+		os.Unsetenv("CACHE_DISK_MAX_MB")
+		os.Unsetenv("CACHE_S3_ENABLED")
+		os.Unsetenv("CACHE_S3_BUCKET")
+		os.Unsetenv("CACHE_S3_PREFIX")
+		os.Unsetenv("CACHE_S3_REGION")
+		os.Unsetenv("CACHE_S3_ENDPOINT")
+		os.Unsetenv("CACHE_S3_MAX_MB")
+	}()
+
+	conf := ReadConfig()
+	if conf.Cache.DiskPath != "/custom/cache" {
+		t.Fatalf("Expected DiskPath /custom/cache, got %s", conf.Cache.DiskPath)
+	}
+	if conf.Cache.DiskMaxMB != 8192 {
+		t.Fatalf("Expected DiskMaxMB 8192, got %d", conf.Cache.DiskMaxMB)
+	}
+	if !conf.Cache.S3Enabled {
+		t.Fatal("Expected S3Enabled true")
+	}
+	if conf.Cache.S3Bucket != "my-cache-bucket" {
+		t.Fatalf("Expected S3Bucket my-cache-bucket, got %s", conf.Cache.S3Bucket)
+	}
+	if conf.Cache.S3Prefix != "cache/" {
+		t.Fatalf("Expected S3Prefix cache/, got %s", conf.Cache.S3Prefix)
+	}
+	if conf.Cache.S3Region != "us-east-1" {
+		t.Fatalf("Expected S3Region us-east-1, got %s", conf.Cache.S3Region)
+	}
+	if conf.Cache.S3Endpoint != "http://minio:9000" {
+		t.Fatalf("Expected S3Endpoint http://minio:9000, got %s", conf.Cache.S3Endpoint)
+	}
+	if conf.Cache.S3MaxMB != 500 {
+		t.Fatalf("Expected S3MaxMB 500, got %d", conf.Cache.S3MaxMB)
+	}
+}
+
+func TestReadConfigCacheInvalidEnvVars(t *testing.T) {
+	os.Setenv("CACHE_DISK_MAX_MB", "not_a_number")
+	os.Setenv("CACHE_S3_ENABLED", "not_a_bool")
+	os.Setenv("CACHE_S3_MAX_MB", "also_not_number")
+
+	defer func() {
+		os.Unsetenv("CACHE_DISK_MAX_MB")
+		os.Unsetenv("CACHE_S3_ENABLED")
+		os.Unsetenv("CACHE_S3_MAX_MB")
+	}()
+
+	conf := ReadConfig()
+	if conf.Cache.DiskMaxMB != defaults.Cache.DiskMaxMB {
+		t.Fatalf("Expected DiskMaxMB %d (default), got %d", defaults.Cache.DiskMaxMB, conf.Cache.DiskMaxMB)
+	}
+	if conf.Cache.S3Enabled != defaults.Cache.S3Enabled {
+		t.Fatalf("Expected S3Enabled %v (default), got %v", defaults.Cache.S3Enabled, conf.Cache.S3Enabled)
+	}
+	if conf.Cache.S3MaxMB != defaults.Cache.S3MaxMB {
+		t.Fatalf("Expected S3MaxMB %d (default), got %d", defaults.Cache.S3MaxMB, conf.Cache.S3MaxMB)
+	}
+}
+
+func TestReadConfigImageSourceEnvVars(t *testing.T) {
+	os.Setenv("SOURCE_S3_ENABLED", "true")
+	os.Setenv("SOURCE_S3_BUCKET", "my-source-bucket")
+	os.Setenv("SOURCE_S3_PREFIX", "images/")
+	os.Setenv("SOURCE_S3_REGION", "eu-west-1")
+	os.Setenv("SOURCE_S3_ENDPOINT", "http://s3.example.com")
+
+	defer func() {
+		os.Unsetenv("SOURCE_S3_ENABLED")
+		os.Unsetenv("SOURCE_S3_BUCKET")
+		os.Unsetenv("SOURCE_S3_PREFIX")
+		os.Unsetenv("SOURCE_S3_REGION")
+		os.Unsetenv("SOURCE_S3_ENDPOINT")
+	}()
+
+	conf := ReadConfig()
+	if !conf.ImageSource.S3Enabled {
+		t.Fatal("Expected S3Enabled true")
+	}
+	if conf.ImageSource.S3Bucket != "my-source-bucket" {
+		t.Fatalf("Expected S3Bucket my-source-bucket, got %s", conf.ImageSource.S3Bucket)
+	}
+	if conf.ImageSource.S3Prefix != "images/" {
+		t.Fatalf("Expected S3Prefix images/, got %s", conf.ImageSource.S3Prefix)
+	}
+	if conf.ImageSource.S3Region != "eu-west-1" {
+		t.Fatalf("Expected S3Region eu-west-1, got %s", conf.ImageSource.S3Region)
+	}
+	if conf.ImageSource.S3Endpoint != "http://s3.example.com" {
+		t.Fatalf("Expected S3Endpoint http://s3.example.com, got %s", conf.ImageSource.S3Endpoint)
+	}
+}
+
+func TestReadConfigImageSourceInvalidEnvVars(t *testing.T) {
+	os.Setenv("SOURCE_S3_ENABLED", "not_a_bool")
+
+	defer func() {
+		os.Unsetenv("SOURCE_S3_ENABLED")
+	}()
+
+	conf := ReadConfig()
+	if conf.ImageSource.S3Enabled != defaults.ImageSource.S3Enabled {
+		t.Fatalf("Expected S3Enabled %v (default), got %v", defaults.ImageSource.S3Enabled, conf.ImageSource.S3Enabled)
 	}
 }

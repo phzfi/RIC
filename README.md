@@ -88,6 +88,19 @@ RIC supports multiple types of image sources:
 - Dynamically adds a web root for the request
 - Must be prefixed with `http://` or `https://`
 
+**S3 source (AWS S3 or S3-compatible):**
+- Configure via environment variables (see Configuration section)
+- Supports AWS S3, MinIO, and other S3-compatible storage
+- Uses EC2 instance profile for authentication
+- Example config:
+  ```
+  SOURCE_S3_ENABLED=true
+  SOURCE_S3_BUCKET=my-image-bucket
+  SOURCE_S3_PREFIX=images/
+  SOURCE_S3_REGION=eu-west-1
+  SOURCE_S3_ENDPOINT=http://localhost:9000  # for MinIO
+  ```
+
 ### 1.5. Non-Functional Requirements
 
 ## 2. Architecture
@@ -164,7 +177,7 @@ Client -> fasthttp Server -> ParseURI -> Operator -> HybridCache
 
 #### Cache Types
 
-RIC uses a hybrid caching system with configurable eviction policies:
+RIC uses a tiered hybrid caching system with configurable eviction policies:
 
 **Cache Policies:**
 
@@ -179,24 +192,114 @@ RIC uses a hybrid caching system with configurable eviction policies:
 |-------|-------------|----------------|
 | Memory Cache | LRU-backed in-memory store | 2GB max (`SERVER_MEMORY`) |
 | Disk Cache | Persistent on-disk storage | 4GB max, folder `/tmp/RICdiskcache` |
+| S3 Cache | S3-compatible storage (MinIO, AWS S3) | Configurable via env vars |
 
-**How HybridCache Works:**
+**Cache Architecture:**
 ```
-Request -> Memory Cache (LRU) -> Disk Cache (LRU) -> Image Processing
-                 |                      |
-                 +-- Cache Hit! --------+
-                 |
-                 +-- Cache Miss -> Process -> Store in both layers
+┌─────────────────────────────────────────────────────────────────┐
+│                        Request Flow                              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │   Query Params   │
+                    │ width, height... │
+                    └────────┬────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Cache Lookup (HybridCache)                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  TIER 1: Memory Cache (LRU)                    [FASTEST] │   │
+│  ├─────────────────────────────────────────────────────────┤   │
+│  │  • In-memory map[string][]byte                          │   │
+│  │  • 2GB default (configurable via SERVER_MEMORY)          │   │
+│  │  • Synchronous read/write                               │   │
+│  │  • Eviction: LRU when memory exceeded                   │   │
+│  │                                                         │   │
+│  │  Request → Check Memory → [HIT] → Return blob            │   │
+│  │                    │                                     │   │
+│  │                    └── [MISS] ───────────────────────────┤   │
+│  └──────────────────────────│───────────────────────────────┘   │
+│                             │                                  │
+│                             ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  TIER 2: Disk Cache (LRU)                      [MEDIUM] │   │
+│  ├─────────────────────────────────────────────────────────┤   │
+│  │  • Files stored in /tmp/RICdiskcache/                   │   │
+│  │  • 4GB default (configurable via CACHE_DISK_MAX_MB)    │   │
+│  │  • Async writes (non-blocking Store)                    │   │
+│  │  • Keys: base64.RawURLEncoding                         │   │
+│  │  • Eviction: LRU with file deletion                     │   │
+│  │                                                         │   │
+│  │  Request → Check Disk → [HIT] → Load to memory → Return  │   │
+│  │                    │                                     │   │
+│  │                    └── [MISS] ───────────────────────────┤   │
+│  └──────────────────────────│───────────────────────────────┘   │
+│                             │                                  │
+│                             ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  TIER 3: S3 Cache (S3-compatible)              [SLOWEST]│   │
+│  ├─────────────────────────────────────────────────────────┤   │
+│  │  • AWS S3 or S3-compatible (MinIO, etc.)                │   │
+│  │  • Configurable bucket, prefix, region, endpoint         │   │
+│  │  • Async writes, async deletes (non-blocking)            │   │
+│  │  • Graceful fallback if S3 unreachable                   │   │
+│  │  • Max object size: 200MB (configurable)                │   │
+│  │                                                         │   │
+│  │  Request → Check S3 → [HIT] → Load to memory → Return    │   │
+│  │                    │                                     │   │
+│  │                    └── [MISS] ───────────────────────────┤   │
+│  └──────────────────────────│───────────────────────────────┘   │
+│                             │                                  │
+│                             ▼                                  │
+│                    ┌─────────────────┐                         │
+│                    │ Image Processor │                         │
+│                    │  (ImageMagick)  │                         │
+│                    └────────┬────────┘                         │
+│                             │                                  │
+│                             ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    Store Result                          │   │
+│  ├─────────────────────────────────────────────────────────┤   │
+│  │                                                         │   │
+│  │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │   │
+│  │   │  Memory    │→ │    Disk     │→ │     S3      │     │   │
+│  │   │  (always)  │  │  (if ok)    │  │  (if ok)    │     │   │
+│  │   └─────────────┘  └─────────────┘  └─────────────┘     │   │
+│  │                                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Eviction Behavior:**
-- Memory cache: LRU policy evicts least recently visited items when memory limit reached
-- Disk cache: Stores base64-encoded blobs in files, uses LRU policy
-- When image found in disk cache but not memory, it's promoted to memory cache
+**Fallback Behavior:**
+
+| Backend | Failure Behavior |
+|---------|------------------|
+| Memory | (always required) |
+| Disk | Skip if unreachable, continue with Memory only |
+| S3 | Skip if unreachable, continue with Memory + Disk |
 
 **Configuration:**
-- `SERVER_MEMORY` - Memory cache limit in bytes (default: 2147483648 = 2GB)
-- Disk cache folder is set in `server/main.go` (default: `/tmp/RICdiskcache`)
+
+| Variable | Description | Default |
+|---|---|---|
+| `SERVER_MEMORY` | Memory cache limit in bytes | `2147483648` (2GB) |
+| `CACHE_DISK_PATH` | Disk cache folder | `/tmp/RICdiskcache` |
+| `CACHE_DISK_MAX_MB` | Disk cache max size in MB | `4096` |
+| `CACHE_S3_ENABLED` | Enable S3 cache backend | `false` |
+| `CACHE_S3_BUCKET` | S3 bucket name | `""` |
+| `CACHE_S3_PREFIX` | S3 key prefix | `""` |
+| `CACHE_S3_REGION` | AWS region | `""` |
+| `CACHE_S3_ENDPOINT` | S3-compatible endpoint (MinIO) | `""` |
+| `CACHE_S3_MAX_MB` | Max object size in MB | `200` |
+| `SOURCE_S3_ENABLED` | Enable S3 image source | `false` |
+| `SOURCE_S3_BUCKET` | S3 source bucket name | `""` |
+| `SOURCE_S3_PREFIX` | S3 source key prefix | `""` |
+| `SOURCE_S3_REGION` | S3 source region | `""` |
+| `SOURCE_S3_ENDPOINT` | S3 source endpoint (MinIO) | `""` |
 
 ## 3. Development Environment
 Note! PHZ Coding Convention: name this environment as dev.

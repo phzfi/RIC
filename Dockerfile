@@ -39,13 +39,11 @@ RUN mkdir -p /tmp
 # initialise go project
 RUN go mod init github.com/phzfi/RIC
 
-# download necessary go libraries
-RUN cd server && go get -t ./...
-RUN go mod vendor
-RUN go mod download
+# download necessary go libraries and vendor
+RUN cd server && go get -t ./... && go mod tidy && go mod vendor && go mod download
 
 # build Go application
-RUN cd server; go build -v -tags debug -a -installsuffix cgo .
+RUN cd server && go build -v -tags debug -a -installsuffix cgo .
 
 
 # Stage 2: Get certificates

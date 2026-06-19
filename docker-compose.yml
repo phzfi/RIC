@@ -30,9 +30,9 @@ services:
       - /bin/sh
       - -c
       - |
-        go mod vendor -e;
+        go mod tidy && go mod vendor;
         go install github.com/codeofthrone/goclover@latest;
-        go test -mod=mod -v -coverprofile=/app/reports/coverage/coverage.out ./server/...;
+        go test -mod=vendor -v -coverprofile=/app/reports/coverage/coverage.out ./server/...;
         go tool cover -html=/app/reports/coverage/coverage.out -o=/app/reports/coverage/coverage.html;
         goclover -f /app/reports/coverage/coverage.out -o /app/reports/coverage/clover.xml
     working_dir: /app

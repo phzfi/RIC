@@ -9,6 +9,8 @@ import (
 	"os"
 )
 
+type BlobLoader func([]byte) error
+
 // Returns Image from file.
 func (img *Image) FromFile(filename string) error {
 
